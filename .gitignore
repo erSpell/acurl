@@ -1,0 +1,23 @@
+# Binaries
+/acurl
+/acurl.exe
+/dist/
+*.test
+
+# Coverage and profiling
+coverage*.out
+coverage*.txt
+*.prof
+
+# Local test output
+testdata/e2e-results/
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Local config and keys
+.acurl.local.yaml
+*.key
