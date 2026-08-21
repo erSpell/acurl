@@ -1,0 +1,80 @@
+// Package fetcher retrieves a URL once per agent profile.
+package fetcher
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"net/http"
+	"time"
+
+	"github.com/imroc/req/v3"
+	"github.com/tragent-io/acurl/pkg/types"
+)
+
+// Options configures a Fetcher.
+type Options struct {
+	// Timeout bounds each request, including reading the body.
+	Timeout time.Duration
+	// Headers are added to every request after the profile headers.
+	Headers map[string]string
+}
+
+// Fetcher fetches URLs with a browser-like TLS fingerprint so that the only
+// variable between profiles is what the profile itself sends.
+type Fetcher struct {
+	client *req.Client
+	opts   Options
+}
+
+// New returns a Fetcher configured with opts.
+func New(opts Options) *Fetcher {
+	if opts.Timeout <= 0 {
+		opts.Timeout = 30 * time.Second
+	}
+	client := req.C().
+		SetTimeout(opts.Timeout).
+		ImpersonateChrome()
+	return &Fetcher{client: client, opts: opts}
+}
+
+// Fetch retrieves url using profile. Network failures are reported in the
+// result rather than returned, so one failing profile never aborts a run.
+func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) types.FetchResult {
+	result := types.FetchResult{Profile: profile.Name}
+	start := time.Now()
+
+	r := f.client.R().
+		SetContext(ctx).
+		SetHeader("User-Agent", profile.UserAgent)
+	for k, v := range profile.Headers {
+		r.SetHeader(k, v)
+	}
+	for k, v := range f.opts.Headers {
+		r.SetHeader(k, v)
+	}
+
+	resp, err := r.Get(url)
+	if err != nil {
+		result.Duration = time.Since(start)
+		result.Error = err.Error()
+		return result
+	}
+	defer resp.Body.Close()
+
+	result.Success = true
+	result.StatusCode = resp.StatusCode
+	if resp.StatusCode == http.StatusTooManyRequests {
+		result.RateLimited = true
+		result.RetryAfter = resp.Header.Get("Retry-After")
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	result.Duration = time.Since(start)
+	if err != nil {
+		result.Error = fmt.Sprintf("read body: %v", err)
+		return result
+	}
+	result.BodySize = len(body)
+	return result
+}
