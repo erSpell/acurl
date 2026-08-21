@@ -1,0 +1,50 @@
+# Default agent profiles for acurl.
+# User agent strings follow the operators' published documentation and
+# https://github.com/ai-robots-txt/ai.robots.txt
+profiles:
+  - name: "Chrome (Browser)"
+    user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    robots_key: ""
+    headers:
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
+      Accept-Language: "en-US,en;q=0.9"
+      Sec-Ch-Ua: '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"'
+      Sec-Ch-Ua-Mobile: "?0"
+      Sec-Ch-Ua-Platform: '"Windows"'
+      Sec-Fetch-Dest: "document"
+      Sec-Fetch-Mode: "navigate"
+      Sec-Fetch-Site: "none"
+      Sec-Fetch-User: "?1"
+      Upgrade-Insecure-Requests: "1"
+
+  - name: "ChatGPT-User"
+    user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+    robots_key: "ChatGPT-User"
+
+  - name: "OAI-SearchBot"
+    user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; OAI-SearchBot/1.0; +https://openai.com/searchbot"
+    robots_key: "OAI-SearchBot"
+
+  - name: "Claude-Web"
+    user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Claude-Web/1.0; +claude-web@anthropic.com)"
+    robots_key: "Claude-Web"
+
+  - name: "anthropic-ai"
+    user_agent: "anthropic-ai"
+    robots_key: "anthropic-ai"
+
+  - name: "PerplexityBot"
+    user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)"
+    robots_key: "PerplexityBot"
+
+  - name: "Googlebot"
+    user_agent: "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+    robots_key: "Googlebot"
+
+  - name: "Bingbot"
+    user_agent: "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)"
+    robots_key: "bingbot"
+
+  - name: "curl (Baseline)"
+    user_agent: "curl/8.5.0"
+    robots_key: ""
