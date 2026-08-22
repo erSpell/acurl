@@ -76,5 +76,7 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 		return result
 	}
 	result.BodySize = len(body)
+	result.ContentHash = contentHash(body)
+	result.Title = extractTitle(string(body))
 	return result
 }
