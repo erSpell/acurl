@@ -10,7 +10,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tragent-io/acurl/internal/fetcher"
+	"github.com/tragent-io/acurl/internal/output"
 	"github.com/tragent-io/acurl/internal/profiles"
+	"github.com/tragent-io/acurl/pkg/types"
 )
 
 var (
@@ -25,6 +27,7 @@ var (
 	flagHeaders      []string
 	flagConcurrency  int
 	flagProfilesFile string
+	flagNoColor      bool
 )
 
 var rootCmd = &cobra.Command{
@@ -46,6 +49,7 @@ func init() {
 	f.StringArrayVarP(&flagHeaders, "header", "H", nil, `extra header "Name: value" (repeatable)`)
 	f.IntVarP(&flagConcurrency, "concurrency", "c", 5, "maximum concurrent requests")
 	f.StringVar(&flagProfilesFile, "profiles", "", "custom profiles YAML file")
+	f.BoolVar(&flagNoColor, "no-color", false, "disable colored output")
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -68,10 +72,8 @@ func run(cmd *cobra.Command, args []string) error {
 	fmt.Fprintf(os.Stderr, "Fetching %s with %d profiles...\n", url, len(selected))
 	results := f.FetchAll(cmd.Context(), url, selected, flagConcurrency)
 
-	for _, r := range results {
-		fmt.Printf("%-20s %3d %6dms %8dB %s\n", r.Profile, r.StatusCode, r.Duration.Milliseconds(), r.BodySize, r.Error)
-	}
-	return nil
+	report := types.ComparisonResult{URL: url, Timestamp: time.Now().UTC(), Results: results}
+	return output.WriteTable(os.Stdout, report, !flagNoColor)
 }
 
 func parseHeaders(raw []string) (map[string]string, error) {
