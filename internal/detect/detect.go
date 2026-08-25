@@ -52,6 +52,44 @@ var Signatures = []Signature{
 		// AkamaiGHost is on every Akamai response, so only the block page counts.
 		Body: regexp.MustCompile(`(?is)Access Denied.*Reference\s*#\d+\.[0-9a-f]+`),
 	},
+	{
+		Vendor: "DataDome",
+		Header: func(h http.Header) bool { return h.Get("X-DataDome") != "" && h.Get("X-DD-B") != "" },
+		Body:   regexp.MustCompile(`(?i)(geo\.captcha-delivery\.com|ct\.captcha-delivery\.com|dd=\{'rt':'c')`),
+	},
+	{
+		Vendor:   "PerimeterX",
+		Statuses: []int{403, 429},
+		Body:     regexp.MustCompile(`(?i)(/_px[a-z0-9]*/|px-captcha|_pxAppId|window\._pxUuid|Press &amp; Hold|Press & Hold)`),
+	},
+	{
+		Vendor: "Imperva",
+		Body:   regexp.MustCompile(`(?i)(_Incapsula_Resource|Incapsula incident ID|Request unsuccessful\. Incapsula)`),
+	},
+	{
+		Vendor: "Kasada",
+		Header: func(h http.Header) bool { return h.Get("X-Kpsdk-Ct") != "" || h.Get("X-Kpsdk-C") != "" },
+		Body:   regexp.MustCompile(`(?i)(/149e9513-01fa-4fb0-aad4-566afd725d1b/|KPSDK\.configure)`),
+	},
+	{
+		Vendor: "AWS WAF",
+		Header: func(h http.Header) bool {
+			return strings.EqualFold(h.Get("X-Amzn-Waf-Action"), "challenge") || strings.EqualFold(h.Get("X-Amzn-Waf-Action"), "captcha")
+		},
+		Body: regexp.MustCompile(`(?i)(awswaf\.com/[^"']*challenge\.js|AwsWafIntegration)`),
+	},
+	{
+		Vendor:   "Sucuri",
+		Statuses: []int{403, 503},
+		Body:     regexp.MustCompile(`(?i)(Sucuri WebSite Firewall|sucuri\.net/privacy-policy|cloudproxy@sucuri)`),
+	},
+	{
+		Vendor: "CAPTCHA",
+		// Many normal pages embed a captcha in a login or contact form, so a
+		// generic captcha only counts on error responses.
+		Statuses: []int{401, 403, 405, 429, 503},
+		Body:     regexp.MustCompile(`(?i)(class=["'][^"']*g-recaptcha|class=["'][^"']*h-captcha|class=["'][^"']*cf-turnstile|data-sitekey=)`),
+	},
 }
 
 // Challenge returns the vendor whose challenge or block page this response
