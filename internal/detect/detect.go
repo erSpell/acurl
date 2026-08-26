@@ -50,7 +50,8 @@ var Signatures = []Signature{
 		Vendor:   "Akamai",
 		Statuses: []int{403},
 		// AkamaiGHost is on every Akamai response, so only the block page counts.
-		Body: regexp.MustCompile(`(?is)Access Denied.*Reference\s*#\d+\.[0-9a-f]+`),
+		// Akamai HTML-encodes the reference ID ("Reference&#32;&#35;18&#46;...").
+		Body: regexp.MustCompile(`(?is)Access Denied.*(Reference(\s|&#32;)*(#|&#35;)\d+(\.|&#46;)|errors(\.|&#46;)edgesuite(\.|&#46;)net)`),
 	},
 	{
 		Vendor: "DataDome",
