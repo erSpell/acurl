@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/imroc/req/v3"
+	"github.com/tragent-io/acurl/internal/detect"
 	"github.com/tragent-io/acurl/pkg/types"
 )
 
@@ -78,5 +79,6 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 	result.BodySize = len(body)
 	result.ContentHash = contentHash(body)
 	result.Title = extractTitle(string(body))
+	result.BotChallenge = detect.Challenge(resp.StatusCode, resp.Header, body)
 	return result
 }

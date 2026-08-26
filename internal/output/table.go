@@ -80,6 +80,9 @@ func FormatSize(n int) string {
 
 func details(r types.FetchResult) string {
 	var parts []string
+	if r.BotChallenge != "" {
+		parts = append(parts, "challenge: "+r.BotChallenge)
+	}
 	if r.RateLimited {
 		p := "rate limited"
 		if r.RetryAfter != "" {
