@@ -5,6 +5,7 @@ go 1.26.0
 require (
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/imroc/req/v3 v3.61.0
+	github.com/jimsmart/grobotstxt v1.0.3
 	github.com/olekukonko/tablewriter v1.1.5
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/net v0.57.0
