@@ -83,6 +83,9 @@ func details(r types.FetchResult) string {
 	if r.BotChallenge != "" {
 		parts = append(parts, "challenge: "+r.BotChallenge)
 	}
+	if r.RobotsDisallowed {
+		parts = append(parts, "robots.txt: disallowed")
+	}
 	if r.RateLimited {
 		p := "rate limited"
 		if r.RetryAfter != "" {

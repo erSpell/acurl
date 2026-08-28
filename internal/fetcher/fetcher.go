@@ -82,3 +82,18 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 	result.BotChallenge = detect.Challenge(resp.StatusCode, resp.Header, body)
 	return result
 }
+
+// Get performs a plain GET with the given user agent and returns at most
+// limit bytes of the body. It is used for auxiliary files such as robots.txt.
+func (f *Fetcher) Get(ctx context.Context, url, userAgent string, limit int64) (int, []byte, error) {
+	resp, err := f.client.R().
+		SetContext(ctx).
+		SetHeader("User-Agent", userAgent).
+		Get(url)
+	if err != nil {
+		return 0, nil, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(io.LimitReader(resp.Body, limit))
+	return resp.StatusCode, body, err
+}

@@ -12,6 +12,7 @@ import (
 	"github.com/tragent-io/acurl/internal/fetcher"
 	"github.com/tragent-io/acurl/internal/output"
 	"github.com/tragent-io/acurl/internal/profiles"
+	"github.com/tragent-io/acurl/internal/robots"
 	"github.com/tragent-io/acurl/pkg/types"
 )
 
@@ -28,6 +29,7 @@ var (
 	flagConcurrency  int
 	flagProfilesFile string
 	flagNoColor      bool
+	flagNoRobots     bool
 )
 
 var rootCmd = &cobra.Command{
@@ -50,6 +52,7 @@ func init() {
 	f.IntVarP(&flagConcurrency, "concurrency", "c", 5, "maximum concurrent requests")
 	f.StringVar(&flagProfilesFile, "profiles", "", "custom profiles YAML file")
 	f.BoolVar(&flagNoColor, "no-color", false, "disable colored output")
+	f.BoolVar(&flagNoRobots, "no-robots", false, "skip robots.txt checks")
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -71,9 +74,33 @@ func run(cmd *cobra.Command, args []string) error {
 	f := fetcher.New(fetcher.Options{Timeout: flagTimeout, Headers: headers})
 	fmt.Fprintf(os.Stderr, "Fetching %s with %d profiles...\n", url, len(selected))
 	results := f.FetchAll(cmd.Context(), url, selected, flagConcurrency)
+	if !flagNoRobots {
+		applyRobots(cmd.Context(), f, url, selected, results)
+	}
 
 	report := types.ComparisonResult{URL: url, Timestamp: time.Now().UTC(), Results: results}
 	return output.WriteTable(os.Stdout, report, !flagNoColor)
+}
+
+// userAgent identifies acurl itself when fetching auxiliary files.
+func userAgent() string {
+	return "acurl/" + version + " (+https://github.com/tragent-io/acurl)"
+}
+
+func applyRobots(ctx context.Context, f *fetcher.Fetcher, url string, ps []types.Profile, results []types.FetchResult) {
+	cache := robots.NewCache(func(ctx context.Context, u string) (int, []byte, error) {
+		return f.Get(ctx, u, userAgent(), robots.MaxSize)
+	})
+	data := cache.Get(ctx, url)
+	for i, p := range ps {
+		if p.RobotsKey == "" {
+			continue
+		}
+		if data.Unreachable() {
+			results[i].RobotsError = data.Err.Error()
+		}
+		results[i].RobotsDisallowed = !data.Allowed(p.RobotsKey, url)
+	}
 }
 
 func parseHeaders(raw []string) (map[string]string, error) {
