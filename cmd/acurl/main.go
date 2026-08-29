@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/tragent-io/acurl/internal/classifier"
 	"github.com/tragent-io/acurl/internal/fetcher"
 	"github.com/tragent-io/acurl/internal/output"
 	"github.com/tragent-io/acurl/internal/profiles"
@@ -78,7 +79,13 @@ func run(cmd *cobra.Command, args []string) error {
 		applyRobots(cmd.Context(), f, url, selected, results)
 	}
 
-	report := types.ComparisonResult{URL: url, Timestamp: time.Now().UTC(), Results: results}
+	classifier.ClassifyAll(results)
+	report := types.ComparisonResult{
+		URL:       url,
+		Timestamp: time.Now().UTC(),
+		Results:   results,
+		Summary:   classifier.Summarize(results),
+	}
 	return output.WriteTable(os.Stdout, report, !flagNoColor)
 }
 

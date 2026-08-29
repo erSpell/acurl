@@ -40,9 +40,9 @@ func WriteTable(w io.Writer, result types.ComparisonResult, color bool) error {
 	sb.WriteString(style(mutedStyle, result.Timestamp.Format(time.RFC3339)) + "\n\n")
 
 	table := tablewriter.NewTable(&sb)
-	table.Header("Profile", "Status", "Time", "Size", "Details")
+	table.Header("Profile", "Status", "Time", "Size", "Result", "Details")
 	for _, r := range result.Results {
-		if err := table.Append(r.Profile, statusText(r), durationText(r.Duration), FormatSize(r.BodySize), details(r)); err != nil {
+		if err := table.Append(r.Profile, statusText(r), durationText(r.Duration), FormatSize(r.BodySize), style(classStyle(r.Classification), r.Classification), details(r)); err != nil {
 			return err
 		}
 	}
@@ -50,9 +50,37 @@ func WriteTable(w io.Writer, result types.ComparisonResult, color bool) error {
 		return err
 	}
 
+	sm := result.Summary
+	sb.WriteString("\n" + style(headerStyle, "Summary") + "\n")
+	line := func(label string, n int, s lipgloss.Style) {
+		v := strconv.Itoa(n)
+		if n > 0 {
+			v = style(s, v)
+		}
+		fmt.Fprintf(&sb, "  %-18s %s\n", label, v)
+	}
+	line("Allowed", sm.Allowed, okStyle)
+	line("Blocked", sm.Blocked, badStyle)
+	line("Challenged", sm.Challenged, badStyle)
+	line("Rate limited", sm.RateLimited, warnStyle)
+	line("Cloaked", sm.Cloaked, warnStyle)
+	line("Robots disallowed", sm.RobotsDisallow, warnStyle)
+	line("Errors", sm.Errors, badStyle)
+
 	sb.WriteString("\n" + style(mutedStyle, Caveat) + "\n")
 	_, err := io.WriteString(w, sb.String())
 	return err
+}
+
+func classStyle(c string) lipgloss.Style {
+	switch c {
+	case "allowed":
+		return okStyle
+	case "blocked", "challenged", "error":
+		return badStyle
+	default:
+		return warnStyle
+	}
 }
 
 func statusText(r types.FetchResult) string {
