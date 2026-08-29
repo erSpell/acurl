@@ -57,7 +57,7 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 
 	resp, err := r.Get(url)
 	if err != nil {
-		result.Duration = time.Since(start)
+		result.SetDuration(time.Since(start))
 		result.Error = err.Error()
 		return result
 	}
@@ -71,7 +71,7 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 	}
 
 	body, err := io.ReadAll(resp.Body)
-	result.Duration = time.Since(start)
+	result.SetDuration(time.Since(start))
 	if err != nil {
 		result.Error = fmt.Sprintf("read body: %v", err)
 		return result

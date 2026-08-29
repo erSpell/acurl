@@ -17,7 +17,8 @@ type FetchResult struct {
 	Success          bool          `json:"success"`
 	StatusCode       int           `json:"status_code"`
 	RedirectChain    []string      `json:"redirect_chain,omitempty"`
-	Duration         time.Duration `json:"duration_ms"`
+	Duration         time.Duration `json:"-"`
+	DurationMs       int64         `json:"duration_ms"`
 	BodySize         int           `json:"body_size"`
 	Title            string        `json:"title,omitempty"`
 	BotChallenge     string        `json:"bot_challenge,omitempty"`
@@ -28,6 +29,12 @@ type FetchResult struct {
 	Classification   string        `json:"classification"`
 	Error            string        `json:"error,omitempty"`
 	ContentHash      string        `json:"content_hash,omitempty"`
+}
+
+// SetDuration records d on the result in both forms.
+func (r *FetchResult) SetDuration(d time.Duration) {
+	r.Duration = d
+	r.DurationMs = d.Milliseconds()
 }
 
 // ComparisonResult is the full report for one URL.
