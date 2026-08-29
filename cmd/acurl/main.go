@@ -31,6 +31,8 @@ var (
 	flagProfilesFile string
 	flagNoColor      bool
 	flagNoRobots     bool
+	flagFormat       string
+	flagOutput       string
 )
 
 var rootCmd = &cobra.Command{
@@ -54,6 +56,8 @@ func init() {
 	f.StringVar(&flagProfilesFile, "profiles", "", "custom profiles YAML file")
 	f.BoolVar(&flagNoColor, "no-color", false, "disable colored output")
 	f.BoolVar(&flagNoRobots, "no-robots", false, "skip robots.txt checks")
+	f.StringVarP(&flagFormat, "format", "f", "table", "output format: table, json, markdown")
+	f.StringVarP(&flagOutput, "output", "o", "", "write the report to a file instead of stdout")
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -86,7 +90,19 @@ func run(cmd *cobra.Command, args []string) error {
 		Results:   results,
 		Summary:   classifier.Summarize(results),
 	}
-	return output.WriteTable(os.Stdout, report, !flagNoColor)
+	if flagOutput == "" {
+		return output.Write(os.Stdout, flagFormat, report, !flagNoColor)
+	}
+	out, err := os.Create(flagOutput)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	if err := output.Write(out, flagFormat, report, false); err != nil {
+		return err
+	}
+	fmt.Fprintf(os.Stderr, "Report written to %s\n", flagOutput)
+	return out.Close()
 }
 
 // userAgent identifies acurl itself when fetching auxiliary files.
