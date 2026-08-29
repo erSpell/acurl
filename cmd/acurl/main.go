@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -90,6 +91,21 @@ func run(cmd *cobra.Command, args []string) error {
 		Results:   results,
 		Summary:   classifier.Summarize(results),
 	}
+	if err := writeReport(report); err != nil {
+		return err
+	}
+	if code := output.ExitCode(report.Summary); code != output.ExitOK {
+		return exitError(code)
+	}
+	return nil
+}
+
+// exitError carries a non-zero exit code without an error message.
+type exitError int
+
+func (e exitError) Error() string { return fmt.Sprintf("exit status %d", int(e)) }
+
+func writeReport(report types.ComparisonResult) error {
 	if flagOutput == "" {
 		return output.Write(os.Stdout, flagFormat, report, !flagNoColor)
 	}
@@ -139,8 +155,14 @@ func parseHeaders(raw []string) (map[string]string, error) {
 }
 
 func main() {
-	if err := rootCmd.ExecuteContext(context.Background()); err != nil {
+	err := rootCmd.ExecuteContext(context.Background())
+	var code exitError
+	switch {
+	case err == nil:
+	case errors.As(err, &code):
+		os.Exit(int(code))
+	default:
 		fmt.Fprintln(os.Stderr, "acurl:", err)
-		os.Exit(2)
+		os.Exit(output.ExitError)
 	}
 }

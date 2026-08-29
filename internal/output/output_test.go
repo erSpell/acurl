@@ -79,3 +79,21 @@ func TestFormatSize(t *testing.T) {
 		}
 	}
 }
+
+func TestExitCode(t *testing.T) {
+	tests := []struct {
+		s    types.Summary
+		want int
+	}{
+		{types.Summary{Total: 2, Allowed: 2}, ExitOK},
+		{types.Summary{Total: 2, Allowed: 1, RobotsDisallow: 1}, ExitOK},
+		{types.Summary{Total: 2, Allowed: 1, Blocked: 1}, ExitBlocked},
+		{types.Summary{Total: 2, Allowed: 1, Challenged: 1}, ExitBlocked},
+		{types.Summary{Total: 2, Blocked: 1, Errors: 1}, ExitError},
+	}
+	for _, tt := range tests {
+		if got := ExitCode(tt.s); got != tt.want {
+			t.Errorf("ExitCode(%+v) = %d, want %d", tt.s, got, tt.want)
+		}
+	}
+}
