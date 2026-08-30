@@ -23,6 +23,16 @@ acurl --agents ChatGPT-User,Googlebot https://yourstore.com/products/1
 acurl -H "Cookie: region=us" --timeout 10s https://example.com
 ```
 
+Output formats: `--format table` (default), `json` or `markdown`. Use `-o report.md` to write to a file.
+
+## Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | Every profile was allowed |
+| 1 | At least one profile was blocked or challenged |
+| 2 | A request failed |
+
 ## Status
 
 Early development. Expect breaking changes until v1.0.
