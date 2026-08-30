@@ -1,0 +1,24 @@
+name: New agent profile
+description: Request a new AI agent or crawler profile
+labels: ["profiles"]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Agent name
+      placeholder: ExampleBot
+    validations:
+      required: true
+  - type: input
+    id: ua
+    attributes:
+      label: User agent string
+    validations:
+      required: true
+  - type: input
+    id: docs
+    attributes:
+      label: Operator documentation
+      description: Link to the page where the operator documents this agent
+    validations:
+      required: true
