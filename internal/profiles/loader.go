@@ -7,8 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/tragent-io/acurl/pkg/types"
 	"gopkg.in/yaml.v3"
+
+	"github.com/tragent-io/acurl/pkg/types"
 )
 
 //go:embed profiles.yaml

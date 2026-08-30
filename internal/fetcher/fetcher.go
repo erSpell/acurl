@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/imroc/req/v3"
+
 	"github.com/tragent-io/acurl/internal/detect"
 	"github.com/tragent-io/acurl/pkg/types"
 )

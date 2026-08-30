@@ -38,7 +38,7 @@ func TestFetchSendsProfileHeaders(t *testing.T) {
 	if gotUA != "TestBot/1.0" || gotCustom != "p" || gotExtra != "yes" {
 		t.Errorf("headers not sent: ua=%q profile=%q extra=%q", gotUA, gotCustom, gotExtra)
 	}
-	if res.StatusCode != 200 || !res.Success {
+	if res.StatusCode != http.StatusOK || !res.Success {
 		t.Errorf("status = %d success = %v", res.StatusCode, res.Success)
 	}
 	if res.Title != "Hello & welcome" {

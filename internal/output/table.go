@@ -10,6 +10,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/olekukonko/tablewriter"
+
 	"github.com/tragent-io/acurl/pkg/types"
 )
 
