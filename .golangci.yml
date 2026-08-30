@@ -1,0 +1,34 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - bodyclose
+    - errorlint
+    - gocritic
+    - misspell
+    - nilerr
+    - revive
+    - unconvert
+    - unparam
+    - usestdlibvars
+  settings:
+    gocritic:
+      enabled-tags: [diagnostic]
+    revive:
+      rules:
+        - name: exported
+        - name: package-comments
+  exclusions:
+    presets: [std-error-handling]
+    rules:
+      - path: _test\.go
+        linters: [errcheck, unparam, bodyclose]
+
+formatters:
+  enable: [gofmt, goimports]
+  settings:
+    goimports:
+      local-prefixes: [github.com/tragent-io/acurl]

@@ -4,13 +4,14 @@ package main
 import (
 	"context"
 	"errors"
-	neturl "net/url"
 	"fmt"
+	neturl "net/url"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
+
 	"github.com/tragent-io/acurl/internal/classifier"
 	"github.com/tragent-io/acurl/internal/fetcher"
 	"github.com/tragent-io/acurl/internal/output"
