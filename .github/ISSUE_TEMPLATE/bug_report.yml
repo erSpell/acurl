@@ -1,0 +1,40 @@
+name: Bug report
+description: Something in acurl does not work as expected
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: acurl version
+      description: Output of `acurl --version`
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS 15 / Ubuntu 24.04 / Windows 11
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The exact command you ran
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead?
+      description: Paste the output. `--format json` output is most useful.
+      render: text
+    validations:
+      required: true

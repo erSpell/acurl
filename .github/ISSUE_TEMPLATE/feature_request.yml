@@ -1,0 +1,19 @@
+name: Feature request
+description: Suggest an idea for acurl
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How should acurl behave? Example commands and output help.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
