@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"errors"
+	neturl "net/url"
 	"fmt"
 	"os"
 	"strings"
@@ -62,7 +63,10 @@ func init() {
 }
 
 func run(cmd *cobra.Command, args []string) error {
-	url := args[0]
+	url, err := normalizeURL(args[0])
+	if err != nil {
+		return err
+	}
 
 	all, err := profiles.Load(flagProfilesFile)
 	if err != nil {
@@ -119,6 +123,26 @@ func writeReport(report types.ComparisonResult) error {
 	}
 	fmt.Fprintf(os.Stderr, "Report written to %s\n", flagOutput)
 	return out.Close()
+}
+
+// normalizeURL adds https:// when no scheme is given and rejects anything
+// that is not an absolute http(s) URL.
+func normalizeURL(raw string) (string, error) {
+	raw = strings.TrimSpace(raw)
+	if !strings.Contains(raw, "://") {
+		raw = "https://" + raw
+	}
+	u, err := neturl.Parse(raw)
+	if err != nil {
+		return "", fmt.Errorf("invalid url: %w", err)
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return "", fmt.Errorf("unsupported scheme %q: only http and https are supported", u.Scheme)
+	}
+	if u.Host == "" {
+		return "", fmt.Errorf("invalid url %q: missing host", raw)
+	}
+	return u.String(), nil
 }
 
 // userAgent identifies acurl itself when fetching auxiliary files.
