@@ -124,3 +124,32 @@ func TestExtractTitle(t *testing.T) {
 		}
 	}
 }
+
+func TestFetchRecordsRedirectChain(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/a", func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, "/b", http.StatusMovedPermanently) })
+	mux.HandleFunc("/b", func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, "/c", http.StatusFound) })
+	mux.HandleFunc("/c", func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte("done")) })
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	res := New(Options{}).Fetch(context.Background(), srv.URL+"/a", types.Profile{Name: "x", UserAgent: "x"})
+	if res.Error != "" {
+		t.Fatal(res.Error)
+	}
+	want := []string{srv.URL + "/b", srv.URL + "/c"}
+	if len(res.RedirectChain) != 2 || res.RedirectChain[0] != want[0] || res.RedirectChain[1] != want[1] {
+		t.Errorf("chain = %v, want %v", res.RedirectChain, want)
+	}
+	if res.FinalURL != srv.URL+"/c" {
+		t.Errorf("final url = %q", res.FinalURL)
+	}
+}
+
+func TestFetchStopsRedirectLoops(t *testing.T) {
+	srv := newServer(t, func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, r.URL.Path, http.StatusFound) })
+	res := New(Options{}).Fetch(context.Background(), srv.URL+"/loop", types.Profile{Name: "x", UserAgent: "x"})
+	if res.Error == "" || len(res.RedirectChain) != maxRedirects {
+		t.Errorf("expected redirect error with %d hops, got err=%q hops=%d", maxRedirects, res.Error, len(res.RedirectChain))
+	}
+}

@@ -36,6 +36,7 @@ func New(opts Options) *Fetcher {
 	}
 	client := req.C().
 		SetTimeout(opts.Timeout).
+		SetRedirectPolicy(recordRedirects).
 		ImpersonateChrome()
 	return &Fetcher{client: client, opts: opts}
 }
@@ -46,8 +47,9 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 	result := types.FetchResult{Profile: profile.Name}
 	start := time.Now()
 
+	var chain []string
 	r := f.client.R().
-		SetContext(ctx).
+		SetContext(withRedirectChain(ctx, &chain)).
 		SetHeader("User-Agent", profile.UserAgent)
 	for k, v := range profile.Headers {
 		r.SetHeader(k, v)
@@ -57,6 +59,7 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 	}
 
 	resp, err := r.Get(url)
+	result.RedirectChain = chain
 	if err != nil {
 		result.SetDuration(time.Since(start))
 		result.Error = err.Error()
@@ -66,6 +69,9 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 
 	result.Success = true
 	result.StatusCode = resp.StatusCode
+	if resp.Request != nil && resp.Request.URL != nil {
+		result.FinalURL = resp.Request.URL.String()
+	}
 	if resp.StatusCode == http.StatusTooManyRequests {
 		result.RateLimited = true
 		result.RetryAfter = resp.Header.Get("Retry-After")

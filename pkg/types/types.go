@@ -17,6 +17,7 @@ type FetchResult struct {
 	Success          bool          `json:"success"`
 	StatusCode       int           `json:"status_code"`
 	RedirectChain    []string      `json:"redirect_chain,omitempty"`
+	FinalURL         string        `json:"final_url,omitempty"`
 	Duration         time.Duration `json:"-"`
 	DurationMs       int64         `json:"duration_ms"`
 	BodySize         int           `json:"body_size"`

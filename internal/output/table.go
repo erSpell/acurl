@@ -122,6 +122,9 @@ func details(r types.FetchResult) string {
 		}
 		parts = append(parts, p)
 	}
+	if n := len(r.RedirectChain); n > 0 {
+		parts = append(parts, fmt.Sprintf("%d redirect(s) -> %s", n, truncate(r.FinalURL, 40)))
+	}
 	if r.Error != "" {
 		parts = append(parts, "error: "+truncate(r.Error, 60))
 	}
