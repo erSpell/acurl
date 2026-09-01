@@ -69,8 +69,10 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 
 	result.Success = true
 	result.StatusCode = resp.StatusCode
-	if resp.Request != nil && resp.Request.URL != nil {
-		result.FinalURL = resp.Request.URL.String()
+	// resp.Request is the request acurl built; the underlying response
+	// carries the request that produced it, i.e. the last redirect hop.
+	if resp.Response != nil && resp.Response.Request != nil {
+		result.FinalURL = resp.Response.Request.URL.String()
 	}
 	if resp.StatusCode == http.StatusTooManyRequests {
 		result.RateLimited = true
