@@ -21,11 +21,12 @@ func withRedirectChain(ctx context.Context, chain *[]string) context.Context {
 // recordRedirects is a req redirect policy that appends every hop to the
 // chain stored in the request context.
 func recordRedirects(req *http.Request, via []*http.Request) error {
-	if len(via) >= maxRedirects {
-		return errTooManyRedirects
-	}
+	// Record the hop before enforcing the limit so loops show where they go.
 	if chain, ok := req.Context().Value(chainKey{}).(*[]string); ok {
 		*chain = append(*chain, req.URL.String())
+	}
+	if len(via) >= maxRedirects {
+		return errTooManyRedirects
 	}
 	return nil
 }
