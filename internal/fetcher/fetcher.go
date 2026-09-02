@@ -20,7 +20,12 @@ type Options struct {
 	Timeout time.Duration
 	// Headers are added to every request after the profile headers.
 	Headers map[string]string
+	// MaxBody caps how many body bytes are read and kept. Zero means DefaultMaxBody.
+	MaxBody int64
 }
+
+// DefaultMaxBody is the default response body cap (5 MiB).
+const DefaultMaxBody = 5 << 20
 
 // Fetcher fetches URLs with a browser-like TLS fingerprint so that the only
 // variable between profiles is what the profile itself sends.
@@ -33,6 +38,9 @@ type Fetcher struct {
 func New(opts Options) *Fetcher {
 	if opts.Timeout <= 0 {
 		opts.Timeout = 30 * time.Second
+	}
+	if opts.MaxBody <= 0 {
+		opts.MaxBody = DefaultMaxBody
 	}
 	client := req.C().
 		SetTimeout(opts.Timeout).
@@ -79,12 +87,18 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 		result.RetryAfter = resp.Header.Get("Retry-After")
 	}
 
-	body, err := io.ReadAll(resp.Body)
+	// Read one byte past the cap to know whether the body was truncated.
+	body, err := io.ReadAll(io.LimitReader(resp.Body, f.opts.MaxBody+1))
 	result.SetDuration(time.Since(start))
 	if err != nil {
 		result.Error = fmt.Sprintf("read body: %v", err)
 		return result
 	}
+	if int64(len(body)) > f.opts.MaxBody {
+		body = body[:f.opts.MaxBody]
+		result.Truncated = true
+	}
+	result.Body = body
 	result.BodySize = len(body)
 	result.ContentHash = contentHash(body)
 	result.Title = extractTitle(string(body))

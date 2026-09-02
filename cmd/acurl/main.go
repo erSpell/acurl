@@ -36,6 +36,7 @@ var (
 	flagNoRobots     bool
 	flagFormat       string
 	flagOutput       string
+	flagMaxBody      int64
 )
 
 var rootCmd = &cobra.Command{
@@ -61,6 +62,7 @@ func init() {
 	f.BoolVar(&flagNoRobots, "no-robots", false, "skip robots.txt checks")
 	f.StringVarP(&flagFormat, "format", "f", "table", "output format: table, json, markdown")
 	f.StringVarP(&flagOutput, "output", "o", "", "write the report to a file instead of stdout")
+	f.Int64Var(&flagMaxBody, "max-body", fetcher.DefaultMaxBody, "maximum response body bytes to read per profile")
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -82,7 +84,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	f := fetcher.New(fetcher.Options{Timeout: flagTimeout, Headers: headers})
+	f := fetcher.New(fetcher.Options{Timeout: flagTimeout, Headers: headers, MaxBody: flagMaxBody})
 	fmt.Fprintf(os.Stderr, "Fetching %s with %d profiles...\n", url, len(selected))
 	results := f.FetchAll(cmd.Context(), url, selected, flagConcurrency)
 	if !flagNoRobots {
