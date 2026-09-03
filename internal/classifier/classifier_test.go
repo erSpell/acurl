@@ -39,7 +39,7 @@ func TestSummarize(t *testing.T) {
 		{StatusCode: 200}, {StatusCode: 200}, {StatusCode: 403}, {StatusCode: 429, RateLimited: true},
 		{StatusCode: 403, BotChallenge: "x"}, {StatusCode: 200, RobotsDisallowed: true}, {Error: "boom"},
 	}
-	ClassifyAll(rs)
+	ClassifyAll(rs, DefaultCloakThreshold)
 	got := Summarize(rs)
 	want := types.Summary{Total: 7, Allowed: 2, Blocked: 1, RateLimited: 1, Challenged: 1, RobotsDisallow: 1, Errors: 1}
 	if got != want {

@@ -27,16 +27,17 @@ var (
 )
 
 var (
-	flagAgents       []string
-	flagTimeout      time.Duration
-	flagHeaders      []string
-	flagConcurrency  int
-	flagProfilesFile string
-	flagNoColor      bool
-	flagNoRobots     bool
-	flagFormat       string
-	flagOutput       string
-	flagMaxBody      int64
+	flagAgents         []string
+	flagTimeout        time.Duration
+	flagHeaders        []string
+	flagConcurrency    int
+	flagProfilesFile   string
+	flagNoColor        bool
+	flagNoRobots       bool
+	flagFormat         string
+	flagOutput         string
+	flagMaxBody        int64
+	flagCloakThreshold float64
 )
 
 var rootCmd = &cobra.Command{
@@ -62,6 +63,7 @@ func init() {
 	f.BoolVar(&flagNoRobots, "no-robots", false, "skip robots.txt checks")
 	f.StringVarP(&flagFormat, "format", "f", "table", "output format: table, json, markdown")
 	f.StringVarP(&flagOutput, "output", "o", "", "write the report to a file instead of stdout")
+	f.Float64Var(&flagCloakThreshold, "cloak-threshold", classifier.DefaultCloakThreshold, "visible-text similarity below which a response counts as cloaked (0 disables)")
 	f.Int64Var(&flagMaxBody, "max-body", fetcher.DefaultMaxBody, "maximum response body bytes to read per profile")
 }
 
@@ -91,7 +93,7 @@ func run(cmd *cobra.Command, args []string) error {
 		applyRobots(cmd.Context(), f, url, selected, results)
 	}
 
-	classifier.ClassifyAll(results)
+	classifier.ClassifyAll(results, flagCloakThreshold)
 	report := types.ComparisonResult{
 		URL:       url,
 		Timestamp: time.Now().UTC(),
