@@ -17,6 +17,7 @@ import (
 	"github.com/tragent-io/acurl/internal/output"
 	"github.com/tragent-io/acurl/internal/profiles"
 	"github.com/tragent-io/acurl/internal/robots"
+	"github.com/tragent-io/acurl/internal/textdiff"
 	"github.com/tragent-io/acurl/pkg/types"
 )
 
@@ -38,6 +39,7 @@ var (
 	flagOutput         string
 	flagMaxBody        int64
 	flagCloakThreshold float64
+	flagDiff           string
 )
 
 var rootCmd = &cobra.Command{
@@ -64,6 +66,7 @@ func init() {
 	f.StringVarP(&flagFormat, "format", "f", "table", "output format: table, json, markdown")
 	f.StringVarP(&flagOutput, "output", "o", "", "write the report to a file instead of stdout")
 	f.Float64Var(&flagCloakThreshold, "cloak-threshold", classifier.DefaultCloakThreshold, "visible-text similarity below which a response counts as cloaked (0 disables)")
+	f.StringVar(&flagDiff, "diff", "", "print a visible-text diff between the browser baseline and this profile")
 	f.Int64Var(&flagMaxBody, "max-body", fetcher.DefaultMaxBody, "maximum response body bytes to read per profile")
 }
 
@@ -103,10 +106,32 @@ func run(cmd *cobra.Command, args []string) error {
 	if err := writeReport(report); err != nil {
 		return err
 	}
+	if flagDiff != "" {
+		if err := printDiff(results, flagDiff); err != nil {
+			return err
+		}
+	}
 	if code := output.ExitCode(report.Summary); code != output.ExitOK {
 		return exitError(code)
 	}
 	return nil
+}
+
+// printDiff writes the visible-text diff between the baseline and the named
+// profile to stderr, so machine-readable stdout stays clean.
+func printDiff(results []types.FetchResult, name string) error {
+	b := classifier.BaselineIndex(results)
+	if b < 0 {
+		return fmt.Errorf("--diff needs the browser baseline profile in the run")
+	}
+	for _, r := range results {
+		if strings.EqualFold(r.Profile, name) {
+			lines := textdiff.Lines(textdiff.VisibleText(results[b].Body), textdiff.VisibleText(r.Body), 3)
+			fmt.Fprintln(os.Stderr)
+			return output.WriteDiff(os.Stderr, results[b].Profile, r.Profile, lines, !flagNoColor)
+		}
+	}
+	return fmt.Errorf("--diff: profile %q was not part of this run", name)
 }
 
 // exitError carries a non-zero exit code without an error message.

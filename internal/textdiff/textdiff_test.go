@@ -47,3 +47,21 @@ func TestSimilarity(t *testing.T) {
 		})
 	}
 }
+
+func TestLines(t *testing.T) {
+	a := "title\nline 1\nline 2\nline 3\nline 4\nprice $49\nfooter"
+	b := "title\nline 1\nline 2\nline 3\nline 4\nprice $59\nfooter"
+	got := Lines(a, b, 1)
+	want := []Line{{Op: Skip}, {Equal, "line 4"}, {Delete, "price $49"}, {Insert, "price $59"}, {Equal, "footer"}}
+	if len(got) != len(want) {
+		t.Fatalf("Lines = %+v, want %+v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("line %d = %+v, want %+v", i, got[i], want[i])
+		}
+	}
+	if !Changed(got) || Changed(Lines(a, a, 1)) {
+		t.Error("Changed() misreports")
+	}
+}
