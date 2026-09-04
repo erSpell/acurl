@@ -56,3 +56,52 @@ func TestBaselineIndex(t *testing.T) {
 		t.Errorf("BaselineIndex without browser = %d, want -1", i)
 	}
 }
+
+func page(text string) []byte {
+	return []byte("<html><body><main><p>" + text + "</p></main></body></html>")
+}
+
+const article = "Our red running shoes are made from recycled materials and ship free to every country we serve. Sizes run true to fit."
+
+func TestClassifyAllCloaking(t *testing.T) {
+	tests := []struct {
+		name      string
+		agentBody []byte
+		status    int
+		threshold float64
+		want      string
+	}{
+		{"same content", page(article), 200, DefaultCloakThreshold, Allowed},
+		{"tiny change", page(article + " Price 49."), 200, DefaultCloakThreshold, Allowed},
+		{"different content", page("Bots get a stripped down page without products or prices at all, sorry."), 200, DefaultCloakThreshold, Cloaked},
+		{"empty shell", []byte("<html><body><div id=root></div></body></html>"), 200, DefaultCloakThreshold, Cloaked},
+		{"blocked is not cloaked", page("Access denied"), 403, DefaultCloakThreshold, Blocked},
+		{"detection disabled", page("totally different words here for the bot"), 200, 0, Allowed},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rs := []types.FetchResult{
+				{Profile: "Chrome (Browser)", StatusCode: 200, Body: page(article)},
+				{Profile: "GPTBot", StatusCode: tt.status, Body: tt.agentBody},
+			}
+			ClassifyAll(rs, tt.threshold)
+			if rs[0].Classification != Allowed {
+				t.Fatalf("baseline classified %q", rs[0].Classification)
+			}
+			if rs[1].Classification != tt.want {
+				t.Errorf("agent classified %q, want %q", rs[1].Classification, tt.want)
+			}
+		})
+	}
+}
+
+func TestClassifyAllSkipsCloakingWhenBaselineFails(t *testing.T) {
+	rs := []types.FetchResult{
+		{Profile: "Chrome (Browser)", StatusCode: 403, Body: page("denied")},
+		{Profile: "GPTBot", StatusCode: 200, Body: page(article)},
+	}
+	ClassifyAll(rs, DefaultCloakThreshold)
+	if rs[1].Classification != Allowed || rs[1].Similarity != nil {
+		t.Errorf("got %q similarity=%v, want allowed without similarity", rs[1].Classification, rs[1].Similarity)
+	}
+}
