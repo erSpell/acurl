@@ -4,8 +4,13 @@ package classifier
 import (
 	"strings"
 
+	"github.com/tragent-io/acurl/internal/textdiff"
 	"github.com/tragent-io/acurl/pkg/types"
 )
+
+// DefaultCloakThreshold is the visible-text similarity below which an
+// allowed response is reported as cloaked.
+const DefaultCloakThreshold = 0.5
 
 // Classifications, from most to least severe.
 const (
@@ -36,10 +41,30 @@ func Classify(r types.FetchResult) string {
 	}
 }
 
-// ClassifyAll sets Classification on every result in place.
-func ClassifyAll(results []types.FetchResult) {
+// ClassifyAll sets Classification on every result in place. When a browser
+// baseline was fetched successfully, every other allowed result is compared
+// with it and marked cloaked if its visible text similarity is below
+// threshold. A threshold <= 0 disables cloaking detection.
+func ClassifyAll(results []types.FetchResult, threshold float64) {
 	for i := range results {
 		results[i].Classification = Classify(results[i])
+	}
+
+	b := BaselineIndex(results)
+	if threshold <= 0 || b < 0 || results[b].Classification != Allowed || len(results[b].Body) == 0 {
+		return
+	}
+	baseText := textdiff.VisibleText(results[b].Body)
+	for i := range results {
+		r := &results[i]
+		if i == b || (r.Classification != Allowed && r.Classification != RobotsDisallow) {
+			continue
+		}
+		sim := textdiff.Similarity(baseText, textdiff.VisibleText(r.Body))
+		r.Similarity = &sim
+		if sim < threshold {
+			r.Classification = Cloaked
+		}
 	}
 }
 

@@ -153,3 +153,13 @@ func TestFetchStopsRedirectLoops(t *testing.T) {
 		t.Errorf("expected redirect error with %d hops, got err=%q hops=%d", maxRedirects, res.Error, len(res.RedirectChain))
 	}
 }
+
+func TestFetchTruncatesLargeBodies(t *testing.T) {
+	srv := newServer(t, func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(strings.Repeat("x", 5000)))
+	})
+	res := New(Options{MaxBody: 1000}).Fetch(context.Background(), srv.URL, types.Profile{Name: "x", UserAgent: "x"})
+	if !res.Truncated || res.BodySize != 1000 || len(res.Body) != 1000 {
+		t.Errorf("truncated=%v size=%d body=%d", res.Truncated, res.BodySize, len(res.Body))
+	}
+}
