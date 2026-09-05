@@ -163,3 +163,28 @@ func TestFetchTruncatesLargeBodies(t *testing.T) {
 		t.Errorf("truncated=%v size=%d body=%d", res.Truncated, res.BodySize, len(res.Body))
 	}
 }
+
+func TestFetchRetriesGatewayErrorsOnly(t *testing.T) {
+	var calls int32
+	srv := newServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if atomic.AddInt32(&calls, 1) < 3 {
+			w.WriteHeader(http.StatusBadGateway)
+			return
+		}
+		_, _ = w.Write([]byte("ok"))
+	})
+	res := New(Options{Retries: 3}).Fetch(context.Background(), srv.URL, types.Profile{Name: "x", UserAgent: "x"})
+	if res.StatusCode != http.StatusOK || calls != 3 {
+		t.Errorf("status=%d calls=%d, want 200 after 3 calls", res.StatusCode, calls)
+	}
+
+	calls = 0
+	forbidden := newServer(t, func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&calls, 1)
+		w.WriteHeader(http.StatusForbidden)
+	})
+	res = New(Options{Retries: 3}).Fetch(context.Background(), forbidden.URL, types.Profile{Name: "x", UserAgent: "x"})
+	if res.StatusCode != http.StatusForbidden || calls != 1 {
+		t.Errorf("403 must not be retried: status=%d calls=%d", res.StatusCode, calls)
+	}
+}

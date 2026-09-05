@@ -22,6 +22,10 @@ type Options struct {
 	Headers map[string]string
 	// MaxBody caps how many body bytes are read and kept. Zero means DefaultMaxBody.
 	MaxBody int64
+	// Retries is how many times a request is retried after a network error
+	// or a 502/504 gateway error. Other statuses are never retried because
+	// they are exactly what acurl reports on.
+	Retries int
 }
 
 // DefaultMaxBody is the default response body cap (5 MiB).
@@ -46,7 +50,20 @@ func New(opts Options) *Fetcher {
 		SetTimeout(opts.Timeout).
 		SetRedirectPolicy(recordRedirects).
 		ImpersonateChrome()
+	if opts.Retries > 0 {
+		client.
+			SetCommonRetryCount(opts.Retries).
+			SetCommonRetryBackoffInterval(250*time.Millisecond, 4*time.Second).
+			SetCommonRetryCondition(shouldRetry)
+	}
 	return &Fetcher{client: client, opts: opts}
+}
+
+func shouldRetry(resp *req.Response, err error) bool {
+	if err != nil {
+		return true
+	}
+	return resp.StatusCode == http.StatusBadGateway || resp.StatusCode == http.StatusGatewayTimeout
 }
 
 // Fetch retrieves url using profile. Network failures are reported in the
