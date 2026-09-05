@@ -26,6 +26,12 @@ type Options struct {
 	// or a 502/504 gateway error. Other statuses are never retried because
 	// they are exactly what acurl reports on.
 	Retries int
+	// Proxy is an http, https or socks5 proxy URL.
+	Proxy string
+	// Insecure skips TLS certificate verification.
+	Insecure bool
+	// HTTPVersion forces "1.1" or "2". Empty negotiates as a browser would.
+	HTTPVersion string
 }
 
 // DefaultMaxBody is the default response body cap (5 MiB).
@@ -39,7 +45,7 @@ type Fetcher struct {
 }
 
 // New returns a Fetcher configured with opts.
-func New(opts Options) *Fetcher {
+func New(opts Options) (*Fetcher, error) {
 	if opts.Timeout <= 0 {
 		opts.Timeout = 30 * time.Second
 	}
@@ -56,7 +62,22 @@ func New(opts Options) *Fetcher {
 			SetCommonRetryBackoffInterval(250*time.Millisecond, 4*time.Second).
 			SetCommonRetryCondition(shouldRetry)
 	}
-	return &Fetcher{client: client, opts: opts}
+	if opts.Proxy != "" {
+		client.SetProxyURL(opts.Proxy)
+	}
+	if opts.Insecure {
+		client.EnableInsecureSkipVerify()
+	}
+	switch opts.HTTPVersion {
+	case "":
+	case "1.1", "1":
+		client.EnableForceHTTP1()
+	case "2":
+		client.EnableForceHTTP2()
+	default:
+		return nil, fmt.Errorf("unsupported HTTP version %q (use 1.1 or 2)", opts.HTTPVersion)
+	}
+	return &Fetcher{client: client, opts: opts}, nil
 }
 
 func shouldRetry(resp *req.Response, err error) bool {

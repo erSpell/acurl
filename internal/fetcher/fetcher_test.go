@@ -19,6 +19,33 @@ func newServer(t *testing.T, h http.HandlerFunc) *httptest.Server {
 	return srv
 }
 
+func mustNew(t *testing.T, opts Options) *Fetcher {
+	t.Helper()
+	f, err := New(opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return f
+}
+
+func TestNewRejectsUnknownHTTPVersion(t *testing.T) {
+	if _, err := New(Options{HTTPVersion: "3"}); err == nil {
+		t.Error("expected error for HTTP/3")
+	}
+}
+
+func TestFetchThroughProxy(t *testing.T) {
+	var proxied int32
+	proxy := newServer(t, func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&proxied, 1)
+		_, _ = w.Write([]byte("via proxy"))
+	})
+	res := mustNew(t, Options{Proxy: proxy.URL}).Fetch(context.Background(), "http://target.invalid/", types.Profile{Name: "x", UserAgent: "x"})
+	if res.Error != "" || proxied != 1 {
+		t.Errorf("proxy not used: err=%q proxied=%d", res.Error, proxied)
+	}
+}
+
 func TestFetchSendsProfileHeaders(t *testing.T) {
 	var gotUA, gotCustom, gotExtra string
 	srv := newServer(t, func(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +55,7 @@ func TestFetchSendsProfileHeaders(t *testing.T) {
 		_, _ = w.Write([]byte("<html><head><title> Hello &amp; welcome </title></head></html>"))
 	})
 
-	f := New(Options{Timeout: 5 * time.Second, Headers: map[string]string{"X-Extra": "yes"}})
+	f := mustNew(t, Options{Timeout: 5 * time.Second, Headers: map[string]string{"X-Extra": "yes"}})
 	p := types.Profile{Name: "Test", UserAgent: "TestBot/1.0", Headers: map[string]string{"X-Profile": "p"}}
 	res := f.Fetch(context.Background(), srv.URL, p)
 
@@ -54,14 +81,14 @@ func TestFetchRateLimited(t *testing.T) {
 		w.Header().Set("Retry-After", "120")
 		w.WriteHeader(http.StatusTooManyRequests)
 	})
-	res := New(Options{}).Fetch(context.Background(), srv.URL, types.Profile{Name: "x", UserAgent: "x"})
+	res := mustNew(t, Options{}).Fetch(context.Background(), srv.URL, types.Profile{Name: "x", UserAgent: "x"})
 	if !res.RateLimited || res.RetryAfter != "120" {
 		t.Errorf("rate limit not detected: %+v", res)
 	}
 }
 
 func TestFetchNetworkError(t *testing.T) {
-	res := New(Options{Timeout: time.Second}).Fetch(context.Background(), "http://127.0.0.1:1", types.Profile{Name: "x", UserAgent: "x"})
+	res := mustNew(t, Options{Timeout: time.Second}).Fetch(context.Background(), "http://127.0.0.1:1", types.Profile{Name: "x", UserAgent: "x"})
 	if res.Error == "" || res.Success {
 		t.Errorf("expected error, got %+v", res)
 	}
@@ -74,7 +101,7 @@ func TestFetchTimeout(t *testing.T) {
 		case <-r.Context().Done():
 		}
 	})
-	res := New(Options{Timeout: 100 * time.Millisecond}).Fetch(context.Background(), srv.URL, types.Profile{Name: "x", UserAgent: "x"})
+	res := mustNew(t, Options{Timeout: 100 * time.Millisecond}).Fetch(context.Background(), srv.URL, types.Profile{Name: "x", UserAgent: "x"})
 	if res.Error == "" {
 		t.Error("expected timeout error")
 	}
@@ -99,7 +126,7 @@ func TestFetchAllKeepsOrderAndLimitsConcurrency(t *testing.T) {
 	for _, n := range []string{"a", "b", "c", "d", "e", "f"} {
 		ps = append(ps, types.Profile{Name: n, UserAgent: "ua-" + n})
 	}
-	results := New(Options{}).FetchAll(context.Background(), srv.URL, ps, 2)
+	results := mustNew(t, Options{}).FetchAll(context.Background(), srv.URL, ps, 2)
 
 	for i, r := range results {
 		if r.Profile != ps[i].Name {
@@ -133,7 +160,7 @@ func TestFetchRecordsRedirectChain(t *testing.T) {
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
 
-	res := New(Options{}).Fetch(context.Background(), srv.URL+"/a", types.Profile{Name: "x", UserAgent: "x"})
+	res := mustNew(t, Options{}).Fetch(context.Background(), srv.URL+"/a", types.Profile{Name: "x", UserAgent: "x"})
 	if res.Error != "" {
 		t.Fatal(res.Error)
 	}
@@ -148,7 +175,7 @@ func TestFetchRecordsRedirectChain(t *testing.T) {
 
 func TestFetchStopsRedirectLoops(t *testing.T) {
 	srv := newServer(t, func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, r.URL.Path, http.StatusFound) })
-	res := New(Options{}).Fetch(context.Background(), srv.URL+"/loop", types.Profile{Name: "x", UserAgent: "x"})
+	res := mustNew(t, Options{}).Fetch(context.Background(), srv.URL+"/loop", types.Profile{Name: "x", UserAgent: "x"})
 	if res.Error == "" || len(res.RedirectChain) != maxRedirects {
 		t.Errorf("expected redirect error with %d hops, got err=%q hops=%d", maxRedirects, res.Error, len(res.RedirectChain))
 	}
@@ -158,7 +185,7 @@ func TestFetchTruncatesLargeBodies(t *testing.T) {
 	srv := newServer(t, func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(strings.Repeat("x", 5000)))
 	})
-	res := New(Options{MaxBody: 1000}).Fetch(context.Background(), srv.URL, types.Profile{Name: "x", UserAgent: "x"})
+	res := mustNew(t, Options{MaxBody: 1000}).Fetch(context.Background(), srv.URL, types.Profile{Name: "x", UserAgent: "x"})
 	if !res.Truncated || res.BodySize != 1000 || len(res.Body) != 1000 {
 		t.Errorf("truncated=%v size=%d body=%d", res.Truncated, res.BodySize, len(res.Body))
 	}
@@ -173,7 +200,7 @@ func TestFetchRetriesGatewayErrorsOnly(t *testing.T) {
 		}
 		_, _ = w.Write([]byte("ok"))
 	})
-	res := New(Options{Retries: 3}).Fetch(context.Background(), srv.URL, types.Profile{Name: "x", UserAgent: "x"})
+	res := mustNew(t, Options{Retries: 3}).Fetch(context.Background(), srv.URL, types.Profile{Name: "x", UserAgent: "x"})
 	if res.StatusCode != http.StatusOK || calls != 3 {
 		t.Errorf("status=%d calls=%d, want 200 after 3 calls", res.StatusCode, calls)
 	}
@@ -183,7 +210,7 @@ func TestFetchRetriesGatewayErrorsOnly(t *testing.T) {
 		atomic.AddInt32(&calls, 1)
 		w.WriteHeader(http.StatusForbidden)
 	})
-	res = New(Options{Retries: 3}).Fetch(context.Background(), forbidden.URL, types.Profile{Name: "x", UserAgent: "x"})
+	res = mustNew(t, Options{Retries: 3}).Fetch(context.Background(), forbidden.URL, types.Profile{Name: "x", UserAgent: "x"})
 	if res.StatusCode != http.StatusForbidden || calls != 1 {
 		t.Errorf("403 must not be retried: status=%d calls=%d", res.StatusCode, calls)
 	}

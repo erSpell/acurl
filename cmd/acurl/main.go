@@ -41,6 +41,9 @@ var (
 	flagCloakThreshold float64
 	flagDiff           string
 	flagRetries        int
+	flagProxy          string
+	flagInsecure       bool
+	flagHTTP           string
 )
 
 var rootCmd = &cobra.Command{
@@ -69,6 +72,9 @@ func init() {
 	f.Float64Var(&flagCloakThreshold, "cloak-threshold", classifier.DefaultCloakThreshold, "visible-text similarity below which a response counts as cloaked (0 disables)")
 	f.StringVar(&flagDiff, "diff", "", "print a visible-text diff between the browser baseline and this profile")
 	f.IntVar(&flagRetries, "retries", 1, "retries after network or gateway errors (exponential backoff with jitter)")
+	f.StringVar(&flagProxy, "proxy", "", "proxy URL (http://, https:// or socks5://)")
+	f.BoolVarP(&flagInsecure, "insecure", "k", false, "skip TLS certificate verification")
+	f.StringVar(&flagHTTP, "http", "", `force HTTP version: "1.1" or "2"`)
 	f.Int64Var(&flagMaxBody, "max-body", fetcher.DefaultMaxBody, "maximum response body bytes to read per profile")
 }
 
@@ -91,7 +97,18 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	f := fetcher.New(fetcher.Options{Timeout: flagTimeout, Headers: headers, MaxBody: flagMaxBody, Retries: flagRetries})
+	f, err := fetcher.New(fetcher.Options{
+		Timeout:     flagTimeout,
+		Headers:     headers,
+		MaxBody:     flagMaxBody,
+		Retries:     flagRetries,
+		Proxy:       flagProxy,
+		Insecure:    flagInsecure,
+		HTTPVersion: flagHTTP,
+	})
+	if err != nil {
+		return err
+	}
 	fmt.Fprintf(os.Stderr, "Fetching %s with %d profiles...\n", url, len(selected))
 	results := f.FetchAll(cmd.Context(), url, selected, flagConcurrency)
 	if !flagNoRobots {
