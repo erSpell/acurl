@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	neturl "net/url"
 	"os"
 	"strings"
@@ -40,6 +41,12 @@ var (
 	flagMaxBody        int64
 	flagCloakThreshold float64
 	flagDiff           string
+	flagRetries        int
+	flagProxy          string
+	flagInsecure       bool
+	flagHTTP           string
+	flagMethod         string
+	flagHead           bool
 )
 
 var rootCmd = &cobra.Command{
@@ -67,6 +74,12 @@ func init() {
 	f.StringVarP(&flagOutput, "output", "o", "", "write the report to a file instead of stdout")
 	f.Float64Var(&flagCloakThreshold, "cloak-threshold", classifier.DefaultCloakThreshold, "visible-text similarity below which a response counts as cloaked (0 disables)")
 	f.StringVar(&flagDiff, "diff", "", "print a visible-text diff between the browser baseline and this profile")
+	f.IntVar(&flagRetries, "retries", 1, "retries after network or gateway errors (exponential backoff with jitter)")
+	f.StringVar(&flagProxy, "proxy", "", "proxy URL (http://, https:// or socks5://)")
+	f.BoolVarP(&flagInsecure, "insecure", "k", false, "skip TLS certificate verification")
+	f.StringVar(&flagHTTP, "http", "", `force HTTP version: "1.1" or "2"`)
+	f.StringVarP(&flagMethod, "request", "X", "GET", "HTTP method to use")
+	f.BoolVarP(&flagHead, "head", "I", false, "send HEAD requests (status and headers only)")
 	f.Int64Var(&flagMaxBody, "max-body", fetcher.DefaultMaxBody, "maximum response body bytes to read per profile")
 }
 
@@ -89,7 +102,19 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	f := fetcher.New(fetcher.Options{Timeout: flagTimeout, Headers: headers, MaxBody: flagMaxBody})
+	f, err := fetcher.New(fetcher.Options{
+		Timeout:     flagTimeout,
+		Headers:     headers,
+		MaxBody:     flagMaxBody,
+		Retries:     flagRetries,
+		Proxy:       flagProxy,
+		Insecure:    flagInsecure,
+		HTTPVersion: flagHTTP,
+		Method:      method(),
+	})
+	if err != nil {
+		return err
+	}
 	fmt.Fprintf(os.Stderr, "Fetching %s with %d profiles...\n", url, len(selected))
 	results := f.FetchAll(cmd.Context(), url, selected, flagConcurrency)
 	if !flagNoRobots {
@@ -173,6 +198,13 @@ func normalizeURL(raw string) (string, error) {
 		return "", fmt.Errorf("invalid url %q: missing host", raw)
 	}
 	return u.String(), nil
+}
+
+func method() string {
+	if flagHead {
+		return http.MethodHead
+	}
+	return flagMethod
 }
 
 // userAgent identifies acurl itself when fetching auxiliary files.

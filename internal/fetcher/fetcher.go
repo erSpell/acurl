@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/imroc/req/v3"
@@ -22,6 +23,18 @@ type Options struct {
 	Headers map[string]string
 	// MaxBody caps how many body bytes are read and kept. Zero means DefaultMaxBody.
 	MaxBody int64
+	// Retries is how many times a request is retried after a network error
+	// or a 502/504 gateway error. Other statuses are never retried because
+	// they are exactly what acurl reports on.
+	Retries int
+	// Proxy is an http, https or socks5 proxy URL.
+	Proxy string
+	// Insecure skips TLS certificate verification.
+	Insecure bool
+	// HTTPVersion forces "1.1" or "2". Empty negotiates as a browser would.
+	HTTPVersion string
+	// Method is the HTTP method for page requests. Empty means GET.
+	Method string
 }
 
 // DefaultMaxBody is the default response body cap (5 MiB).
@@ -35,18 +48,50 @@ type Fetcher struct {
 }
 
 // New returns a Fetcher configured with opts.
-func New(opts Options) *Fetcher {
+func New(opts Options) (*Fetcher, error) {
 	if opts.Timeout <= 0 {
 		opts.Timeout = 30 * time.Second
 	}
 	if opts.MaxBody <= 0 {
 		opts.MaxBody = DefaultMaxBody
 	}
+	opts.Method = strings.ToUpper(opts.Method)
+	if opts.Method == "" {
+		opts.Method = http.MethodGet
+	}
 	client := req.C().
 		SetTimeout(opts.Timeout).
 		SetRedirectPolicy(recordRedirects).
 		ImpersonateChrome()
-	return &Fetcher{client: client, opts: opts}
+	if opts.Retries > 0 {
+		client.
+			SetCommonRetryCount(opts.Retries).
+			SetCommonRetryBackoffInterval(250*time.Millisecond, 4*time.Second).
+			SetCommonRetryCondition(shouldRetry)
+	}
+	if opts.Proxy != "" {
+		client.SetProxyURL(opts.Proxy)
+	}
+	if opts.Insecure {
+		client.EnableInsecureSkipVerify()
+	}
+	switch opts.HTTPVersion {
+	case "":
+	case "1.1", "1":
+		client.EnableForceHTTP1()
+	case "2":
+		client.EnableForceHTTP2()
+	default:
+		return nil, fmt.Errorf("unsupported HTTP version %q (use 1.1 or 2)", opts.HTTPVersion)
+	}
+	return &Fetcher{client: client, opts: opts}, nil
+}
+
+func shouldRetry(resp *req.Response, err error) bool {
+	if err != nil {
+		return true
+	}
+	return resp.StatusCode == http.StatusBadGateway || resp.StatusCode == http.StatusGatewayTimeout
 }
 
 // Fetch retrieves url using profile. Network failures are reported in the
@@ -66,7 +111,7 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 		r.SetHeader(k, v)
 	}
 
-	resp, err := r.Get(url)
+	resp, err := r.Send(f.opts.Method, url)
 	result.RedirectChain = chain
 	if err != nil {
 		result.SetDuration(time.Since(start))
