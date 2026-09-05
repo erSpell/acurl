@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/imroc/req/v3"
@@ -32,6 +33,8 @@ type Options struct {
 	Insecure bool
 	// HTTPVersion forces "1.1" or "2". Empty negotiates as a browser would.
 	HTTPVersion string
+	// Method is the HTTP method for page requests. Empty means GET.
+	Method string
 }
 
 // DefaultMaxBody is the default response body cap (5 MiB).
@@ -51,6 +54,10 @@ func New(opts Options) (*Fetcher, error) {
 	}
 	if opts.MaxBody <= 0 {
 		opts.MaxBody = DefaultMaxBody
+	}
+	opts.Method = strings.ToUpper(opts.Method)
+	if opts.Method == "" {
+		opts.Method = http.MethodGet
 	}
 	client := req.C().
 		SetTimeout(opts.Timeout).
@@ -104,7 +111,7 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 		r.SetHeader(k, v)
 	}
 
-	resp, err := r.Get(url)
+	resp, err := r.Send(f.opts.Method, url)
 	result.RedirectChain = chain
 	if err != nil {
 		result.SetDuration(time.Since(start))

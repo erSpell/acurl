@@ -215,3 +215,12 @@ func TestFetchRetriesGatewayErrorsOnly(t *testing.T) {
 		t.Errorf("403 must not be retried: status=%d calls=%d", res.StatusCode, calls)
 	}
 }
+
+func TestFetchUsesConfiguredMethod(t *testing.T) {
+	var got string
+	srv := newServer(t, func(w http.ResponseWriter, r *http.Request) { got = r.Method })
+	res := mustNew(t, Options{Method: "head"}).Fetch(context.Background(), srv.URL, types.Profile{Name: "x", UserAgent: "x"})
+	if got != http.MethodHead || res.StatusCode != http.StatusOK {
+		t.Errorf("method = %q status = %d", got, res.StatusCode)
+	}
+}

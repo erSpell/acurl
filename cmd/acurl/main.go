@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	neturl "net/url"
 	"os"
 	"strings"
@@ -44,6 +45,8 @@ var (
 	flagProxy          string
 	flagInsecure       bool
 	flagHTTP           string
+	flagMethod         string
+	flagHead           bool
 )
 
 var rootCmd = &cobra.Command{
@@ -75,6 +78,8 @@ func init() {
 	f.StringVar(&flagProxy, "proxy", "", "proxy URL (http://, https:// or socks5://)")
 	f.BoolVarP(&flagInsecure, "insecure", "k", false, "skip TLS certificate verification")
 	f.StringVar(&flagHTTP, "http", "", `force HTTP version: "1.1" or "2"`)
+	f.StringVarP(&flagMethod, "request", "X", "GET", "HTTP method to use")
+	f.BoolVarP(&flagHead, "head", "I", false, "send HEAD requests (status and headers only)")
 	f.Int64Var(&flagMaxBody, "max-body", fetcher.DefaultMaxBody, "maximum response body bytes to read per profile")
 }
 
@@ -105,6 +110,7 @@ func run(cmd *cobra.Command, args []string) error {
 		Proxy:       flagProxy,
 		Insecure:    flagInsecure,
 		HTTPVersion: flagHTTP,
+		Method:      method(),
 	})
 	if err != nil {
 		return err
@@ -192,6 +198,13 @@ func normalizeURL(raw string) (string, error) {
 		return "", fmt.Errorf("invalid url %q: missing host", raw)
 	}
 	return u.String(), nil
+}
+
+func method() string {
+	if flagHead {
+		return http.MethodHead
+	}
+	return flagMethod
 }
 
 // userAgent identifies acurl itself when fetching auxiliary files.
