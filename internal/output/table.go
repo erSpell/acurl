@@ -120,7 +120,10 @@ func details(r types.FetchResult) string {
 	}
 	if r.RateLimited {
 		p := "rate limited"
-		if r.RetryAfter != "" {
+		switch {
+		case r.RetryAfterSeconds > 0:
+			p += fmt.Sprintf(" (retry in %s)", time.Duration(r.RetryAfterSeconds)*time.Second)
+		case r.RetryAfter != "":
 			p += " (retry after " + r.RetryAfter + ")"
 		}
 		parts = append(parts, p)

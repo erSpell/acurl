@@ -16,26 +16,27 @@ type Profile struct {
 
 // FetchResult is the outcome of fetching a URL with one profile.
 type FetchResult struct {
-	Profile          string        `json:"profile"`
-	Browser          bool          `json:"browser,omitempty"`
-	Success          bool          `json:"success"`
-	StatusCode       int           `json:"status_code"`
-	RedirectChain    []string      `json:"redirect_chain,omitempty"`
-	FinalURL         string        `json:"final_url,omitempty"`
-	Duration         time.Duration `json:"-"`
-	DurationMs       int64         `json:"duration_ms"`
-	BodySize         int           `json:"body_size"`
-	Truncated        bool          `json:"truncated,omitempty"`
-	Title            string        `json:"title,omitempty"`
-	BotChallenge     string        `json:"bot_challenge,omitempty"`
-	RateLimited      bool          `json:"rate_limited"`
-	RetryAfter       string        `json:"retry_after,omitempty"`
-	RobotsDisallowed bool          `json:"robots_disallowed"`
-	RobotsError      string        `json:"robots_error,omitempty"`
-	Similarity       *float64      `json:"similarity,omitempty"` // visible-text similarity to the browser baseline
-	Classification   string        `json:"classification"`
-	Error            string        `json:"error,omitempty"`
-	ContentHash      string        `json:"content_hash,omitempty"`
+	Profile           string        `json:"profile"`
+	Browser           bool          `json:"browser,omitempty"`
+	Success           bool          `json:"success"`
+	StatusCode        int           `json:"status_code"`
+	RedirectChain     []string      `json:"redirect_chain,omitempty"`
+	FinalURL          string        `json:"final_url,omitempty"`
+	Duration          time.Duration `json:"-"`
+	DurationMs        int64         `json:"duration_ms"`
+	BodySize          int           `json:"body_size"`
+	Truncated         bool          `json:"truncated,omitempty"`
+	Title             string        `json:"title,omitempty"`
+	BotChallenge      string        `json:"bot_challenge,omitempty"`
+	RateLimited       bool          `json:"rate_limited"`
+	RetryAfter        string        `json:"retry_after,omitempty"`
+	RetryAfterSeconds int           `json:"retry_after_seconds,omitempty"`
+	RobotsDisallowed  bool          `json:"robots_disallowed"`
+	RobotsError       string        `json:"robots_error,omitempty"`
+	Similarity        *float64      `json:"similarity,omitempty"` // visible-text similarity to the browser baseline
+	Classification    string        `json:"classification"`
+	Error             string        `json:"error,omitempty"`
+	ContentHash       string        `json:"content_hash,omitempty"`
 
 	// Body is kept in memory for comparisons and never serialised.
 	Body []byte `json:"-"`
