@@ -82,7 +82,7 @@ func TestFetchRateLimited(t *testing.T) {
 		w.WriteHeader(http.StatusTooManyRequests)
 	})
 	res := mustNew(t, Options{}).Fetch(context.Background(), srv.URL, types.Profile{Name: "x", UserAgent: "x"})
-	if !res.RateLimited || res.RetryAfter != "120" {
+	if !res.RateLimited || res.RetryAfter != "120" || res.RetryAfterSeconds != 120 {
 		t.Errorf("rate limit not detected: %+v", res)
 	}
 }

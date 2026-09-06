@@ -160,6 +160,9 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 	if resp.StatusCode == http.StatusTooManyRequests {
 		result.RateLimited = true
 		result.RetryAfter = resp.Header.Get("Retry-After")
+		if d, ok := parseRetryAfter(result.RetryAfter, time.Now()); ok {
+			result.RetryAfterSeconds = int(d.Seconds())
+		}
 	}
 
 	// Read one byte past the cap to know whether the body was truncated.
