@@ -224,3 +224,34 @@ func TestFetchUsesConfiguredMethod(t *testing.T) {
 		t.Errorf("method = %q status = %d", got, res.StatusCode)
 	}
 }
+
+func TestBotProfilesDoNotSendBrowserHeaders(t *testing.T) {
+	var hdr http.Header
+	srv := newServer(t, func(w http.ResponseWriter, r *http.Request) { hdr = r.Header.Clone() })
+	f := mustNew(t, Options{})
+
+	f.Fetch(context.Background(), srv.URL, types.Profile{Name: "GPTBot", UserAgent: "GPTBot/1.2"})
+	for _, h := range []string{"Sec-Ch-Ua", "Sec-Fetch-Mode", "Upgrade-Insecure-Requests"} {
+		if hdr.Get(h) != "" {
+			t.Errorf("bot profile sent browser header %s: %q", h, hdr.Get(h))
+		}
+	}
+	if strings.Contains(hdr.Get("Accept-Language"), "zh-CN") {
+		t.Errorf("bot profile leaked impersonation Accept-Language %q", hdr.Get("Accept-Language"))
+	}
+	if hdr.Get("User-Agent") != "GPTBot/1.2" {
+		t.Errorf("user agent = %q", hdr.Get("User-Agent"))
+	}
+
+	// httptest serves HTTP/1.1, where client hints still arrive as headers.
+	f.Fetch(context.Background(), srv.URL, types.Profile{Name: "Chrome", UserAgent: "Mozilla/5.0 Chrome", Browser: true})
+	if hdr.Get("Sec-Ch-Ua") == "" {
+		t.Error("browser profile should send Chrome client hints")
+	}
+}
+
+func TestNewRejectsUnknownBotTLS(t *testing.T) {
+	if _, err := New(Options{BotTLS: "firefox"}); err == nil {
+		t.Error("expected error for unknown bot TLS fingerprint")
+	}
+}

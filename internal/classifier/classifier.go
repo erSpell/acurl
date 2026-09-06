@@ -69,7 +69,13 @@ func ClassifyAll(results []types.FetchResult, threshold float64) {
 }
 
 // BaselineIndex returns the index of the browser baseline result, or -1.
+// Profiles marked browser win; otherwise a profile named like Chrome is used.
 func BaselineIndex(results []types.FetchResult) int {
+	for i, r := range results {
+		if r.Browser {
+			return i
+		}
+	}
 	for i, r := range results {
 		if strings.Contains(strings.ToLower(r.Profile), "chrome") {
 			return i
