@@ -9,11 +9,15 @@ type Profile struct {
 	UserAgent string            `json:"user_agent" yaml:"user_agent"`
 	Headers   map[string]string `json:"headers,omitempty" yaml:"headers,omitempty"`
 	RobotsKey string            `json:"robots_key" yaml:"robots_key"`
+	// Browser marks a real-browser profile. It is fetched with a full Chrome
+	// impersonation and used as the baseline for comparisons.
+	Browser bool `json:"browser,omitempty" yaml:"browser,omitempty"`
 }
 
 // FetchResult is the outcome of fetching a URL with one profile.
 type FetchResult struct {
 	Profile          string        `json:"profile"`
+	Browser          bool          `json:"browser,omitempty"`
 	Success          bool          `json:"success"`
 	StatusCode       int           `json:"status_code"`
 	RedirectChain    []string      `json:"redirect_chain,omitempty"`

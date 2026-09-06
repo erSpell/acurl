@@ -47,6 +47,7 @@ var (
 	flagHTTP           string
 	flagMethod         string
 	flagHead           bool
+	flagBotTLS         string
 )
 
 var rootCmd = &cobra.Command{
@@ -80,6 +81,7 @@ func init() {
 	f.StringVar(&flagHTTP, "http", "", `force HTTP version: "1.1" or "2"`)
 	f.StringVarP(&flagMethod, "request", "X", "GET", "HTTP method to use")
 	f.BoolVarP(&flagHead, "head", "I", false, "send HEAD requests (status and headers only)")
+	f.StringVar(&flagBotTLS, "tls", "go", `TLS fingerprint for bot profiles: "go" (like real crawlers) or "chrome" (only the user agent differs)`)
 	f.Int64Var(&flagMaxBody, "max-body", fetcher.DefaultMaxBody, "maximum response body bytes to read per profile")
 }
 
@@ -111,6 +113,7 @@ func run(cmd *cobra.Command, args []string) error {
 		Insecure:    flagInsecure,
 		HTTPVersion: flagHTTP,
 		Method:      method(),
+		BotTLS:      flagBotTLS,
 	})
 	if err != nil {
 		return err

@@ -35,16 +35,23 @@ type Options struct {
 	HTTPVersion string
 	// Method is the HTTP method for page requests. Empty means GET.
 	Method string
+	// BotTLS selects the TLS fingerprint for non-browser profiles: "go"
+	// (default, like most real crawlers) or "chrome" to make the user agent
+	// the only difference from the browser baseline.
+	BotTLS string
 }
 
 // DefaultMaxBody is the default response body cap (5 MiB).
 const DefaultMaxBody = 5 << 20
 
-// Fetcher fetches URLs with a browser-like TLS fingerprint so that the only
-// variable between profiles is what the profile itself sends.
+// Fetcher fetches URLs once per profile. Browser profiles get a full Chrome
+// impersonation (TLS, HTTP/2 settings and default headers); bot profiles get
+// a plain client that only sends the profile's own headers, because real
+// crawlers do not send Chrome client hints.
 type Fetcher struct {
-	client *req.Client
-	opts   Options
+	browser *req.Client
+	bot     *req.Client
+	opts    Options
 }
 
 // New returns a Fetcher configured with opts.
@@ -59,32 +66,51 @@ func New(opts Options) (*Fetcher, error) {
 	if opts.Method == "" {
 		opts.Method = http.MethodGet
 	}
-	client := req.C().
+	browser, err := newClient(opts)
+	if err != nil {
+		return nil, err
+	}
+	browser.ImpersonateChrome()
+
+	bot, err := newClient(opts)
+	if err != nil {
+		return nil, err
+	}
+	switch opts.BotTLS {
+	case "", "go":
+	case "chrome":
+		bot.SetTLSFingerprintChrome()
+	default:
+		return nil, fmt.Errorf("unsupported bot TLS fingerprint %q (use go or chrome)", opts.BotTLS)
+	}
+	return &Fetcher{browser: browser, bot: bot, opts: opts}, nil
+}
+
+func newClient(opts Options) (*req.Client, error) {
+	c := req.C().
 		SetTimeout(opts.Timeout).
-		SetRedirectPolicy(recordRedirects).
-		ImpersonateChrome()
+		SetRedirectPolicy(recordRedirects)
 	if opts.Retries > 0 {
-		client.
-			SetCommonRetryCount(opts.Retries).
+		c.SetCommonRetryCount(opts.Retries).
 			SetCommonRetryBackoffInterval(250*time.Millisecond, 4*time.Second).
 			SetCommonRetryCondition(shouldRetry)
 	}
 	if opts.Proxy != "" {
-		client.SetProxyURL(opts.Proxy)
+		c.SetProxyURL(opts.Proxy)
 	}
 	if opts.Insecure {
-		client.EnableInsecureSkipVerify()
+		c.EnableInsecureSkipVerify()
 	}
 	switch opts.HTTPVersion {
 	case "":
 	case "1.1", "1":
-		client.EnableForceHTTP1()
+		c.EnableForceHTTP1()
 	case "2":
-		client.EnableForceHTTP2()
+		c.EnableForceHTTP2()
 	default:
 		return nil, fmt.Errorf("unsupported HTTP version %q (use 1.1 or 2)", opts.HTTPVersion)
 	}
-	return &Fetcher{client: client, opts: opts}, nil
+	return c, nil
 }
 
 func shouldRetry(resp *req.Response, err error) bool {
@@ -97,11 +123,15 @@ func shouldRetry(resp *req.Response, err error) bool {
 // Fetch retrieves url using profile. Network failures are reported in the
 // result rather than returned, so one failing profile never aborts a run.
 func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) types.FetchResult {
-	result := types.FetchResult{Profile: profile.Name}
+	result := types.FetchResult{Profile: profile.Name, Browser: profile.Browser}
 	start := time.Now()
 
+	client := f.bot
+	if profile.Browser {
+		client = f.browser
+	}
 	var chain []string
-	r := f.client.R().
+	r := client.R().
 		SetContext(withRedirectChain(ctx, &chain)).
 		SetHeader("User-Agent", profile.UserAgent)
 	for k, v := range profile.Headers {
@@ -154,7 +184,7 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 // Get performs a plain GET with the given user agent and returns at most
 // limit bytes of the body. It is used for auxiliary files such as robots.txt.
 func (f *Fetcher) Get(ctx context.Context, url, userAgent string, limit int64) (int, []byte, error) {
-	resp, err := f.client.R().
+	resp, err := f.bot.R().
 		SetContext(ctx).
 		SetHeader("User-Agent", userAgent).
 		Get(url)
