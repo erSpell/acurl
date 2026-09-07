@@ -1,9 +1,13 @@
 # Default agent profiles for acurl.
-# User agent strings follow the operators' published documentation and
-# https://github.com/ai-robots-txt/ai.robots.txt
+#
+# User agent strings follow each operator's published documentation (linked
+# in `docs`) and https://github.com/ai-robots-txt/ai.robots.txt.
+# Categories: browser, ai-assistant, ai-search, ai-training, search, other.
 profiles:
   - name: "Chrome (Browser)"
     browser: true
+    category: browser
+    operator: Google
     user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     robots_key: ""
     headers:
@@ -19,33 +23,53 @@ profiles:
       Upgrade-Insecure-Requests: "1"
 
   - name: "ChatGPT-User"
+    category: ai-assistant
+    operator: OpenAI
+    docs: https://platform.openai.com/docs/bots
     user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
     robots_key: "ChatGPT-User"
 
   - name: "OAI-SearchBot"
+    category: ai-search
+    operator: OpenAI
+    docs: https://platform.openai.com/docs/bots
     user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; OAI-SearchBot/1.0; +https://openai.com/searchbot"
     robots_key: "OAI-SearchBot"
 
   - name: "Claude-Web"
+    category: ai-training
+    operator: Anthropic
     user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Claude-Web/1.0; +claude-web@anthropic.com)"
     robots_key: "Claude-Web"
 
   - name: "anthropic-ai"
+    category: ai-training
+    operator: Anthropic
     user_agent: "anthropic-ai"
     robots_key: "anthropic-ai"
 
   - name: "PerplexityBot"
+    category: ai-search
+    operator: Perplexity
+    docs: https://docs.perplexity.ai/guides/bots
     user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)"
     robots_key: "PerplexityBot"
 
   - name: "Googlebot"
+    category: search
+    operator: Google
+    docs: https://developers.google.com/search/docs/crawling-indexing/google-common-crawlers
     user_agent: "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
     robots_key: "Googlebot"
 
   - name: "Bingbot"
+    category: search
+    operator: Microsoft
+    docs: https://www.bing.com/webmasters/help/which-crawlers-does-bing-use-8c184ec0
     user_agent: "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)"
     robots_key: "bingbot"
 
   - name: "curl (Baseline)"
+    category: other
     user_agent: "curl/8.5.0"
     robots_key: ""

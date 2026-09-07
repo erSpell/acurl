@@ -3,12 +3,25 @@ package types
 
 import "time"
 
+// Profile categories.
+const (
+	CategoryBrowser     = "browser"
+	CategoryAIAssistant = "ai-assistant" // fetches a page because a user asked
+	CategoryAISearch    = "ai-search"    // builds an AI search index
+	CategoryAITraining  = "ai-training"  // collects training data
+	CategorySearch      = "search"       // classic search engine crawler
+	CategoryOther       = "other"
+)
+
 // Profile is a user agent profile used to fetch a URL.
 type Profile struct {
 	Name      string            `json:"name" yaml:"name"`
 	UserAgent string            `json:"user_agent" yaml:"user_agent"`
 	Headers   map[string]string `json:"headers,omitempty" yaml:"headers,omitempty"`
 	RobotsKey string            `json:"robots_key" yaml:"robots_key"`
+	Operator  string            `json:"operator,omitempty" yaml:"operator,omitempty"`
+	Category  string            `json:"category,omitempty" yaml:"category,omitempty"`
+	Docs      string            `json:"docs,omitempty" yaml:"docs,omitempty"`
 	// Browser marks a real-browser profile. It is fetched with a full Chrome
 	// impersonation and used as the baseline for comparisons.
 	Browser bool `json:"browser,omitempty" yaml:"browser,omitempty"`

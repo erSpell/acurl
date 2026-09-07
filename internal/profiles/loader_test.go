@@ -90,3 +90,19 @@ func TestFilter(t *testing.T) {
 		t.Errorf("expected no matches, got %d", len(got))
 	}
 }
+
+func TestDefaultProfilesHaveValidCategories(t *testing.T) {
+	valid := map[string]bool{
+		types.CategoryBrowser: true, types.CategoryAIAssistant: true, types.CategoryAISearch: true,
+		types.CategoryAITraining: true, types.CategorySearch: true, types.CategoryOther: true,
+	}
+	ps, err := Default()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range ps {
+		if !valid[p.Category] {
+			t.Errorf("profile %q has invalid category %q", p.Name, p.Category)
+		}
+	}
+}
