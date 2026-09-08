@@ -85,6 +85,61 @@ profiles:
     user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)"
     robots_key: "PerplexityBot"
 
+  - name: "Perplexity-User"
+    category: ai-assistant
+    operator: Perplexity
+    docs: https://docs.perplexity.ai/guides/bots
+    user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Perplexity-User/1.0; +https://perplexity.ai/perplexity-user)"
+    robots_key: "Perplexity-User"
+
+  - name: "MistralAI-User"
+    category: ai-assistant
+    operator: Mistral AI
+    docs: https://docs.mistral.ai/robots
+    user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; MistralAI-User/1.0; +https://docs.mistral.ai/robots)"
+    robots_key: "MistralAI-User"
+
+  - name: "DuckAssistBot"
+    category: ai-assistant
+    operator: DuckDuckGo
+    docs: https://duckduckgo.com/duckduckgo-help-pages/results/duckassistbot
+    user_agent: "DuckAssistBot/1.2; (+http://duckduckgo.com/duckassistbot.html)"
+    robots_key: "DuckAssistBot"
+
+  - name: "Meta-ExternalAgent"
+    category: ai-training
+    operator: Meta
+    docs: https://developers.facebook.com/docs/sharing/webmasters/web-crawlers
+    user_agent: "meta-externalagent/1.1 (+https://developers.facebook.com/docs/sharing/webmasters/crawler)"
+    robots_key: "meta-externalagent"
+
+  - name: "Amazonbot"
+    category: ai-search
+    operator: Amazon
+    docs: https://developer.amazon.com/amazonbot
+    user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Amazonbot/0.1; +https://developer.amazon.com/support/amazonbot) Chrome/119.0.6045.214 Safari/537.36"
+    robots_key: "Amazonbot"
+
+  - name: "Bytespider"
+    category: ai-training
+    operator: ByteDance
+    user_agent: "Mozilla/5.0 (Linux; Android 5.0) AppleWebKit/537.36 (KHTML, like Gecko) Mobile Safari/537.36 (compatible; Bytespider; spider-feedback@bytedance.com)"
+    robots_key: "Bytespider"
+
+  - name: "CCBot"
+    category: ai-training
+    operator: Common Crawl
+    docs: https://commoncrawl.org/ccbot
+    user_agent: "CCBot/2.0 (https://commoncrawl.org/faq/)"
+    robots_key: "CCBot"
+
+  - name: "Applebot"
+    category: search
+    operator: Apple
+    docs: https://support.apple.com/en-us/119829
+    user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)"
+    robots_key: "Applebot"
+
   - name: "Googlebot"
     category: search
     operator: Google
