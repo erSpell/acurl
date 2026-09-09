@@ -51,7 +51,10 @@ func Parse(data []byte) ([]types.Profile, error) {
 		if p.Name == "" {
 			return nil, fmt.Errorf("profile #%d: name is required", i+1)
 		}
-		if p.UserAgent == "" {
+		switch {
+		case p.RobotsOnly && p.RobotsKey == "":
+			return nil, fmt.Errorf("profile %q: robots_only profiles need a robots_key", p.Name)
+		case !p.RobotsOnly && p.UserAgent == "":
 			return nil, fmt.Errorf("profile %q: user_agent is required", p.Name)
 		}
 		key := strings.ToLower(p.Name)
@@ -76,6 +79,18 @@ func Filter(profiles []types.Profile, names []string) []types.Profile {
 	var out []types.Profile
 	for _, p := range profiles {
 		if want[strings.ToLower(p.Name)] {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+// WithoutRobotsOnly drops robots.txt-only tokens, which mean nothing when
+// robots.txt is not checked.
+func WithoutRobotsOnly(ps []types.Profile) []types.Profile {
+	out := make([]types.Profile, 0, len(ps))
+	for _, p := range ps {
+		if !p.RobotsOnly {
 			out = append(out, p)
 		}
 	}

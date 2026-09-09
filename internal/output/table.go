@@ -85,6 +85,9 @@ func classStyle(c string) lipgloss.Style {
 }
 
 func statusText(r types.FetchResult) string {
+	if r.RobotsOnly {
+		return "-"
+	}
 	if r.StatusCode == 0 {
 		return "ERR"
 	}
@@ -109,6 +112,9 @@ func FormatSize(n int) string {
 
 func details(r types.FetchResult) string {
 	var parts []string
+	if r.RobotsOnly {
+		parts = append(parts, "robots.txt token (not fetched)")
+	}
 	if r.BotChallenge != "" {
 		parts = append(parts, "challenge: "+r.BotChallenge)
 	}

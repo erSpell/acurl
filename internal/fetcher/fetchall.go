@@ -28,6 +28,10 @@ func (f *Fetcher) FetchAll(ctx context.Context, url string, profiles []types.Pro
 				return
 			}
 			defer func() { <-sem }()
+			if p.RobotsOnly {
+				results[i] = types.FetchResult{Profile: p.Name, RobotsOnly: true}
+				return
+			}
 			results[i] = f.Fetch(ctx, url, p)
 		}(i, p)
 	}

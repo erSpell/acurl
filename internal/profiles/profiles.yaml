@@ -140,6 +140,22 @@ profiles:
     user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)"
     robots_key: "Applebot"
 
+  # Robots.txt-only tokens: these opt content in or out of AI use but are
+  # never sent as a user agent, so acurl checks them without fetching.
+  - name: "Google-Extended"
+    robots_only: true
+    category: ai-training
+    operator: Google
+    docs: https://developers.google.com/search/docs/crawling-indexing/google-common-crawlers#google-extended
+    robots_key: "Google-Extended"
+
+  - name: "Applebot-Extended"
+    robots_only: true
+    category: ai-training
+    operator: Apple
+    docs: https://support.apple.com/en-us/119829
+    robots_key: "Applebot-Extended"
+
   - name: "Googlebot"
     category: search
     operator: Google

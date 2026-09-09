@@ -21,7 +21,7 @@ func TestDefault(t *testing.T) {
 		t.Errorf("first profile should be the browser baseline, got %q", ps[0].Name)
 	}
 	for _, p := range ps {
-		if p.UserAgent == "" {
+		if p.UserAgent == "" && !p.RobotsOnly {
 			t.Errorf("profile %q has empty user agent", p.Name)
 		}
 	}
@@ -64,6 +64,7 @@ func TestParseValidation(t *testing.T) {
 		{"invalid yaml", "profiles: [", "parse profiles"},
 		{"missing name", "profiles:\n  - user_agent: x", "name is required"},
 		{"missing ua", "profiles:\n  - name: x", "user_agent is required"},
+		{"robots only without key", "profiles:\n  - {name: X, robots_only: true}", "robots_key"},
 		{"duplicate", "profiles:\n  - {name: A, user_agent: a}\n  - {name: a, user_agent: b}", "duplicate"},
 	}
 	for _, tt := range tests {
