@@ -12,6 +12,7 @@ import (
 	"github.com/tragent-io/acurl/internal/classifier"
 	"github.com/tragent-io/acurl/internal/fetcher"
 	"github.com/tragent-io/acurl/internal/output"
+	"github.com/tragent-io/acurl/internal/profiles"
 	"github.com/tragent-io/acurl/internal/robots"
 	"github.com/tragent-io/acurl/internal/textdiff"
 	"github.com/tragent-io/acurl/pkg/types"
@@ -56,6 +57,9 @@ func (a *app) runCheck(ctx context.Context, fl *checkFlags, rawURL string) error
 	selected, err := fl.http.loadProfiles()
 	if err != nil {
 		return err
+	}
+	if fl.noRobots {
+		selected = profiles.WithoutRobotsOnly(selected)
 	}
 	f, err := fl.http.newFetcher()
 	if err != nil {

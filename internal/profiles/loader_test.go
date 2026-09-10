@@ -21,7 +21,7 @@ func TestDefault(t *testing.T) {
 		t.Errorf("first profile should be the browser baseline, got %q", ps[0].Name)
 	}
 	for _, p := range ps {
-		if p.UserAgent == "" {
+		if p.UserAgent == "" && !p.RobotsOnly {
 			t.Errorf("profile %q has empty user agent", p.Name)
 		}
 	}
@@ -64,6 +64,7 @@ func TestParseValidation(t *testing.T) {
 		{"invalid yaml", "profiles: [", "parse profiles"},
 		{"missing name", "profiles:\n  - user_agent: x", "name is required"},
 		{"missing ua", "profiles:\n  - name: x", "user_agent is required"},
+		{"robots only without key", "profiles:\n  - {name: X, robots_only: true}", "robots_key"},
 		{"duplicate", "profiles:\n  - {name: A, user_agent: a}\n  - {name: a, user_agent: b}", "duplicate"},
 	}
 	for _, tt := range tests {
@@ -88,5 +89,41 @@ func TestFilter(t *testing.T) {
 	}
 	if got := Filter(ps, []string{"unknown"}); len(got) != 0 {
 		t.Errorf("expected no matches, got %d", len(got))
+	}
+}
+
+func TestDefaultProfilesHaveValidCategories(t *testing.T) {
+	valid := map[string]bool{
+		types.CategoryBrowser: true, types.CategoryAIAssistant: true, types.CategoryAISearch: true,
+		types.CategoryAITraining: true, types.CategorySearch: true, types.CategoryOther: true,
+	}
+	ps, err := Default()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range ps {
+		if !valid[p.Category] {
+			t.Errorf("profile %q has invalid category %q", p.Name, p.Category)
+		}
+	}
+}
+
+func TestFilterCategories(t *testing.T) {
+	ps := []types.Profile{
+		{Name: "Chrome", Browser: true, Category: types.CategoryBrowser},
+		{Name: "GPTBot", Category: types.CategoryAITraining},
+		{Name: "ChatGPT-User", Category: types.CategoryAIAssistant},
+		{Name: "Googlebot", Category: types.CategorySearch},
+	}
+	got := FilterCategories(ps, []string{"AI-Training", "search"})
+	var names []string
+	for _, p := range got {
+		names = append(names, p.Name)
+	}
+	if strings.Join(names, ",") != "Chrome,GPTBot,Googlebot" {
+		t.Errorf("FilterCategories = %v", names)
+	}
+	if len(FilterCategories(ps, nil)) != 4 {
+		t.Error("empty categories should keep all profiles")
 	}
 }

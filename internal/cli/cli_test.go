@@ -83,3 +83,30 @@ func TestCheckBadInput(t *testing.T) {
 		t.Errorf("unknown agent: code=%d stderr=%q", code, stderr)
 	}
 }
+
+func TestCheckRobotsOnlyTokens(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/robots.txt" {
+			_, _ = w.Write([]byte("User-agent: Google-Extended\nDisallow: /\n"))
+			return
+		}
+		if r.UserAgent() == "" || strings.Contains(r.UserAgent(), "Google-Extended") {
+			t.Errorf("robots-only token was fetched with UA %q", r.UserAgent())
+		}
+		_, _ = w.Write([]byte("ok"))
+	}))
+	defer srv.Close()
+
+	_, stdout, _ := run(t, srv.URL, "-f", "json", "-a", "Google-Extended,Applebot-Extended,Googlebot")
+	var rep types.ComparisonResult
+	if err := json.Unmarshal([]byte(stdout), &rep); err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]string{}
+	for _, r := range rep.Results {
+		got[r.Profile] = r.Classification
+	}
+	if got["Google-Extended"] != "robots-disallowed" || got["Applebot-Extended"] != "allowed" || got["Googlebot"] != "allowed" {
+		t.Errorf("classifications = %v", got)
+	}
+}

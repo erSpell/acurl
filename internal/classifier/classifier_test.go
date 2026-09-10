@@ -24,6 +24,8 @@ func TestClassify(t *testing.T) {
 		{"server error", types.FetchResult{StatusCode: 503}, Blocked},
 		{"blocked beats robots", types.FetchResult{StatusCode: 403, RobotsDisallowed: true}, Blocked},
 		{"robots only", types.FetchResult{StatusCode: 200, RobotsDisallowed: true}, RobotsDisallow},
+		{"robots token allowed", types.FetchResult{RobotsOnly: true}, Allowed},
+		{"robots token disallowed", types.FetchResult{RobotsOnly: true, RobotsDisallowed: true}, RobotsDisallow},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -1,9 +1,13 @@
 # Default agent profiles for acurl.
-# User agent strings follow the operators' published documentation and
-# https://github.com/ai-robots-txt/ai.robots.txt
+#
+# User agent strings follow each operator's published documentation (linked
+# in `docs`) and https://github.com/ai-robots-txt/ai.robots.txt.
+# Categories: browser, ai-assistant, ai-search, ai-training, search, other.
 profiles:
   - name: "Chrome (Browser)"
     browser: true
+    category: browser
+    operator: Google
     user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     robots_key: ""
     headers:
@@ -19,33 +23,154 @@ profiles:
       Upgrade-Insecure-Requests: "1"
 
   - name: "ChatGPT-User"
+    category: ai-assistant
+    operator: OpenAI
+    docs: https://platform.openai.com/docs/bots
     user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
     robots_key: "ChatGPT-User"
 
   - name: "OAI-SearchBot"
+    category: ai-search
+    operator: OpenAI
+    docs: https://platform.openai.com/docs/bots
     user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; OAI-SearchBot/1.0; +https://openai.com/searchbot"
     robots_key: "OAI-SearchBot"
 
+  - name: "GPTBot"
+    category: ai-training
+    operator: OpenAI
+    docs: https://platform.openai.com/docs/bots
+    user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.1; +https://openai.com/gptbot"
+    robots_key: "GPTBot"
+
+  - name: "ClaudeBot"
+    category: ai-training
+    operator: Anthropic
+    docs: https://support.claude.com/en/articles/8896518
+    user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; ClaudeBot/1.0; +claudebot@anthropic.com)"
+    robots_key: "ClaudeBot"
+
+  - name: "Claude-User"
+    category: ai-assistant
+    operator: Anthropic
+    docs: https://support.claude.com/en/articles/8896518
+    user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Claude-User/1.0; +Claude-User@anthropic.com)"
+    robots_key: "Claude-User"
+
+  - name: "Claude-SearchBot"
+    category: ai-search
+    operator: Anthropic
+    docs: https://support.claude.com/en/articles/8896518
+    user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Claude-SearchBot/1.0; +Claude-SearchBot@anthropic.com)"
+    robots_key: "Claude-SearchBot"
+
+  # Legacy Anthropic tokens. Anthropic no longer crawls with these, but many
+  # robots.txt files still name them.
   - name: "Claude-Web"
+    category: ai-training
+    operator: Anthropic
     user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Claude-Web/1.0; +claude-web@anthropic.com)"
     robots_key: "Claude-Web"
 
   - name: "anthropic-ai"
+    category: ai-training
+    operator: Anthropic
     user_agent: "anthropic-ai"
     robots_key: "anthropic-ai"
 
   - name: "PerplexityBot"
+    category: ai-search
+    operator: Perplexity
+    docs: https://docs.perplexity.ai/guides/bots
     user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)"
     robots_key: "PerplexityBot"
 
+  - name: "Perplexity-User"
+    category: ai-assistant
+    operator: Perplexity
+    docs: https://docs.perplexity.ai/guides/bots
+    user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Perplexity-User/1.0; +https://perplexity.ai/perplexity-user)"
+    robots_key: "Perplexity-User"
+
+  - name: "MistralAI-User"
+    category: ai-assistant
+    operator: Mistral AI
+    docs: https://docs.mistral.ai/robots
+    user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; MistralAI-User/1.0; +https://docs.mistral.ai/robots)"
+    robots_key: "MistralAI-User"
+
+  - name: "DuckAssistBot"
+    category: ai-assistant
+    operator: DuckDuckGo
+    docs: https://duckduckgo.com/duckduckgo-help-pages/results/duckassistbot
+    user_agent: "DuckAssistBot/1.2; (+http://duckduckgo.com/duckassistbot.html)"
+    robots_key: "DuckAssistBot"
+
+  - name: "Meta-ExternalAgent"
+    category: ai-training
+    operator: Meta
+    docs: https://developers.facebook.com/docs/sharing/webmasters/web-crawlers
+    user_agent: "meta-externalagent/1.1 (+https://developers.facebook.com/docs/sharing/webmasters/crawler)"
+    robots_key: "meta-externalagent"
+
+  - name: "Amazonbot"
+    category: ai-search
+    operator: Amazon
+    docs: https://developer.amazon.com/amazonbot
+    user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Amazonbot/0.1; +https://developer.amazon.com/support/amazonbot) Chrome/119.0.6045.214 Safari/537.36"
+    robots_key: "Amazonbot"
+
+  - name: "Bytespider"
+    category: ai-training
+    operator: ByteDance
+    user_agent: "Mozilla/5.0 (Linux; Android 5.0) AppleWebKit/537.36 (KHTML, like Gecko) Mobile Safari/537.36 (compatible; Bytespider; spider-feedback@bytedance.com)"
+    robots_key: "Bytespider"
+
+  - name: "CCBot"
+    category: ai-training
+    operator: Common Crawl
+    docs: https://commoncrawl.org/ccbot
+    user_agent: "CCBot/2.0 (https://commoncrawl.org/faq/)"
+    robots_key: "CCBot"
+
+  - name: "Applebot"
+    category: search
+    operator: Apple
+    docs: https://support.apple.com/en-us/119829
+    user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)"
+    robots_key: "Applebot"
+
+  # Robots.txt-only tokens: these opt content in or out of AI use but are
+  # never sent as a user agent, so acurl checks them without fetching.
+  - name: "Google-Extended"
+    robots_only: true
+    category: ai-training
+    operator: Google
+    docs: https://developers.google.com/search/docs/crawling-indexing/google-common-crawlers#google-extended
+    robots_key: "Google-Extended"
+
+  - name: "Applebot-Extended"
+    robots_only: true
+    category: ai-training
+    operator: Apple
+    docs: https://support.apple.com/en-us/119829
+    robots_key: "Applebot-Extended"
+
   - name: "Googlebot"
+    category: search
+    operator: Google
+    docs: https://developers.google.com/search/docs/crawling-indexing/google-common-crawlers
     user_agent: "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
     robots_key: "Googlebot"
 
   - name: "Bingbot"
+    category: search
+    operator: Microsoft
+    docs: https://www.bing.com/webmasters/help/which-crawlers-does-bing-use-8c184ec0
     user_agent: "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)"
     robots_key: "bingbot"
 
   - name: "curl (Baseline)"
+    category: other
     user_agent: "curl/8.5.0"
     robots_key: ""

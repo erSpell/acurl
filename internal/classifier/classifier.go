@@ -25,6 +25,12 @@ const (
 
 // Classify returns the classification for a single result.
 func Classify(r types.FetchResult) string {
+	if r.RobotsOnly {
+		if r.RobotsDisallowed {
+			return RobotsDisallow
+		}
+		return Allowed
+	}
 	switch {
 	case r.Error != "" || r.StatusCode == 0:
 		return Error
