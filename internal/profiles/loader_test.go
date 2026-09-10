@@ -107,3 +107,23 @@ func TestDefaultProfilesHaveValidCategories(t *testing.T) {
 		}
 	}
 }
+
+func TestFilterCategories(t *testing.T) {
+	ps := []types.Profile{
+		{Name: "Chrome", Browser: true, Category: types.CategoryBrowser},
+		{Name: "GPTBot", Category: types.CategoryAITraining},
+		{Name: "ChatGPT-User", Category: types.CategoryAIAssistant},
+		{Name: "Googlebot", Category: types.CategorySearch},
+	}
+	got := FilterCategories(ps, []string{"AI-Training", "search"})
+	var names []string
+	for _, p := range got {
+		names = append(names, p.Name)
+	}
+	if strings.Join(names, ",") != "Chrome,GPTBot,Googlebot" {
+		t.Errorf("FilterCategories = %v", names)
+	}
+	if len(FilterCategories(ps, nil)) != 4 {
+		t.Error("empty categories should keep all profiles")
+	}
+}

@@ -96,3 +96,22 @@ func WithoutRobotsOnly(ps []types.Profile) []types.Profile {
 	}
 	return out
 }
+
+// FilterCategories keeps profiles in one of categories, plus the browser
+// baseline so that comparisons still work. Empty categories keep everything.
+func FilterCategories(ps []types.Profile, categories []string) []types.Profile {
+	if len(categories) == 0 {
+		return ps
+	}
+	want := make(map[string]bool, len(categories))
+	for _, c := range categories {
+		want[strings.ToLower(strings.TrimSpace(c))] = true
+	}
+	var out []types.Profile
+	for _, p := range ps {
+		if p.Browser || want[strings.ToLower(p.Category)] {
+			out = append(out, p)
+		}
+	}
+	return out
+}

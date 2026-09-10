@@ -14,6 +14,7 @@ import (
 // httpFlags are shared by every command that fetches pages.
 type httpFlags struct {
 	agents       []string
+	categories   []string
 	profilesFile string
 	timeout      time.Duration
 	headers      []string
@@ -31,6 +32,7 @@ type httpFlags struct {
 
 func (h *httpFlags) register(f *pflag.FlagSet) {
 	f.StringSliceVarP(&h.agents, "agents", "a", nil, "only use these profiles (comma-separated)")
+	f.StringSliceVar(&h.categories, "category", nil, "only use profiles in these categories: ai-assistant, ai-search, ai-training, search, other (the browser baseline is always kept)")
 	f.StringVar(&h.profilesFile, "profiles", "", "custom profiles YAML file")
 	f.DurationVarP(&h.timeout, "timeout", "t", 30*time.Second, "per-request timeout")
 	f.StringArrayVarP(&h.headers, "header", "H", nil, `extra header "Name: value" (repeatable)`)
@@ -73,9 +75,9 @@ func (h *httpFlags) loadProfiles() ([]types.Profile, error) {
 	if err != nil {
 		return nil, err
 	}
-	selected := profiles.Filter(all, h.agents)
+	selected := profiles.FilterCategories(profiles.Filter(all, h.agents), h.categories)
 	if len(selected) == 0 {
-		return nil, errNoProfiles(h.agents)
+		return nil, errNoProfiles(append(h.agents, h.categories...))
 	}
 	return selected, nil
 }
