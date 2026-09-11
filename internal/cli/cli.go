@@ -57,6 +57,7 @@ func newRootCmd(a *app) *cobra.Command {
 	cmd.Version = fmt.Sprintf("%s (commit %s, built %s)", a.info.Version, a.info.Commit, a.info.Date)
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
+	cmd.AddCommand(newProfilesCmd(a))
 	return cmd
 }
 
