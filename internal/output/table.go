@@ -135,18 +135,26 @@ func details(r types.FetchResult) string {
 		parts = append(parts, p)
 	}
 	if n := len(r.RedirectChain); n > 0 {
-		parts = append(parts, fmt.Sprintf("%d redirect(s) -> %s", n, truncate(r.FinalURL, 40)))
+		parts = append(parts, fmt.Sprintf("%d redirect(s) -> %s", n, shortURL(r.FinalURL)))
 	}
 	if r.Error != "" {
-		parts = append(parts, "error: "+truncate(r.Error, 60))
+		parts = append(parts, "error: "+truncate(r.Error, 50))
 	}
-	if r.Title != "" {
-		parts = append(parts, "title: "+truncate(r.Title, 40))
+	// The title is the least important detail; only show it when nothing
+	// else needs saying.
+	if len(parts) == 0 && r.Title != "" {
+		parts = append(parts, truncate(r.Title, 40))
 	}
 	if len(parts) == 0 {
 		return "OK"
 	}
 	return strings.Join(parts, "; ")
+}
+
+// shortURL drops the scheme and truncates for table display.
+func shortURL(u string) string {
+	u = strings.TrimPrefix(strings.TrimPrefix(u, "https://"), "http://")
+	return truncate(u, 40)
 }
 
 func truncate(s string, n int) string {
