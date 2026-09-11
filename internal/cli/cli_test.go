@@ -110,3 +110,28 @@ func TestCheckRobotsOnlyTokens(t *testing.T) {
 		t.Errorf("classifications = %v", got)
 	}
 }
+
+func TestProfilesList(t *testing.T) {
+	code, stdout, stderr := run(t, "profiles", "list", "--category", "ai-assistant")
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%s", code, stderr)
+	}
+	for _, want := range []string{"ChatGPT-User", "Claude-User", "baseline"} {
+		if !strings.Contains(stdout, want) {
+			t.Errorf("list output missing %q", want)
+		}
+	}
+	if strings.Contains(stdout, "GPTBot") {
+		t.Error("category filter did not exclude GPTBot")
+	}
+}
+
+func TestProfilesShow(t *testing.T) {
+	code, stdout, _ := run(t, "profiles", "show", "gptbot")
+	if code != 0 || !strings.Contains(stdout, "robots_key: GPTBot") {
+		t.Errorf("code=%d output=%s", code, stdout)
+	}
+	if code, _, _ := run(t, "profiles", "show", "nobody"); code != output.ExitError {
+		t.Errorf("unknown profile exit code = %d", code)
+	}
+}
