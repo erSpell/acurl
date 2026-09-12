@@ -85,3 +85,21 @@ type Summary struct {
 	RobotsDisallow int `json:"robots_disallowed"`
 	Errors         int `json:"errors"`
 }
+
+// RobotsAudit is the result of `acurl robots`.
+type RobotsAudit struct {
+	URL       string        `json:"url"`
+	RobotsURL string        `json:"robots_url"`
+	Status    int           `json:"status"`
+	Error     string        `json:"error,omitempty"`
+	Sitemaps  []string      `json:"sitemaps,omitempty"`
+	Agents    []RobotsAgent `json:"agents"`
+}
+
+// RobotsAgent is one agent's robots.txt verdict for a URL.
+type RobotsAgent struct {
+	Profile  string `json:"profile"`
+	Token    string `json:"token"`
+	Category string `json:"category,omitempty"`
+	Allowed  bool   `json:"allowed"`
+}
