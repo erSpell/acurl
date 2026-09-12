@@ -102,4 +102,6 @@ type RobotsAgent struct {
 	Token    string `json:"token"`
 	Category string `json:"category,omitempty"`
 	Allowed  bool   `json:"allowed"`
+	// Signals are Content-Signal directives such as ai-train=no.
+	Signals map[string]string `json:"content_signals,omitempty"`
 }

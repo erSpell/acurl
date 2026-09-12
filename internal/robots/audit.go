@@ -27,6 +27,7 @@ func Audit(ctx context.Context, cache *Cache, target string, ps []types.Profile)
 			Token:    p.RobotsKey,
 			Category: p.Category,
 			Allowed:  d.Allowed(p.RobotsKey, target),
+			Signals:  d.ContentSignals(p.RobotsKey),
 		})
 	}
 	return a

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
@@ -41,13 +42,13 @@ func WriteRobotsAudit(w io.Writer, format string, a types.RobotsAudit, color boo
 	}
 
 	t := tablewriter.NewTable(&sb)
-	t.Header("Agent", "Token", "Category", "Allowed")
+	t.Header("Agent", "Token", "Category", "Allowed", "Content signals")
 	for _, ag := range a.Agents {
 		allowed := style("yes", okStyle.Render)
 		if !ag.Allowed {
 			allowed = style("no", badStyle.Render)
 		}
-		if err := t.Append(ag.Profile, ag.Token, ag.Category, allowed); err != nil {
+		if err := t.Append(ag.Profile, ag.Token, ag.Category, allowed, formatSignals(ag.Signals)); err != nil {
 			return err
 		}
 	}
@@ -62,4 +63,28 @@ func WriteRobotsAudit(w io.Writer, format string, a types.RobotsAudit, color boo
 	}
 	_, err := io.WriteString(w, sb.String())
 	return err
+}
+
+// formatSignals renders signals in a stable order: the three standard
+// signals first, then any others alphabetically.
+func formatSignals(sig map[string]string) string {
+	if len(sig) == 0 {
+		return "-"
+	}
+	var parts []string
+	seen := map[string]bool{}
+	for _, k := range []string{"search", "ai-input", "ai-train"} {
+		if v, ok := sig[k]; ok {
+			parts = append(parts, k+"="+v)
+			seen[k] = true
+		}
+	}
+	var rest []string
+	for k, v := range sig {
+		if !seen[k] {
+			rest = append(rest, k+"="+v)
+		}
+	}
+	sort.Strings(rest)
+	return strings.Join(append(parts, rest...), " ")
 }

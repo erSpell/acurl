@@ -98,6 +98,17 @@ func (p parsed) groupFor(agent string) *group {
 	return star
 }
 
+// ContentSignals returns the Content-Signal directives
+// (https://contentsignals.org) that apply to agent, such as
+// {"search": "yes", "ai-train": "no"}. It returns nil when there are none.
+func (d *Data) ContentSignals(agent string) map[string]string {
+	g := parse(d.Content).groupFor(agent)
+	if g == nil || len(g.signals) == 0 {
+		return nil
+	}
+	return g.signals
+}
+
 // Sitemaps returns the sitemap URLs listed in robots.txt.
 func (d *Data) Sitemaps() []string {
 	return parse(d.Content).sitemaps
