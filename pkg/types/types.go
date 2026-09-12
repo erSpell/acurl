@@ -50,6 +50,7 @@ type FetchResult struct {
 	RetryAfterSeconds int           `json:"retry_after_seconds,omitempty"`
 	RobotsDisallowed  bool          `json:"robots_disallowed"`
 	RobotsError       string        `json:"robots_error,omitempty"`
+	Directives        []string      `json:"directives,omitempty"` // X-Robots-Tag and meta robots for this agent
 	Similarity        *float64      `json:"similarity,omitempty"` // visible-text similarity to the browser baseline
 	Classification    string        `json:"classification"`
 	Error             string        `json:"error,omitempty"`
