@@ -124,6 +124,9 @@ func details(r types.FetchResult) string {
 	if r.RobotsDisallowed {
 		parts = append(parts, "robots.txt: disallowed")
 	}
+	if d := blockingDirectives(r.Directives); d != "" {
+		parts = append(parts, d)
+	}
 	if r.RateLimited {
 		p := "rate limited"
 		switch {
@@ -163,4 +166,16 @@ func truncate(s string, n int) string {
 		return s
 	}
 	return string(r[:n]) + "..."
+}
+
+// blockingDirectives keeps the directives that limit indexing or AI use.
+func blockingDirectives(ds []string) string {
+	var keep []string
+	for _, d := range ds {
+		switch d {
+		case "noindex", "none", "noai", "noimageai", "nosnippet":
+			keep = append(keep, d)
+		}
+	}
+	return strings.Join(keep, ",")
 }

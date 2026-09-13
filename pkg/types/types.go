@@ -50,6 +50,7 @@ type FetchResult struct {
 	RetryAfterSeconds int           `json:"retry_after_seconds,omitempty"`
 	RobotsDisallowed  bool          `json:"robots_disallowed"`
 	RobotsError       string        `json:"robots_error,omitempty"`
+	Directives        []string      `json:"directives,omitempty"` // X-Robots-Tag and meta robots for this agent
 	Similarity        *float64      `json:"similarity,omitempty"` // visible-text similarity to the browser baseline
 	Classification    string        `json:"classification"`
 	Error             string        `json:"error,omitempty"`
@@ -84,4 +85,39 @@ type Summary struct {
 	Cloaked        int `json:"cloaked"`
 	RobotsDisallow int `json:"robots_disallowed"`
 	Errors         int `json:"errors"`
+}
+
+// RobotsAudit is the result of `acurl robots`.
+type RobotsAudit struct {
+	URL       string        `json:"url"`
+	RobotsURL string        `json:"robots_url"`
+	Status    int           `json:"status"`
+	Error     string        `json:"error,omitempty"`
+	Sitemaps  []string      `json:"sitemaps,omitempty"`
+	Agents    []RobotsAgent `json:"agents"`
+	LLMsTxt   []LLMsTxt     `json:"llms_txt,omitempty"`
+}
+
+// RobotsAgent is one agent's robots.txt verdict for a URL.
+type RobotsAgent struct {
+	Profile  string `json:"profile"`
+	Token    string `json:"token"`
+	Category string `json:"category,omitempty"`
+	Allowed  bool   `json:"allowed"`
+	// Signals are Content-Signal directives such as ai-train=no.
+	Signals map[string]string `json:"content_signals,omitempty"`
+}
+
+// LLMsTxt describes one llms.txt or llms-full.txt file.
+type LLMsTxt struct {
+	URL      string   `json:"url"`
+	Status   int      `json:"status"`
+	Found    bool     `json:"found"`
+	Size     int      `json:"size,omitempty"`
+	Title    string   `json:"title,omitempty"`
+	Summary  string   `json:"summary,omitempty"`
+	Sections int      `json:"sections,omitempty"`
+	Links    int      `json:"links,omitempty"`
+	Problems []string `json:"problems,omitempty"`
+	Error    string   `json:"error,omitempty"`
 }
