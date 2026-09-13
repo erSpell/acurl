@@ -135,3 +135,52 @@ func TestProfilesShow(t *testing.T) {
 		t.Errorf("unknown profile exit code = %d", code)
 	}
 }
+
+func TestRobotsAudit(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/robots.txt":
+			_, _ = w.Write([]byte("User-agent: *\nContent-Signal: search=yes, ai-train=no\nAllow: /\n\nUser-agent: GPTBot\nDisallow: /\n\nSitemap: https://shop.example/sitemap.xml\n"))
+		case "/llms.txt":
+			_, _ = w.Write([]byte("# Shop\n\n> Shoes.\n\n## Docs\n\n- [Runners](/runners.md)\n"))
+		case "/products/1":
+			t.Error("robots audit must not fetch the page itself")
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+
+	code, stdout, stderr := run(t, "robots", srv.URL+"/products/1", "-f", "json", "-a", "GPTBot,ClaudeBot,Google-Extended")
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%s", code, stderr)
+	}
+	var a types.RobotsAudit
+	if err := json.Unmarshal([]byte(stdout), &a); err != nil {
+		t.Fatal(err)
+	}
+	verdict := map[string]bool{}
+	for _, ag := range a.Agents {
+		verdict[ag.Profile] = ag.Allowed
+		if ag.Profile == "ClaudeBot" && ag.Signals["ai-train"] != "no" {
+			t.Errorf("ClaudeBot signals = %v", ag.Signals)
+		}
+	}
+	if verdict["GPTBot"] || !verdict["ClaudeBot"] || !verdict["Google-Extended"] {
+		t.Errorf("verdicts = %v", verdict)
+	}
+	if len(a.Sitemaps) != 1 || len(a.LLMsTxt) != 2 || !a.LLMsTxt[0].Found || a.LLMsTxt[0].Links != 1 || a.LLMsTxt[1].Found {
+		t.Errorf("sitemaps=%v llms=%+v", a.Sitemaps, a.LLMsTxt)
+	}
+}
+
+func TestRobotsAuditUnreachable(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	defer srv.Close()
+	code, stdout, _ := run(t, "robots", srv.URL, "--no-color", "-a", "GPTBot")
+	if code != output.ExitError || !strings.Contains(stdout, "full disallow") {
+		t.Errorf("code=%d output=%s", code, stdout)
+	}
+}
