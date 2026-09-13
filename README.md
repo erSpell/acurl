@@ -20,8 +20,17 @@ go install github.com/tragent-io/acurl/cmd/acurl@latest
 ```bash
 acurl https://example.com
 acurl --agents ChatGPT-User,Googlebot https://yourstore.com/products/1
-acurl -H "Cookie: region=us" --timeout 10s https://example.com
+acurl --category ai-assistant,ai-search https://yourstore.com
+acurl --diff GPTBot https://yourstore.com     # what text did GPTBot not see?
+acurl robots https://yourstore.com/products/1  # robots.txt, content signals, llms.txt
+acurl profiles list
 ```
+
+Each result is classified as `allowed`, `blocked`, `challenged` (WAF or captcha page),
+`rate-limited`, `cloaked` (visible text differs a lot from what Chrome got),
+`robots-disallowed` or `error`.
+
+More: [profiles](docs/profiles.md) · [robots.txt and llms.txt](docs/robots.md)
 
 Output formats: `--format table` (default), `json` or `markdown`. Use `-o report.md` to write to a file.
 
