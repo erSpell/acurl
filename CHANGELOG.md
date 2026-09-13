@@ -6,6 +6,32 @@ All notable changes to acurl are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-13
+
+### Added
+- `acurl robots <url>`: per-agent robots.txt audit with Content-Signal directives,
+  sitemaps and llms.txt / llms-full.txt validation
+- `acurl profiles list|show` with `--category` filtering
+- 13 new profiles: GPTBot, ClaudeBot, Claude-User, Claude-SearchBot, Perplexity-User,
+  MistralAI-User, DuckAssistBot, Meta-ExternalAgent, Amazonbot, Bytespider, CCBot, Applebot,
+  plus robots.txt-only tokens Google-Extended and Applebot-Extended
+- Profile metadata: `category`, `operator`, `docs`, `browser`, `robots_only`
+- `--category` to run one class of agents
+- Cloaking detection that compares visible text with the browser baseline, `--cloak-threshold`
+- `--diff <profile>` prints a visible-text diff against the browser
+- X-Robots-Tag and meta robots directives per agent, including agent-specific tags
+- Redirect chains and final URL in results
+- `--retries` with exponential backoff for network and gateway errors
+- `--proxy`, `--insecure`, `--http 1.1|2`, `-X`, `-I/--head`, `--max-body`, `--tls go|chrome`
+
+### Fixed
+- Bot profiles no longer send Chrome client hints and a zh-CN Accept-Language
+- `duration_ms` is now milliseconds, not nanoseconds
+- Akamai block pages with HTML-encoded reference IDs are detected
+- Huge Retry-After values no longer overflow (found by fuzzing)
+- URLs without a scheme default to https
+
+
 ## [0.1.0] - 2026-08-30
 
 First public preview.
@@ -23,5 +49,6 @@ First public preview.
 - CI-friendly exit codes: 0 allowed, 1 blocked or challenged, 2 errors
 - Custom profiles via `--profiles file.yaml`, extra headers via `-H`
 
-[Unreleased]: https://github.com/tragent-io/acurl/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/tragent-io/acurl/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/tragent-io/acurl/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tragent-io/acurl/releases/tag/v0.1.0
