@@ -55,6 +55,20 @@ func WriteRobotsAudit(w io.Writer, format string, a types.RobotsAudit, color boo
 	if err := t.Render(); err != nil {
 		return err
 	}
+	for _, l := range a.LLMsTxt {
+		name := l.URL[strings.LastIndex(l.URL, "/")+1:]
+		switch {
+		case l.Error != "":
+			fmt.Fprintf(&sb, "\n%s: %s\n", name, style(l.Error, badStyle.Render))
+		case !l.Found:
+			fmt.Fprintf(&sb, "\n%s: %s\n", name, style(fmt.Sprintf("not found (%d)", l.Status), mutedStyle.Render))
+		default:
+			fmt.Fprintf(&sb, "\n%s: %s, %d links in %d sections\n", name, style("found", okStyle.Render), l.Links, l.Sections)
+			for _, p := range l.Problems {
+				fmt.Fprintf(&sb, "  %s %s\n", style("!", warnStyle.Render), p)
+			}
+		}
+	}
 	if len(a.Sitemaps) > 0 {
 		sb.WriteString("\nSitemaps:\n")
 		for _, s := range a.Sitemaps {

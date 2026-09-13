@@ -95,6 +95,7 @@ type RobotsAudit struct {
 	Error     string        `json:"error,omitempty"`
 	Sitemaps  []string      `json:"sitemaps,omitempty"`
 	Agents    []RobotsAgent `json:"agents"`
+	LLMsTxt   []LLMsTxt     `json:"llms_txt,omitempty"`
 }
 
 // RobotsAgent is one agent's robots.txt verdict for a URL.
@@ -105,4 +106,18 @@ type RobotsAgent struct {
 	Allowed  bool   `json:"allowed"`
 	// Signals are Content-Signal directives such as ai-train=no.
 	Signals map[string]string `json:"content_signals,omitempty"`
+}
+
+// LLMsTxt describes one llms.txt or llms-full.txt file.
+type LLMsTxt struct {
+	URL      string   `json:"url"`
+	Status   int      `json:"status"`
+	Found    bool     `json:"found"`
+	Size     int      `json:"size,omitempty"`
+	Title    string   `json:"title,omitempty"`
+	Summary  string   `json:"summary,omitempty"`
+	Sections int      `json:"sections,omitempty"`
+	Links    int      `json:"links,omitempty"`
+	Problems []string `json:"problems,omitempty"`
+	Error    string   `json:"error,omitempty"`
 }
