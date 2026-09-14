@@ -1,0 +1,30 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://example.com/#website",
+      "url": "https://example.com/",
+      "name": "Example Store"
+    },
+    {
+      "@type": "Product",
+      "@id": "https://example.com/product/123",
+      "name": "Premium Yoga Mat",
+      "image": "https://example.com/images/yoga-mat.jpg",
+      "description": "High-quality yoga mat",
+      "sku": "YM-001",
+      "offers": [
+        {
+          "@type": "Offer",
+          "price": "49.99",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "url": "https://example.com/product/123"
+        }
+      ]
+    }
+  ]
+}
+</script>
