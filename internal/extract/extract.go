@@ -112,13 +112,58 @@ func productFrom(n map[string]any) *types.Product {
 		Source: "json-ld",
 		Name:   str(n["name"]),
 		SKU:    str(n["sku"]),
+		Brand:  str(n["brand"]),
 	}
-	if offer := firstMap(n["offers"]); offer != nil {
-		p.Price = str(offer["price"])
-		p.Currency = str(offer["priceCurrency"])
-		p.Availability = availability(str(offer["availability"]))
+	if r := firstMap(n["aggregateRating"]); r != nil {
+		p.Rating = str(r["ratingValue"])
+		p.ReviewCount = firstNonEmpty(str(r["reviewCount"]), str(r["ratingCount"]))
+	}
+	offers := n["offers"]
+	if offers == nil {
+		// ProductGroup lists offers on its variants.
+		if v := firstMap(n["hasVariant"]); v != nil {
+			offers = v["offers"]
+			p.SKU = firstNonEmpty(p.SKU, str(v["sku"]))
+		}
+	}
+	if offer := firstMap(offers); offer != nil {
+		applyOffer(p, offer)
 	}
 	return p
+}
+
+func applyOffer(p *types.Product, o map[string]any) {
+	p.Currency = str(o["priceCurrency"])
+	p.Availability = availability(str(o["availability"]))
+	switch {
+	case str(o["price"]) != "":
+		p.Price = str(o["price"])
+	case isType(o, "AggregateOffer") && str(o["lowPrice"]) != "":
+		p.Price = str(o["lowPrice"])
+		if high := str(o["highPrice"]); high != "" && high != p.Price {
+			p.Price += "-" + high
+		}
+	default:
+		if spec := firstMap(o["priceSpecification"]); spec != nil {
+			p.Price = str(spec["price"])
+			p.Currency = firstNonEmpty(p.Currency, str(spec["priceCurrency"]))
+		}
+	}
+	// AggregateOffer may nest the concrete offers.
+	if p.Price == "" {
+		if inner := firstMap(o["offers"]); inner != nil {
+			applyOffer(p, inner)
+		}
+	}
+}
+
+func firstNonEmpty(vals ...string) string {
+	for _, v := range vals {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }
 
 func firstMap(v any) map[string]any {

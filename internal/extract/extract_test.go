@@ -44,3 +44,51 @@ func TestNumericPrice(t *testing.T) {
 		t.Errorf("Product = %+v", p)
 	}
 }
+
+func TestProductGraphWooCommerce(t *testing.T) {
+	p := Product(fixture(t, "product-woocommerce.html"))
+	if p == nil || p.Name != "Premium Yoga Mat" || p.Price != "49.99" || p.Currency != "EUR" || p.Availability != "InStock" {
+		t.Errorf("Product = %+v", p)
+	}
+}
+
+func TestProductVariantsAndAggregates(t *testing.T) {
+	tests := []struct {
+		name string
+		doc  string
+		want types.Product
+	}{
+		{
+			"aggregate offer range",
+			`{"@type":"Product","name":"Tee","brand":"Acme","offers":{"@type":"AggregateOffer","lowPrice":"10","highPrice":"20","priceCurrency":"USD"}}`,
+			types.Product{Name: "Tee", Brand: "Acme", Price: "10-20", Currency: "USD"},
+		},
+		{
+			"price specification",
+			`{"@type":"Product","name":"Mug","offers":{"@type":"Offer","priceSpecification":{"price":"7.5","priceCurrency":"GBP"},"availability":"http://schema.org/OutOfStock"}}`,
+			types.Product{Name: "Mug", Price: "7.5", Currency: "GBP", Availability: "OutOfStock"},
+		},
+		{
+			"product group variant",
+			`{"@type":"ProductGroup","name":"Runner","hasVariant":[{"@type":"Product","sku":"R-9","offers":{"price":"98","priceCurrency":"USD"}}]}`,
+			types.Product{Name: "Runner", SKU: "R-9", Price: "98", Currency: "USD"},
+		},
+		{
+			"array root with rating",
+			`[{"@type":"BreadcrumbList"},{"@type":["Product","Thing"],"name":"Hat","aggregateRating":{"ratingValue":4.5,"ratingCount":"12"},"offers":[{"price":"15","priceCurrency":"USD"}]}]`,
+			types.Product{Name: "Hat", Price: "15", Currency: "USD", Rating: "4.5", ReviewCount: "12"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := Product([]byte(`<script type="application/ld+json">` + tt.doc + `</script>`))
+			if p == nil {
+				t.Fatal("no product")
+			}
+			tt.want.Source = "json-ld"
+			if *p != tt.want {
+				t.Errorf("Product = %+v\nwant      %+v", *p, tt.want)
+			}
+		})
+	}
+}
