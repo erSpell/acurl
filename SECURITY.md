@@ -1,5 +1,7 @@
 # Security Policy
 
+acurl is maintained by [tragent.io](https://tragent.io).
+
 ## Supported versions
 
 Security fixes are released for the latest minor version.

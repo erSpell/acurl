@@ -33,3 +33,7 @@ The main `acurl <url>` command also reads `X-Robots-Tag` headers and
 `<meta name="GPTBot" content="noindex">` and `X-Robots-Tag: googlebot: nosnippet`.
 Directives that limit indexing or AI use (`noindex`, `none`, `noai`, `noimageai`,
 `nosnippet`) show in the Details column. JSON output always lists every directive.
+
+---
+
+acurl is an open-source project by [tragent.io](https://tragent.io).

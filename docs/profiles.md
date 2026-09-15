@@ -75,3 +75,7 @@ profiles:
 | `browser` | no | Marks the comparison baseline |
 | `robots_only` | no | Check robots.txt only, never fetch |
 | `category`, `operator`, `docs` | no | Metadata shown by `acurl profiles` |
+
+---
+
+acurl is an open-source project by [tragent.io](https://tragent.io).
