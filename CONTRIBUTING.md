@@ -1,6 +1,6 @@
 # Contributing to acurl
 
-Thanks for helping make acurl better. Bug reports, new agent profiles, detection
+acurl is an open-source project by [tragent.io](https://tragent.io). Thanks for helping make it better. Bug reports, new agent profiles, detection
 signatures and docs fixes are all welcome.
 
 ## Ground rules

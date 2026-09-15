@@ -2,6 +2,8 @@
 
 > See your website the way AI agents see it.
 
+**acurl** is a free, open-source tool by [tragent.io](https://tragent.io).
+
 `acurl` fetches a URL several times, once per agent profile: a real Chrome browser, AI agents
 such as ChatGPT-User and Claude-Web, search crawlers, and plain curl. It then shows how each one was
 treated side by side.
@@ -49,3 +51,9 @@ Early development. Expect breaking changes until v1.0.
 ## License
 
 Apache 2.0. See [LICENSE](LICENSE).
+
+## About
+
+acurl is built and maintained by [tragent.io](https://tragent.io), which helps online stores
+get found, understood and bought from by AI shopping agents. acurl is the free, open-source
+diagnostic we use ourselves, and contributions are welcome.
