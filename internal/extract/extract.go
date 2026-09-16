@@ -14,14 +14,18 @@ import (
 	"github.com/tragent-io/acurl/pkg/types"
 )
 
-// Product returns the first product found in doc, or nil.
+// Product returns the first product found in doc, or nil. JSON-LD is
+// preferred, then microdata, then OpenGraph product tags.
 func Product(doc []byte) *types.Product {
 	for _, block := range jsonLDBlocks(doc) {
 		if p := fromJSONLD(block); p != nil {
 			return p
 		}
 	}
-	return nil
+	if p := fromMicrodata(doc); p != nil {
+		return p
+	}
+	return fromOpenGraph(doc)
 }
 
 // jsonLDBlocks returns the contents of every <script type="application/ld+json">.

@@ -92,3 +92,40 @@ func TestProductVariantsAndAggregates(t *testing.T) {
 		})
 	}
 }
+
+func TestProductMicrodata(t *testing.T) {
+	doc := `<html><body>
+<div itemscope itemtype="https://schema.org/Product">
+  <h1 itemprop="name">Trail Runner</h1>
+  <meta itemprop="sku" content="TR-1">
+  <div itemprop="brand" itemscope itemtype="https://schema.org/Brand"><span itemprop="name">Acme</span></div>
+  <div itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+    <span itemprop="priceCurrency" content="USD">$</span><span itemprop="price" content="120.00">120</span>
+    <link itemprop="availability" href="https://schema.org/InStock">
+  </div>
+</div>
+<p itemprop="name">outside the scope</p>
+</body></html>`
+	p := Product([]byte(doc))
+	want := types.Product{Source: "microdata", Name: "Trail Runner", SKU: "TR-1", Price: "120.00", Currency: "USD", Availability: "InStock"}
+	if p == nil || p.Name != want.Name || p.SKU != want.SKU || p.Price != want.Price || p.Currency != want.Currency || p.Availability != want.Availability {
+		t.Errorf("Product = %+v, want %+v", p, want)
+	}
+}
+
+func TestProductOpenGraph(t *testing.T) {
+	doc := `<html><head>
+<meta property="og:type" content="product">
+<meta property="og:title" content="Canvas Tote">
+<meta property="product:price:amount" content="25.00">
+<meta property="product:price:currency" content="CAD">
+<meta property="product:availability" content="in stock">
+</head><body></body></html>`
+	p := Product([]byte(doc))
+	if p == nil || p.Source != "opengraph" || p.Name != "Canvas Tote" || p.Price != "25.00" || p.Currency != "CAD" || p.Availability != "in stock" {
+		t.Errorf("Product = %+v", p)
+	}
+	if Product([]byte(`<meta property="og:type" content="website"><meta property="og:title" content="Home">`)) != nil {
+		t.Error("non-product OpenGraph page returned a product")
+	}
+}
