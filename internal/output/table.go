@@ -121,6 +121,9 @@ func details(r types.FetchResult) string {
 	if r.Similarity != nil && *r.Similarity < 0.95 {
 		parts = append(parts, fmt.Sprintf("%.0f%% similar to browser", *r.Similarity*100))
 	}
+	if r.ProductIssue != "" {
+		parts = append(parts, "product: "+r.ProductIssue)
+	}
 	if r.RobotsDisallowed {
 		parts = append(parts, "robots.txt: disallowed")
 	}

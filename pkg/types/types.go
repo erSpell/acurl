@@ -51,7 +51,9 @@ type FetchResult struct {
 	RobotsDisallowed  bool          `json:"robots_disallowed"`
 	RobotsError       string        `json:"robots_error,omitempty"`
 	Directives        []string      `json:"directives,omitempty"` // X-Robots-Tag and meta robots for this agent
-	Similarity        *float64      `json:"similarity,omitempty"` // visible-text similarity to the browser baseline
+	Product           *Product      `json:"product,omitempty"`
+	ProductIssue      string        `json:"product_issue,omitempty"` // how product data differs from the browser
+	Similarity        *float64      `json:"similarity,omitempty"`    // visible-text similarity to the browser baseline
 	Classification    string        `json:"classification"`
 	Error             string        `json:"error,omitempty"`
 	ContentHash       string        `json:"content_hash,omitempty"`
@@ -120,4 +122,17 @@ type LLMsTxt struct {
 	Links    int      `json:"links,omitempty"`
 	Problems []string `json:"problems,omitempty"`
 	Error    string   `json:"error,omitempty"`
+}
+
+// Product is the schema.org product data found on a page.
+type Product struct {
+	Source       string `json:"source"` // json-ld, microdata or opengraph
+	Name         string `json:"name,omitempty"`
+	SKU          string `json:"sku,omitempty"`
+	Brand        string `json:"brand,omitempty"`
+	Price        string `json:"price,omitempty"`
+	Currency     string `json:"currency,omitempty"`
+	Availability string `json:"availability,omitempty"`
+	Rating       string `json:"rating,omitempty"`
+	ReviewCount  string `json:"review_count,omitempty"`
 }

@@ -72,6 +72,7 @@ func (a *app) runCheck(ctx context.Context, fl *checkFlags, rawURL string) error
 		a.applyRobots(ctx, f, url, selected, results)
 	}
 	classifier.ClassifyAll(results, fl.cloakThreshold)
+	classifier.CompareProducts(results)
 
 	report := types.ComparisonResult{
 		URL:       url,
