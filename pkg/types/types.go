@@ -52,7 +52,8 @@ type FetchResult struct {
 	RobotsError       string        `json:"robots_error,omitempty"`
 	Directives        []string      `json:"directives,omitempty"` // X-Robots-Tag and meta robots for this agent
 	Product           *Product      `json:"product,omitempty"`
-	Similarity        *float64      `json:"similarity,omitempty"` // visible-text similarity to the browser baseline
+	ProductIssue      string        `json:"product_issue,omitempty"` // how product data differs from the browser
+	Similarity        *float64      `json:"similarity,omitempty"`    // visible-text similarity to the browser baseline
 	Classification    string        `json:"classification"`
 	Error             string        `json:"error,omitempty"`
 	ContentHash       string        `json:"content_hash,omitempty"`

@@ -107,3 +107,28 @@ func TestClassifyAllSkipsCloakingWhenBaselineFails(t *testing.T) {
 		t.Errorf("got %q similarity=%v, want allowed without similarity", rs[1].Classification, rs[1].Similarity)
 	}
 }
+
+func TestCompareProducts(t *testing.T) {
+	base := &types.Product{Source: "json-ld", Price: "98.00", Currency: "USD", Availability: "InStock"}
+	rs := []types.FetchResult{
+		{Profile: "Chrome", Browser: true, Classification: Allowed, Product: base},
+		{Profile: "same", Classification: Allowed, Product: &types.Product{Price: "98.00", Availability: "InStock"}},
+		{Profile: "missing", Classification: Allowed},
+		{Profile: "price", Classification: Allowed, Product: &types.Product{Price: "89.00", Availability: "InStock"}},
+		{Profile: "stock", Classification: Allowed, Product: &types.Product{Price: "98.00", Availability: "OutOfStock"}},
+		{Profile: "blocked", Classification: Blocked},
+	}
+	CompareProducts(rs)
+	want := map[string]string{
+		"same":    "",
+		"missing": "no product data (browser saw 98.00 USD)",
+		"price":   "price 89.00 vs browser 98.00",
+		"stock":   "availability OutOfStock vs browser InStock",
+		"blocked": "",
+	}
+	for _, r := range rs[1:] {
+		if r.ProductIssue != want[r.Profile] {
+			t.Errorf("%s: issue = %q, want %q", r.Profile, r.ProductIssue, want[r.Profile])
+		}
+	}
+}

@@ -113,3 +113,42 @@ func Summarize(results []types.FetchResult) types.Summary {
 	}
 	return s
 }
+
+// CompareProducts flags agents that were shown different product data than
+// the browser baseline: missing structured data, or a different price or
+// availability. It only looks at allowed results.
+func CompareProducts(results []types.FetchResult) {
+	b := BaselineIndex(results)
+	if b < 0 || results[b].Product == nil {
+		return
+	}
+	base := results[b].Product
+	for i := range results {
+		r := &results[i]
+		if i == b || r.RobotsOnly || r.Classification != Allowed {
+			continue
+		}
+		switch {
+		case r.Product == nil:
+			r.ProductIssue = "no product data (browser saw " + describe(base) + ")"
+		case r.Product.Price != base.Price:
+			r.ProductIssue = "price " + orNone(r.Product.Price) + " vs browser " + orNone(base.Price)
+		case r.Product.Availability != base.Availability:
+			r.ProductIssue = "availability " + orNone(r.Product.Availability) + " vs browser " + orNone(base.Availability)
+		}
+	}
+}
+
+func describe(p *types.Product) string {
+	if p.Price != "" {
+		return strings.TrimSpace(p.Price + " " + p.Currency)
+	}
+	return p.Source
+}
+
+func orNone(s string) string {
+	if s == "" {
+		return "none"
+	}
+	return s
+}
