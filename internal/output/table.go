@@ -121,6 +121,9 @@ func details(r types.FetchResult) string {
 	if r.Similarity != nil && *r.Similarity < 0.95 {
 		parts = append(parts, fmt.Sprintf("%.0f%% similar to browser", *r.Similarity*100))
 	}
+	if r.JS != nil && r.JS.ClientRendered {
+		parts = append(parts, "JS-only page"+frameworkSuffix(r.JS.Framework))
+	}
 	if r.ProductIssue != "" {
 		parts = append(parts, "product: "+r.ProductIssue)
 	}
@@ -181,4 +184,11 @@ func blockingDirectives(ds []string) string {
 		}
 	}
 	return strings.Join(keep, ",")
+}
+
+func frameworkSuffix(f string) string {
+	if f == "" {
+		return ""
+	}
+	return " (" + f + ")"
 }

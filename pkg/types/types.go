@@ -51,6 +51,7 @@ type FetchResult struct {
 	RobotsDisallowed  bool          `json:"robots_disallowed"`
 	RobotsError       string        `json:"robots_error,omitempty"`
 	Directives        []string      `json:"directives,omitempty"` // X-Robots-Tag and meta robots for this agent
+	JS                *JSInfo       `json:"js,omitempty"`
 	Product           *Product      `json:"product,omitempty"`
 	ProductIssue      string        `json:"product_issue,omitempty"` // how product data differs from the browser
 	Similarity        *float64      `json:"similarity,omitempty"`    // visible-text similarity to the browser baseline
@@ -135,4 +136,13 @@ type Product struct {
 	Availability string `json:"availability,omitempty"`
 	Rating       string `json:"rating,omitempty"`
 	ReviewCount  string `json:"review_count,omitempty"`
+}
+
+// JSInfo describes how much a raw response depends on JavaScript.
+type JSInfo struct {
+	TextLength     int    `json:"text_length"`
+	ScriptBytes    int    `json:"script_bytes"`
+	Framework      string `json:"framework,omitempty"`
+	ClientRendered bool   `json:"client_rendered"`
+	Reason         string `json:"reason,omitempty"`
 }
