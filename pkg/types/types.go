@@ -75,6 +75,7 @@ type ComparisonResult struct {
 	Timestamp time.Time     `json:"timestamp"`
 	Results   []FetchResult `json:"results"`
 	Summary   Summary       `json:"summary"`
+	Render    *RenderResult `json:"render,omitempty"`
 	Caveat    string        `json:"caveat"`
 }
 
@@ -145,4 +146,15 @@ type JSInfo struct {
 	Framework      string `json:"framework,omitempty"`
 	ClientRendered bool   `json:"client_rendered"`
 	Reason         string `json:"reason,omitempty"`
+}
+
+// RenderResult compares the raw HTML with what a JavaScript-capable browser
+// renders, for the browser baseline.
+type RenderResult struct {
+	RawTextLength      int     `json:"raw_text_length"`
+	RenderedTextLength int     `json:"rendered_text_length"`
+	Similarity         float64 `json:"similarity"`
+	// JSOnlyShare is the fraction of rendered text missing from the raw HTML.
+	JSOnlyShare float64 `json:"js_only_share"`
+	Error       string  `json:"error,omitempty"`
 }

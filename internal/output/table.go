@@ -68,6 +68,20 @@ func WriteTable(w io.Writer, result types.ComparisonResult, color bool) error {
 	line("Robots disallowed", sm.RobotsDisallow, warnStyle)
 	line("Errors", sm.Errors, badStyle)
 
+	if rr := result.Render; rr != nil {
+		sb.WriteString("\n" + style(headerStyle, "JavaScript rendering") + "\n")
+		switch {
+		case rr.Error != "":
+			sb.WriteString("  " + style(badStyle, rr.Error) + "\n")
+		case rr.JSOnlyShare >= 0.2:
+			fmt.Fprintf(&sb, "  %s of the visible text only appears after JavaScript runs (%d -> %d chars).\n  Agents that do not run JavaScript miss it.\n",
+				style(badStyle, fmt.Sprintf("%.0f%%", rr.JSOnlyShare*100)), rr.RawTextLength, rr.RenderedTextLength)
+		default:
+			fmt.Fprintf(&sb, "  %s: the raw HTML already contains the page text (%d of %d chars).\n",
+				style(okStyle, "OK"), rr.RawTextLength, rr.RenderedTextLength)
+		}
+	}
+
 	sb.WriteString("\n" + style(mutedStyle, Caveat) + "\n")
 	_, err := io.WriteString(w, sb.String())
 	return err
