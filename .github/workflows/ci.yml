@@ -33,6 +33,19 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.go == '1.26.x'
         run: go tool cover -func=coverage.out | tail -1
 
+  render:
+    name: Headless render tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.x"
+      - name: Test with Chrome
+        env:
+          ACURL_TEST_RENDER: "1"
+        run: go test -run 'TestHeadless' -v ./internal/render/
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
