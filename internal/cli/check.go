@@ -13,6 +13,7 @@ import (
 	"github.com/tragent-io/acurl/internal/fetcher"
 	"github.com/tragent-io/acurl/internal/output"
 	"github.com/tragent-io/acurl/internal/profiles"
+	"github.com/tragent-io/acurl/internal/render"
 	"github.com/tragent-io/acurl/internal/robots"
 	"github.com/tragent-io/acurl/internal/textdiff"
 	"github.com/tragent-io/acurl/pkg/types"
@@ -25,6 +26,8 @@ type checkFlags struct {
 	output         string
 	cloakThreshold float64
 	diff           string
+	render         bool
+	renderWait     time.Duration
 }
 
 func newCheckCmd(a *app) *cobra.Command {
@@ -46,6 +49,8 @@ AI agents, search bots) and shows how each one is treated.`,
 	f.StringVarP(&fl.output, "output", "o", "", "write the report to a file instead of stdout")
 	f.Float64Var(&fl.cloakThreshold, "cloak-threshold", classifier.DefaultCloakThreshold, "visible-text similarity below which a response counts as cloaked (0 disables)")
 	f.StringVar(&fl.diff, "diff", "", "print a visible-text diff between the browser baseline and this profile")
+	f.BoolVar(&fl.render, "render", false, "also render the page in headless Chrome to measure how much text needs JavaScript")
+	f.DurationVar(&fl.renderWait, "render-wait", 2*time.Second, "how long scripts may run before the rendered page is captured")
 	return cmd
 }
 
@@ -79,6 +84,9 @@ func (a *app) runCheck(ctx context.Context, fl *checkFlags, rawURL string) error
 		Timestamp: time.Now().UTC(),
 		Results:   results,
 		Summary:   classifier.Summarize(results),
+	}
+	if fl.render {
+		report.Render = a.renderBaseline(ctx, url, results, fl)
 	}
 	if err := a.writeReport(report, fl.format, fl.output, !fl.http.noColor); err != nil {
 		return err
@@ -141,4 +149,19 @@ func (a *app) writeReport(report types.ComparisonResult, format, path string, co
 	}
 	fmt.Fprintf(a.stderr, "Report written to %s\n", path)
 	return out.Close()
+}
+
+// renderBaseline renders url in headless Chrome and compares it with the
+// raw HTML the browser profile received.
+func (a *app) renderBaseline(ctx context.Context, url string, results []types.FetchResult, fl *checkFlags) *types.RenderResult {
+	b := classifier.BaselineIndex(results)
+	if b < 0 || len(results[b].Body) == 0 {
+		return &types.RenderResult{Error: "--render needs a successful browser baseline"}
+	}
+	fmt.Fprintln(a.stderr, "Rendering in headless Chrome...")
+	html, err := render.Headless(ctx, url, render.Options{Timeout: fl.http.timeout + fl.renderWait, Wait: fl.renderWait})
+	if err != nil {
+		return &types.RenderResult{Error: err.Error()}
+	}
+	return render.Compare(results[b].Body, html)
 }

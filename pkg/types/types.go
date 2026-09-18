@@ -51,6 +51,7 @@ type FetchResult struct {
 	RobotsDisallowed  bool          `json:"robots_disallowed"`
 	RobotsError       string        `json:"robots_error,omitempty"`
 	Directives        []string      `json:"directives,omitempty"` // X-Robots-Tag and meta robots for this agent
+	JS                *JSInfo       `json:"js,omitempty"`
 	Product           *Product      `json:"product,omitempty"`
 	ProductIssue      string        `json:"product_issue,omitempty"` // how product data differs from the browser
 	Similarity        *float64      `json:"similarity,omitempty"`    // visible-text similarity to the browser baseline
@@ -74,6 +75,7 @@ type ComparisonResult struct {
 	Timestamp time.Time     `json:"timestamp"`
 	Results   []FetchResult `json:"results"`
 	Summary   Summary       `json:"summary"`
+	Render    *RenderResult `json:"render,omitempty"`
 	Caveat    string        `json:"caveat"`
 }
 
@@ -135,4 +137,24 @@ type Product struct {
 	Availability string `json:"availability,omitempty"`
 	Rating       string `json:"rating,omitempty"`
 	ReviewCount  string `json:"review_count,omitempty"`
+}
+
+// JSInfo describes how much a raw response depends on JavaScript.
+type JSInfo struct {
+	TextLength     int    `json:"text_length"`
+	ScriptBytes    int    `json:"script_bytes"`
+	Framework      string `json:"framework,omitempty"`
+	ClientRendered bool   `json:"client_rendered"`
+	Reason         string `json:"reason,omitempty"`
+}
+
+// RenderResult compares the raw HTML with what a JavaScript-capable browser
+// renders, for the browser baseline.
+type RenderResult struct {
+	RawTextLength      int     `json:"raw_text_length"`
+	RenderedTextLength int     `json:"rendered_text_length"`
+	Similarity         float64 `json:"similarity"`
+	// JSOnlyShare is the fraction of rendered text missing from the raw HTML.
+	JSOnlyShare float64 `json:"js_only_share"`
+	Error       string  `json:"error,omitempty"`
 }

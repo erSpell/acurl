@@ -13,6 +13,7 @@ import (
 
 	"github.com/tragent-io/acurl/internal/detect"
 	"github.com/tragent-io/acurl/internal/extract"
+	"github.com/tragent-io/acurl/internal/render"
 	"github.com/tragent-io/acurl/internal/robots"
 	"github.com/tragent-io/acurl/pkg/types"
 )
@@ -185,6 +186,7 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 	result.BotChallenge = detect.Challenge(resp.StatusCode, resp.Header, body)
 	result.Directives = robots.Directives(resp.Header, body, profile.RobotsKey)
 	result.Product = extract.Product(body)
+	result.JS = render.Analyze(body)
 	return result
 }
 
