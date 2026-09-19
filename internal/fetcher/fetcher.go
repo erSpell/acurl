@@ -126,7 +126,7 @@ func shouldRetry(resp *req.Response, err error) bool {
 // Fetch retrieves url using profile. Network failures are reported in the
 // result rather than returned, so one failing profile never aborts a run.
 func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) types.FetchResult {
-	result := types.FetchResult{Profile: profile.Name, Browser: profile.Browser}
+	result := types.FetchResult{Profile: profile.Name, Browser: profile.Browser, Category: profile.Category}
 	start := time.Now()
 
 	client := f.bot

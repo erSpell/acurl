@@ -15,6 +15,7 @@ import (
 	"github.com/tragent-io/acurl/internal/profiles"
 	"github.com/tragent-io/acurl/internal/render"
 	"github.com/tragent-io/acurl/internal/robots"
+	"github.com/tragent-io/acurl/internal/score"
 	"github.com/tragent-io/acurl/internal/textdiff"
 	"github.com/tragent-io/acurl/pkg/types"
 )
@@ -88,6 +89,7 @@ func (a *app) runCheck(ctx context.Context, fl *checkFlags, rawURL string) error
 	if fl.render {
 		report.Render = a.renderBaseline(ctx, url, results, fl)
 	}
+	report.Score = score.Compute(&report)
 	if err := a.writeReport(report, fl.format, fl.output, !fl.http.noColor); err != nil {
 		return err
 	}

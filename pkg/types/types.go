@@ -34,6 +34,7 @@ type Profile struct {
 type FetchResult struct {
 	Profile           string        `json:"profile"`
 	Browser           bool          `json:"browser,omitempty"`
+	Category          string        `json:"category,omitempty"`
 	RobotsOnly        bool          `json:"robots_only,omitempty"`
 	Success           bool          `json:"success"`
 	StatusCode        int           `json:"status_code"`
@@ -76,6 +77,7 @@ type ComparisonResult struct {
 	Results   []FetchResult `json:"results"`
 	Summary   Summary       `json:"summary"`
 	Render    *RenderResult `json:"render,omitempty"`
+	Score     *Score        `json:"score,omitempty"`
 	Caveat    string        `json:"caveat"`
 }
 
@@ -157,4 +159,23 @@ type RenderResult struct {
 	// JSOnlyShare is the fraction of rendered text missing from the raw HTML.
 	JSOnlyShare float64 `json:"js_only_share"`
 	Error       string  `json:"error,omitempty"`
+}
+
+// Score is the AI-readiness score for a page.
+type Score struct {
+	Value  int          `json:"value"` // 0-100
+	Grade  string       `json:"grade"` // A-F
+	Checks []ScoreCheck `json:"checks"`
+}
+
+// ScoreCheck is one weighted check behind a Score.
+type ScoreCheck struct {
+	ID             string  `json:"id"`
+	Title          string  `json:"title"`
+	Weight         int     `json:"weight"`
+	Applies        bool    `json:"applies"`
+	Passed         bool    `json:"passed"`
+	Points         float64 `json:"points"`
+	Detail         string  `json:"detail,omitempty"`
+	Recommendation string  `json:"recommendation,omitempty"`
 }
