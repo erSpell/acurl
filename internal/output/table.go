@@ -68,6 +68,8 @@ func WriteTable(w io.Writer, result types.ComparisonResult, color bool) error {
 	line("Robots disallowed", sm.RobotsDisallow, warnStyle)
 	line("Errors", sm.Errors, badStyle)
 
+	writeScoreText(&sb, result.Score, style)
+
 	if rr := result.Render; rr != nil {
 		sb.WriteString("\n" + style(headerStyle, "JavaScript rendering") + "\n")
 		switch {
