@@ -40,6 +40,9 @@ func Compute(rep *types.ComparisonResult) *types.Score {
 		res := types.ScoreCheck{ID: c.id, Title: c.title, Weight: c.weight, Applies: applies, Detail: detail}
 		if applies {
 			res.Passed = passed >= 1
+			if !res.Passed {
+				res.Recommendation = recommendations[c.id]
+			}
 			res.Points = math.Round(passed*float64(c.weight)*10) / 10
 			total += float64(c.weight)
 			earned += passed * float64(c.weight)
