@@ -1,0 +1,71 @@
+{
+  "value": 17,
+  "grade": "F",
+  "checks": [
+    {
+      "id": "assistants-allowed",
+      "title": "AI assistants can fetch the page",
+      "weight": 25,
+      "applies": true,
+      "passed": false,
+      "points": 0,
+      "detail": "0 of 1 allowed: ChatGPT-User (cloaked)",
+      "recommendation": "AI assistants fetch pages when a shopper asks about them. Allow ChatGPT-User, Claude-User and Perplexity-User in your WAF or bot-management rules (most vendors have a \"verified AI bots\" category) and check that robots.txt does not disallow them."
+    },
+    {
+      "id": "ai-search-allowed",
+      "title": "AI search crawlers can fetch the page",
+      "weight": 20,
+      "applies": false,
+      "passed": false,
+      "points": 0,
+      "detail": "no ai-search profiles in this run"
+    },
+    {
+      "id": "no-challenges",
+      "title": "No bot challenges for AI agents",
+      "weight": 10,
+      "applies": true,
+      "passed": true,
+      "points": 10,
+      "detail": "no challenge pages"
+    },
+    {
+      "id": "no-cloaking",
+      "title": "AI agents see the same content as browsers",
+      "weight": 10,
+      "applies": true,
+      "passed": false,
+      "points": 0,
+      "detail": "different content for: ChatGPT-User",
+      "recommendation": "AI agents get a much smaller or different page than browsers. Serve the same product content to everyone. Personalisation is fine, but stripping content for bots hurts how assistants describe you. Run with --diff \u003cprofile\u003e to see what is missing."
+    },
+    {
+      "id": "server-rendered",
+      "title": "Content is in the HTML without JavaScript",
+      "weight": 15,
+      "applies": true,
+      "passed": false,
+      "points": 0,
+      "detail": "client-rendered page: empty app root element",
+      "recommendation": "Most AI agents do not run JavaScript, so text rendered on the client is invisible to them. Use server-side rendering or static generation for product pages, or at least render the product name, price, availability and description in the initial HTML."
+    },
+    {
+      "id": "structured-data",
+      "title": "Product structured data is present",
+      "weight": 10,
+      "applies": false,
+      "passed": false,
+      "points": 0,
+      "detail": "no schema.org Product found (fine for non-product pages)"
+    },
+    {
+      "id": "product-parity",
+      "title": "AI agents see the same price and availability",
+      "weight": 10,
+      "applies": false,
+      "passed": false,
+      "points": 0
+    }
+  ]
+}

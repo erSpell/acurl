@@ -1,0 +1,69 @@
+{
+  "value": 100,
+  "grade": "A",
+  "checks": [
+    {
+      "id": "assistants-allowed",
+      "title": "AI assistants can fetch the page",
+      "weight": 25,
+      "applies": true,
+      "passed": true,
+      "points": 25,
+      "detail": "1 of 1 allowed"
+    },
+    {
+      "id": "ai-search-allowed",
+      "title": "AI search crawlers can fetch the page",
+      "weight": 20,
+      "applies": true,
+      "passed": true,
+      "points": 20,
+      "detail": "1 of 1 allowed"
+    },
+    {
+      "id": "no-challenges",
+      "title": "No bot challenges for AI agents",
+      "weight": 10,
+      "applies": true,
+      "passed": true,
+      "points": 10,
+      "detail": "no challenge pages"
+    },
+    {
+      "id": "no-cloaking",
+      "title": "AI agents see the same content as browsers",
+      "weight": 10,
+      "applies": true,
+      "passed": true,
+      "points": 10,
+      "detail": "content matches the browser"
+    },
+    {
+      "id": "server-rendered",
+      "title": "Content is in the HTML without JavaScript",
+      "weight": 15,
+      "applies": true,
+      "passed": true,
+      "points": 15,
+      "detail": "page text is in the raw HTML"
+    },
+    {
+      "id": "structured-data",
+      "title": "Product structured data is present",
+      "weight": 10,
+      "applies": true,
+      "passed": true,
+      "points": 10,
+      "detail": "JSON-LD Product with price and availability"
+    },
+    {
+      "id": "product-parity",
+      "title": "AI agents see the same price and availability",
+      "weight": 10,
+      "applies": true,
+      "passed": true,
+      "points": 10,
+      "detail": "every allowed AI agent sees the same product data"
+    }
+  ]
+}

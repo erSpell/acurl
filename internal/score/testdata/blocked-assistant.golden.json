@@ -1,0 +1,72 @@
+{
+  "value": 64,
+  "grade": "D",
+  "checks": [
+    {
+      "id": "assistants-allowed",
+      "title": "AI assistants can fetch the page",
+      "weight": 25,
+      "applies": true,
+      "passed": false,
+      "points": 12.5,
+      "detail": "1 of 2 allowed: ChatGPT-User (challenged)",
+      "recommendation": "AI assistants fetch pages when a shopper asks about them. Allow ChatGPT-User, Claude-User and Perplexity-User in your WAF or bot-management rules (most vendors have a \"verified AI bots\" category) and check that robots.txt does not disallow them."
+    },
+    {
+      "id": "ai-search-allowed",
+      "title": "AI search crawlers can fetch the page",
+      "weight": 20,
+      "applies": true,
+      "passed": false,
+      "points": 0,
+      "detail": "0 of 1 allowed: OAI-SearchBot (blocked)",
+      "recommendation": "AI search indexes decide which products get cited. Allow OAI-SearchBot, Claude-SearchBot and PerplexityBot in robots.txt and your firewall. You can still block training crawlers such as GPTBot separately."
+    },
+    {
+      "id": "no-challenges",
+      "title": "No bot challenges for AI agents",
+      "weight": 10,
+      "applies": true,
+      "passed": false,
+      "points": 6.7,
+      "detail": "challenged: ChatGPT-User",
+      "recommendation": "Agents cannot solve CAPTCHAs or JavaScript challenges. Skip challenges for verified AI user agents, or allow-list their published IP ranges, instead of challenging every request."
+    },
+    {
+      "id": "no-cloaking",
+      "title": "AI agents see the same content as browsers",
+      "weight": 10,
+      "applies": true,
+      "passed": true,
+      "points": 10,
+      "detail": "content matches the browser"
+    },
+    {
+      "id": "server-rendered",
+      "title": "Content is in the HTML without JavaScript",
+      "weight": 15,
+      "applies": true,
+      "passed": true,
+      "points": 15,
+      "detail": "page text is in the raw HTML"
+    },
+    {
+      "id": "structured-data",
+      "title": "Product structured data is present",
+      "weight": 10,
+      "applies": true,
+      "passed": true,
+      "points": 10,
+      "detail": "JSON-LD Product with price and availability"
+    },
+    {
+      "id": "product-parity",
+      "title": "AI agents see the same price and availability",
+      "weight": 10,
+      "applies": true,
+      "passed": true,
+      "points": 10,
+      "detail": "every allowed AI agent sees the same product data"
+    }
+  ]
+}
