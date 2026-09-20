@@ -32,7 +32,9 @@ Each result is classified as `allowed`, `blocked`, `challenged` (WAF or captcha 
 `rate-limited`, `cloaked` (visible text differs a lot from what Chrome got),
 `robots-disallowed` or `error`.
 
-More: [profiles](docs/profiles.md) · [robots.txt and llms.txt](docs/robots.md)
+Every run ends with an **AI readiness score** (0-100) and concrete fixes for anything that fails.
+
+More: [profiles](docs/profiles.md) · [robots.txt and llms.txt](docs/robots.md) · [scoring](docs/scoring.md)
 
 Output formats: `--format table` (default), `json` or `markdown`. Use `-o report.md` to write to a file.
 

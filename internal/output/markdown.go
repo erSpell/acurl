@@ -30,6 +30,8 @@ func WriteMarkdown(w io.Writer, result types.ComparisonResult) error {
 	fmt.Fprintf(&sb, "| %d | %d | %d | %d | %d | %d | %d |\n",
 		s.Allowed, s.Blocked, s.Challenged, s.RateLimited, s.Cloaked, s.RobotsDisallow, s.Errors)
 
+	writeScoreMarkdown(&sb, result.Score)
+
 	fmt.Fprintf(&sb, "\n> %s\n", Caveat)
 	_, err := io.WriteString(w, sb.String())
 	return err
