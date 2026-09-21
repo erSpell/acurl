@@ -49,16 +49,19 @@ func Analyze(body []byte) *types.JSInfo {
 		}
 	}
 
+	// Strong signals identify a client-rendered shell on their own. Heavy
+	// JavaScript only counts when there is almost no text, because many small
+	// static pages load an analytics script or two.
 	var reasons []string
 	if info.TextLength < minText {
-		if info.ScriptBytes > 20*max(info.TextLength, 1) {
-			reasons = append(reasons, "little visible text and a lot of JavaScript")
-		}
 		if noscriptJS.Match(body) {
 			reasons = append(reasons, "asks visitors to enable JavaScript")
 		}
 		if emptyRoot(body) {
 			reasons = append(reasons, "empty app root element")
+		}
+		if info.TextLength < minText/3 && info.ScriptBytes > max(20*info.TextLength, 16<<10) {
+			reasons = append(reasons, "almost no visible text and a lot of JavaScript")
 		}
 	}
 	if len(reasons) > 0 {
