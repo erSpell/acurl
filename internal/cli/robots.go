@@ -8,6 +8,7 @@ import (
 	"github.com/tragent-io/acurl/internal/llmstxt"
 	"github.com/tragent-io/acurl/internal/output"
 	"github.com/tragent-io/acurl/internal/robots"
+	"github.com/tragent-io/acurl/pkg/acurl"
 )
 
 func newRobotsCmd(a *app) *cobra.Command {
@@ -37,20 +38,20 @@ func (a *app) runRobots(ctx context.Context, fl *httpFlags, format, rawURL strin
 	if err != nil {
 		return err
 	}
-	ps, err := fl.loadProfiles()
+	opts, err := fl.options(a)
 	if err != nil {
 		return err
 	}
-	f, err := fl.newFetcher()
+	c, err := acurl.New(opts)
 	if err != nil {
 		return err
 	}
 	cache := robots.NewCache(func(ctx context.Context, u string) (int, []byte, error) {
-		return f.Get(ctx, u, a.userAgent(), robots.MaxSize)
+		return c.Get(ctx, u, robots.MaxSize)
 	})
-	audit := robots.Audit(ctx, cache, url, ps)
+	audit := robots.Audit(ctx, cache, url, c.Profiles())
 	audit.LLMsTxt, err = llmstxt.Check(ctx, func(ctx context.Context, u string) (int, []byte, error) {
-		return f.Get(ctx, u, a.userAgent(), llmstxt.MaxSize)
+		return c.Get(ctx, u, llmstxt.MaxSize)
 	}, url)
 	if err != nil {
 		return err

@@ -10,13 +10,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/tragent-io/acurl/internal/classifier"
-	"github.com/tragent-io/acurl/internal/fetcher"
 	"github.com/tragent-io/acurl/internal/output"
-	"github.com/tragent-io/acurl/internal/profiles"
-	"github.com/tragent-io/acurl/internal/render"
-	"github.com/tragent-io/acurl/internal/robots"
-	"github.com/tragent-io/acurl/internal/score"
 	"github.com/tragent-io/acurl/internal/textdiff"
+	"github.com/tragent-io/acurl/pkg/acurl"
 	"github.com/tragent-io/acurl/pkg/types"
 )
 
@@ -55,46 +51,49 @@ AI agents, search bots) and shows how each one is treated.`,
 	return cmd
 }
 
+// checkOptions builds checker options from the check flags.
+func (a *app) checkOptions(fl *checkFlags) (acurl.Options, error) {
+	opts, err := fl.http.options(a)
+	if err != nil {
+		return opts, err
+	}
+	opts.SkipRobots = fl.noRobots
+	opts.CloakThreshold = fl.cloakThreshold
+	if opts.CloakThreshold == 0 {
+		opts.CloakThreshold = -1 // the flag uses 0 for "disabled"
+	}
+	opts.Render = fl.render
+	opts.RenderWait = fl.renderWait
+	return opts, nil
+}
+
 func (a *app) runCheck(ctx context.Context, fl *checkFlags, rawURL string) error {
 	url, err := normalizeURL(rawURL)
 	if err != nil {
 		return err
 	}
-	selected, err := fl.http.loadProfiles()
+	opts, err := a.checkOptions(fl)
 	if err != nil {
 		return err
 	}
-	if fl.noRobots {
-		selected = profiles.WithoutRobotsOnly(selected)
-	}
-	f, err := fl.http.newFetcher()
+	c, err := acurl.New(opts)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(a.stderr, "Fetching %s with %d profiles...\n", url, len(selected))
-	results := f.FetchAll(ctx, url, selected, fl.http.concurrency)
-	if !fl.noRobots {
-		a.applyRobots(ctx, f, url, selected, results)
-	}
-	classifier.ClassifyAll(results, fl.cloakThreshold)
-	classifier.CompareProducts(results)
-
-	report := types.ComparisonResult{
-		URL:       url,
-		Timestamp: time.Now().UTC(),
-		Results:   results,
-		Summary:   classifier.Summarize(results),
-	}
+	fmt.Fprintf(a.stderr, "Fetching %s with %d profiles...\n", url, len(c.Profiles()))
 	if fl.render {
-		report.Render = a.renderBaseline(ctx, url, results, fl)
+		fmt.Fprintln(a.stderr, "Rendering in headless Chrome...")
 	}
-	report.Score = score.Compute(&report)
-	if err := a.writeReport(report, fl.format, fl.output, !fl.http.noColor); err != nil {
+	report, err := c.Check(ctx, url)
+	if err != nil {
+		return err
+	}
+	if err := a.writeReport(*report, fl.format, fl.output, !fl.http.noColor); err != nil {
 		return err
 	}
 	if fl.diff != "" {
-		if err := a.printDiff(results, fl.diff, !fl.http.noColor); err != nil {
+		if err := a.printDiff(report.Results, fl.diff, !fl.http.noColor); err != nil {
 			return err
 		}
 	}
@@ -102,22 +101,6 @@ func (a *app) runCheck(ctx context.Context, fl *checkFlags, rawURL string) error
 		return exitError(code)
 	}
 	return nil
-}
-
-func (a *app) applyRobots(ctx context.Context, f *fetcher.Fetcher, url string, ps []types.Profile, results []types.FetchResult) {
-	cache := robots.NewCache(func(ctx context.Context, u string) (int, []byte, error) {
-		return f.Get(ctx, u, a.userAgent(), robots.MaxSize)
-	})
-	data := cache.Get(ctx, url)
-	for i, p := range ps {
-		if p.RobotsKey == "" {
-			continue
-		}
-		if data.Unreachable() {
-			results[i].RobotsError = data.Err.Error()
-		}
-		results[i].RobotsDisallowed = !data.Allowed(p.RobotsKey, url)
-	}
 }
 
 // printDiff writes the visible-text diff between the baseline and the named
@@ -151,19 +134,4 @@ func (a *app) writeReport(report types.ComparisonResult, format, path string, co
 	}
 	fmt.Fprintf(a.stderr, "Report written to %s\n", path)
 	return out.Close()
-}
-
-// renderBaseline renders url in headless Chrome and compares it with the
-// raw HTML the browser profile received.
-func (a *app) renderBaseline(ctx context.Context, url string, results []types.FetchResult, fl *checkFlags) *types.RenderResult {
-	b := classifier.BaselineIndex(results)
-	if b < 0 || len(results[b].Body) == 0 {
-		return &types.RenderResult{Error: "--render needs a successful browser baseline"}
-	}
-	fmt.Fprintln(a.stderr, "Rendering in headless Chrome...")
-	html, err := render.Headless(ctx, url, render.Options{Timeout: fl.http.timeout + fl.renderWait, Wait: fl.renderWait})
-	if err != nil {
-		return &types.RenderResult{Error: err.Error()}
-	}
-	return render.Compare(results[b].Body, html)
 }
