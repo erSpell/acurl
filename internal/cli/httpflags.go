@@ -8,6 +8,7 @@ import (
 
 	"github.com/tragent-io/acurl/internal/fetcher"
 	"github.com/tragent-io/acurl/internal/profiles"
+	"github.com/tragent-io/acurl/pkg/acurl"
 	"github.com/tragent-io/acurl/pkg/types"
 )
 
@@ -48,16 +49,24 @@ func (h *httpFlags) register(f *pflag.FlagSet) {
 	f.BoolVar(&h.noColor, "no-color", false, "disable colored output")
 }
 
-func (h *httpFlags) newFetcher() (*fetcher.Fetcher, error) {
+// options builds checker options from the flags. Profile selection is
+// included so every command filters the same way.
+func (h *httpFlags) options(a *app) (acurl.Options, error) {
 	headers, err := parseHeaders(h.headers)
 	if err != nil {
-		return nil, err
+		return acurl.Options{}, err
+	}
+	ps, err := h.loadProfiles()
+	if err != nil {
+		return acurl.Options{}, err
 	}
 	method := h.method
 	if h.head {
 		method = http.MethodHead
 	}
-	return fetcher.New(fetcher.Options{
+	return acurl.Options{
+		Profiles:    ps,
+		Concurrency: h.concurrency,
 		Timeout:     h.timeout,
 		Headers:     headers,
 		MaxBody:     h.maxBody,
@@ -67,7 +76,8 @@ func (h *httpFlags) newFetcher() (*fetcher.Fetcher, error) {
 		HTTPVersion: h.httpVersion,
 		Method:      method,
 		BotTLS:      h.botTLS,
-	})
+		UserAgent:   a.userAgent(),
+	}, nil
 }
 
 func (h *httpFlags) loadProfiles() ([]types.Profile, error) {

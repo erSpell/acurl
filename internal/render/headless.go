@@ -38,8 +38,8 @@ func Headless(ctx context.Context, url string, opts Options) ([]byte, error) {
 	ctx, cancelTab := chromedp.NewContext(ctx)
 	defer cancelTab()
 
-	fail := func(err error) ([]byte, error) {
-		return nil, fmt.Errorf("headless render: %w (is Chrome installed?)", err)
+	wrap := func(err error) error {
+		return fmt.Errorf("headless render: %w (is Chrome installed?)", err)
 	}
 	for _, step := range []chromedp.Action[chromedp.Void]{
 		chromedp.Navigate(url),
@@ -47,12 +47,12 @@ func Headless(ctx context.Context, url string, opts Options) ([]byte, error) {
 		chromedp.Sleep(opts.Wait),
 	} {
 		if _, err := chromedp.Run(ctx, step); err != nil {
-			return fail(err)
+			return nil, wrap(err)
 		}
 	}
 	out, err := chromedp.Run(ctx, chromedp.OuterHTML(chromedp.CSS("html")))
 	if err != nil {
-		return fail(err)
+		return nil, wrap(err)
 	}
 	return []byte(out), nil
 }
