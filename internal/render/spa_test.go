@@ -48,3 +48,17 @@ func TestAnalyzeEmpty(t *testing.T) {
 }
 
 func contains(s, sub string) bool { return strings.Contains(s, sub) }
+
+func TestAnalyzeSmallStaticPageWithScript(t *testing.T) {
+	// example.com: ~170 chars of text and one small external script.
+	if info := Analyze(fixture(t, "static-small.html")); info == nil || info.ClientRendered {
+		t.Errorf("small static page flagged as client-rendered: %+v", info)
+	}
+}
+
+func TestAnalyzeHeavyScriptNoText(t *testing.T) {
+	body := []byte("<html><body><script>" + strings.Repeat("x=1;", 6000) + "</script></body></html>")
+	if info := Analyze(body); info == nil || !info.ClientRendered {
+		t.Errorf("script-only page not flagged: %+v", info)
+	}
+}
