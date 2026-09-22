@@ -1,6 +1,8 @@
 package batch
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"errors"
 	"reflect"
@@ -70,5 +72,52 @@ func TestRun(t *testing.T) {
 	}
 	if rep.Items[2].Error != "boom" {
 		t.Errorf("failed item = %+v", rep.Items[2])
+	}
+}
+
+func sitemapGetter(files map[string]string) Getter {
+	return func(_ context.Context, u string) (int, []byte, error) {
+		body, ok := files[u]
+		if !ok {
+			return 404, nil, nil
+		}
+		if strings.HasSuffix(u, ".gz") {
+			var buf bytes.Buffer
+			zw := gzip.NewWriter(&buf)
+			_, _ = zw.Write([]byte(body))
+			_ = zw.Close()
+			return 200, buf.Bytes(), nil
+		}
+		return 200, []byte(body), nil
+	}
+}
+
+func TestSitemapURLs(t *testing.T) {
+	files := map[string]string{
+		"https://s.example/sitemap.xml": `<?xml version="1.0"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<sitemap><loc>https://s.example/products.xml.gz</loc></sitemap>
+<sitemap><loc>https://s.example/pages.xml</loc></sitemap></sitemapindex>`,
+		"https://s.example/products.xml.gz": `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url><loc>https://s.example/p/1</loc></url><url><loc> https://s.example/p/2 </loc></url></urlset>`,
+		"https://s.example/pages.xml": `<urlset><url><loc>https://s.example/about</loc></url></urlset>`,
+	}
+	got, err := SitemapURLs(context.Background(), sitemapGetter(files), "https://s.example/sitemap.xml", 0)
+	want := []string{"https://s.example/p/1", "https://s.example/p/2", "https://s.example/about"}
+	if err != nil || !reflect.DeepEqual(got, want) {
+		t.Errorf("SitemapURLs = %v, %v", got, err)
+	}
+	got, _ = SitemapURLs(context.Background(), sitemapGetter(files), "https://s.example/sitemap.xml", 2)
+	if len(got) != 2 {
+		t.Errorf("limit not applied: %v", got)
+	}
+}
+
+func TestSitemapErrors(t *testing.T) {
+	files := map[string]string{"https://s.example/html": "<html><body>not xml"}
+	if _, err := SitemapURLs(context.Background(), sitemapGetter(files), "https://s.example/missing.xml", 0); err == nil {
+		t.Error("expected error for 404")
+	}
+	if _, err := SitemapURLs(context.Background(), sitemapGetter(files), "https://s.example/html", 0); err == nil {
+		t.Error("expected error for non-sitemap body")
 	}
 }

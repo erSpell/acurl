@@ -12,6 +12,7 @@ import (
 
 	"github.com/tragent-io/acurl/internal/batch"
 	"github.com/tragent-io/acurl/internal/output"
+	"github.com/tragent-io/acurl/internal/robots"
 	"github.com/tragent-io/acurl/pkg/acurl"
 )
 
@@ -19,6 +20,8 @@ type batchFlags struct {
 	check    checkFlags
 	csv      bool
 	parallel int
+	sitemap  string
+	limit    int
 }
 
 func newBatchCmd(a *app) *cobra.Command {
@@ -30,7 +33,9 @@ func newBatchCmd(a *app) *cobra.Command {
 file (the "url" column, or the first column), or stdin when the file is "-" or omitted.`,
 		Example: `  acurl batch urls.txt
   acurl batch products.csv -f json -o report.json
-  cat urls.txt | acurl batch`,
+  cat urls.txt | acurl batch
+  acurl batch --sitemap https://shop.example/sitemap.xml --limit 20
+  acurl batch --sitemap auto:shop.example`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return a.runBatch(cmd.Context(), &fl, args)
@@ -44,18 +49,13 @@ file (the "url" column, or the first column), or stdin when the file is "-" or o
 	f.Float64Var(&fl.check.cloakThreshold, "cloak-threshold", 0.5, "visible-text similarity below which a response counts as cloaked (0 disables)")
 	f.BoolVar(&fl.csv, "csv", false, "treat the input as CSV (automatic for .csv files)")
 	f.IntVarP(&fl.parallel, "parallel", "p", 2, "URLs to check at the same time")
+	f.StringVar(&fl.sitemap, "sitemap", "", `read URLs from a sitemap URL, or "auto:<site>" to use the sitemaps listed in robots.txt`)
+	f.IntVar(&fl.limit, "limit", 50, "maximum URLs to check (0 = no limit)")
 	fl.check.renderWait = 2 * time.Second
 	return cmd
 }
 
 func (a *app) runBatch(ctx context.Context, fl *batchFlags, args []string) error {
-	urls, err := a.batchURLs(fl, args)
-	if err != nil {
-		return err
-	}
-	if len(urls) == 0 {
-		return fmt.Errorf("no URLs to check")
-	}
 	opts, err := a.checkOptions(&fl.check)
 	if err != nil {
 		return err
@@ -63,6 +63,24 @@ func (a *app) runBatch(ctx context.Context, fl *batchFlags, args []string) error
 	c, err := acurl.New(opts)
 	if err != nil {
 		return err
+	}
+	var urls []string
+	if fl.sitemap != "" {
+		if len(args) > 0 {
+			return fmt.Errorf("use either a file or --sitemap, not both")
+		}
+		urls, err = a.sitemapURLs(ctx, c, fl.sitemap, fl.limit)
+	} else {
+		urls, err = a.batchURLs(fl, args)
+	}
+	if err != nil {
+		return err
+	}
+	if fl.limit > 0 && len(urls) > fl.limit {
+		urls = urls[:fl.limit]
+	}
+	if len(urls) == 0 {
+		return fmt.Errorf("no URLs to check")
 	}
 
 	fmt.Fprintf(a.stderr, "Checking %d URLs with %d profiles each...\n", len(urls), len(c.Profiles()))
@@ -134,4 +152,43 @@ func (a *app) outputWriter(path string) (io.Writer, func() error, error) {
 		fmt.Fprintf(a.stderr, "Report written to %s\n", path)
 		return nil
 	}, nil
+}
+
+// sitemapURLs reads URLs from a sitemap, or with "auto:<site>" from every
+// sitemap that the site's robots.txt lists.
+func (a *app) sitemapURLs(ctx context.Context, c *acurl.Checker, spec string, limit int) ([]string, error) {
+	get := func(ctx context.Context, u string) (int, []byte, error) {
+		return c.Get(ctx, u, batch.MaxSitemapSize)
+	}
+	roots := []string{spec}
+	if site, ok := strings.CutPrefix(spec, "auto:"); ok {
+		u, err := normalizeURL(site)
+		if err != nil {
+			return nil, err
+		}
+		cache := robots.NewCache(func(ctx context.Context, u string) (int, []byte, error) {
+			return c.Get(ctx, u, robots.MaxSize)
+		})
+		roots = cache.Get(ctx, u).Sitemaps()
+		if len(roots) == 0 {
+			return nil, fmt.Errorf("robots.txt for %s lists no sitemaps", u)
+		}
+	}
+	var urls []string
+	for _, root := range roots {
+		left := 0
+		if limit > 0 {
+			left = limit - len(urls)
+			if left <= 0 {
+				break
+			}
+		}
+		got, err := batch.SitemapURLs(ctx, get, root, left)
+		if err != nil {
+			return nil, err
+		}
+		urls = append(urls, got...)
+	}
+	fmt.Fprintf(a.stderr, "Found %d URLs in %d sitemap(s)\n", len(urls), len(roots))
+	return batch.Dedupe(urls), nil
 }
