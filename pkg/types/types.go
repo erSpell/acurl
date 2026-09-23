@@ -179,3 +179,27 @@ type ScoreCheck struct {
 	Detail         string  `json:"detail,omitempty"`
 	Recommendation string  `json:"recommendation,omitempty"`
 }
+
+// BatchReport is the result of `acurl batch`.
+type BatchReport struct {
+	Timestamp time.Time    `json:"timestamp"`
+	Items     []BatchItem  `json:"items"`
+	Summary   BatchSummary `json:"summary"`
+}
+
+// BatchItem is one URL of a batch run. Error is set when the URL could not
+// be checked at all.
+type BatchItem struct {
+	URL    string            `json:"url"`
+	Report *ComparisonResult `json:"report,omitempty"`
+	Error  string            `json:"error,omitempty"`
+}
+
+// BatchSummary aggregates a batch run.
+type BatchSummary struct {
+	URLs         int     `json:"urls"`
+	Failed       int     `json:"failed"`
+	Scored       int     `json:"scored"`
+	AverageScore int     `json:"average_score"`
+	Results      Summary `json:"results"`
+}
