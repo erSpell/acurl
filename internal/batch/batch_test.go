@@ -6,8 +6,11 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"sort"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/tragent-io/acurl/pkg/types"
 )
@@ -119,5 +122,48 @@ func TestSitemapErrors(t *testing.T) {
 	}
 	if _, err := SitemapURLs(context.Background(), sitemapGetter(files), "https://s.example/html", 0); err == nil {
 		t.Error("expected error for non-sitemap body")
+	}
+}
+
+type timingChecker struct {
+	mu     sync.Mutex
+	starts map[string][]time.Time
+}
+
+func (c *timingChecker) Check(_ context.Context, u string) (*types.ComparisonResult, error) {
+	host := strings.SplitN(strings.TrimPrefix(u, "https://"), "/", 2)[0]
+	c.mu.Lock()
+	c.starts[host] = append(c.starts[host], time.Now())
+	c.mu.Unlock()
+	return &types.ComparisonResult{URL: u}, nil
+}
+
+func TestRunSpacesOutSameHost(t *testing.T) {
+	c := &timingChecker{starts: map[string][]time.Time{}}
+	urls := []string{"https://a.example/1", "https://a.example/2", "https://a.example/3", "https://b.example/1"}
+	start := time.Now()
+	Run(context.Background(), c, urls, Options{Parallel: 4, Delay: 60 * time.Millisecond})
+
+	a := c.starts["a.example"]
+	if len(a) != 3 {
+		t.Fatalf("a.example checked %d times", len(a))
+	}
+	sort.Slice(a, func(i, j int) bool { return a[i].Before(a[j]) })
+	for i := 1; i < len(a); i++ {
+		if gap := a[i].Sub(a[i-1]); gap < 50*time.Millisecond {
+			t.Errorf("gap %d = %v, want >= 60ms", i, gap)
+		}
+	}
+	if b := c.starts["b.example"]; len(b) != 1 || b[0].Sub(start) > 40*time.Millisecond {
+		t.Errorf("b.example should not wait for a.example: %v", b)
+	}
+}
+
+func TestRunCancelled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	rep := Run(ctx, fakeChecker{"u1": 1, "u2": 2}, []string{"u1", "u2"}, Options{Delay: time.Hour})
+	if rep.Summary.Failed != 2 {
+		t.Errorf("cancelled run should fail every URL: %+v", rep.Summary)
 	}
 }

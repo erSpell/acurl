@@ -22,6 +22,7 @@ type batchFlags struct {
 	parallel int
 	sitemap  string
 	limit    int
+	delay    time.Duration
 }
 
 func newBatchCmd(a *app) *cobra.Command {
@@ -51,6 +52,7 @@ file (the "url" column, or the first column), or stdin when the file is "-" or o
 	f.IntVarP(&fl.parallel, "parallel", "p", 2, "URLs to check at the same time")
 	f.StringVar(&fl.sitemap, "sitemap", "", `read URLs from a sitemap URL, or "auto:<site>" to use the sitemaps listed in robots.txt`)
 	f.IntVar(&fl.limit, "limit", 50, "maximum URLs to check (0 = no limit)")
+	f.DurationVar(&fl.delay, "delay", 500*time.Millisecond, "minimum time between checks of URLs on the same host")
 	fl.check.renderWait = 2 * time.Second
 	return cmd
 }
@@ -86,6 +88,7 @@ func (a *app) runBatch(ctx context.Context, fl *batchFlags, args []string) error
 	fmt.Fprintf(a.stderr, "Checking %d URLs with %d profiles each...\n", len(urls), len(c.Profiles()))
 	rep := batch.Run(ctx, c, urls, batch.Options{
 		Parallel: fl.parallel,
+		Delay:    fl.delay,
 		Progress: func(done, total int, u string) {
 			fmt.Fprintf(a.stderr, "  [%d/%d] %s\n", done, total, u)
 		},

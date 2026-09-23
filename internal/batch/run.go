@@ -3,6 +3,7 @@ package batch
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/tragent-io/acurl/pkg/types"
 )
@@ -16,6 +17,8 @@ type Checker interface {
 type Options struct {
 	// Parallel is how many URLs are checked at once. Default 2.
 	Parallel int
+	// Delay is the minimum time between starting checks on the same host.
+	Delay time.Duration
 	// Progress, if set, is called after each URL completes.
 	Progress func(done, total int, url string)
 }
@@ -31,6 +34,7 @@ func Run(ctx context.Context, c Checker, urls []string, opts Options) *types.Bat
 		mu   sync.Mutex
 		done int
 		sem  = make(chan struct{}, opts.Parallel)
+		lim  = newHostLimiter(opts.Delay)
 	)
 	for i, u := range urls {
 		wg.Add(1)
@@ -40,8 +44,8 @@ func Run(ctx context.Context, c Checker, urls []string, opts Options) *types.Bat
 			defer func() { <-sem }()
 
 			item := types.BatchItem{URL: u}
-			if ctx.Err() != nil {
-				item.Error = ctx.Err().Error()
+			if err := lim.wait(ctx, u); err != nil {
+				item.Error = err.Error()
 			} else if rep, err := c.Check(ctx, u); err != nil {
 				item.Error = err.Error()
 			} else {
