@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -182,5 +183,46 @@ func TestRobotsAuditUnreachable(t *testing.T) {
 	code, stdout, _ := run(t, "robots", srv.URL, "--no-color", "-a", "GPTBot")
 	if code != output.ExitError || !strings.Contains(stdout, "full disallow") {
 		t.Errorf("code=%d output=%s", code, stdout)
+	}
+}
+
+func TestConfigFileAndEnv(t *testing.T) {
+	srv := shop(t)
+	dir := t.TempDir()
+	cfg := dir + "/acurl.yaml"
+	if err := os.WriteFile(cfg, []byte("agents: [Googlebot, ChatGPT-User]\nformat: json\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("ACURL_AGENTS", "Googlebot")
+	code, stdout, stderr := run(t, "--config", cfg, srv.URL)
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%s", code, stderr)
+	}
+	var rep types.ComparisonResult
+	if err := json.Unmarshal([]byte(stdout), &rep); err != nil {
+		t.Fatalf("config format: json not applied: %v", err)
+	}
+	if len(rep.Results) != 1 || rep.Results[0].Profile != "Googlebot" {
+		t.Errorf("ACURL_AGENTS should override the config file: %+v", rep.Results)
+	}
+
+	if err := os.WriteFile(cfg, []byte("timeuot: 5s\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if code, _, stderr := run(t, "--config", cfg, srv.URL); code != output.ExitError || !strings.Contains(stderr, "timeuot") {
+		t.Errorf("typo in config should fail: code=%d stderr=%s", code, stderr)
+	}
+}
+
+func TestInit(t *testing.T) {
+	t.Chdir(t.TempDir())
+	if code, _, stderr := run(t, "init"); code != 0 {
+		t.Fatalf("init failed: %s", stderr)
+	}
+	if code, _, stderr := run(t, "init"); code != output.ExitError || !strings.Contains(stderr, "already exists") {
+		t.Errorf("second init should refuse: %d %s", code, stderr)
+	}
+	if _, err := os.Stat(".acurl.yaml"); err != nil {
+		t.Error(err)
 	}
 }
