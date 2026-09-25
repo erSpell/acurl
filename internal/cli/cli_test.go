@@ -226,3 +226,17 @@ func TestInit(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestFailOnPolicy(t *testing.T) {
+	srv := shop(t)
+	args := []string{srv.URL, "-a", "Chrome (Browser),ChatGPT-User,PerplexityBot", "--no-color"}
+	if code, _, _ := run(t, append(args, "--fail-on", "none")...); code != 0 {
+		t.Errorf("--fail-on none: code %d", code)
+	}
+	if code, _, stderr := run(t, append(args, "--fail-on", "robots")...); code != output.ExitBlocked || !strings.Contains(stderr, "PerplexityBot robots-disallowed") {
+		t.Errorf("--fail-on robots: code %d stderr %s", code, stderr)
+	}
+	if code, _, _ := run(t, append(args, "--fail-on", "nonsense")...); code != output.ExitError {
+		t.Errorf("bad policy: code %d", code)
+	}
+}

@@ -44,10 +44,7 @@ file (the "url" column, or the first column), or stdin when the file is "-" or o
 	}
 	f := cmd.Flags()
 	fl.check.http.register(f)
-	f.BoolVar(&fl.check.noRobots, "no-robots", false, "skip robots.txt checks")
-	f.StringVarP(&fl.check.format, "format", "f", "table", "output format: table, json, markdown")
-	f.StringVarP(&fl.check.output, "output", "o", "", "write the report to a file instead of stdout")
-	f.Float64Var(&fl.check.cloakThreshold, "cloak-threshold", 0.5, "visible-text similarity below which a response counts as cloaked (0 disables)")
+	fl.check.registerOutput(f, "table, json, markdown")
 	f.BoolVar(&fl.csv, "csv", false, "treat the input as CSV (automatic for .csv files)")
 	f.IntVarP(&fl.parallel, "parallel", "p", 2, "URLs to check at the same time")
 	f.StringVar(&fl.sitemap, "sitemap", "", `read URLs from a sitemap URL, or "auto:<site>" to use the sitemaps listed in robots.txt`)
@@ -58,6 +55,10 @@ file (the "url" column, or the first column), or stdin when the file is "-" or o
 }
 
 func (a *app) runBatch(ctx context.Context, fl *batchFlags, args []string) error {
+	policy, err := output.ParsePolicy(fl.check.failOn)
+	if err != nil {
+		return err
+	}
 	opts, err := a.checkOptions(&fl.check)
 	if err != nil {
 		return err
@@ -105,7 +106,7 @@ func (a *app) runBatch(ctx context.Context, fl *batchFlags, args []string) error
 	if err := closeOut(); err != nil {
 		return err
 	}
-	if code := output.BatchExitCode(rep); code != output.ExitOK {
+	if code := output.BatchExitCode(rep, policy); code != output.ExitOK {
 		return exitError(code)
 	}
 	return nil

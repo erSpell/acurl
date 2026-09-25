@@ -81,13 +81,13 @@ func writeBatchMarkdown(w io.Writer, rep *types.BatchReport) error {
 	return err
 }
 
-// BatchExitCode returns the worst exit code across the batch.
-func BatchExitCode(rep *types.BatchReport) int {
+// BatchExitCode returns the worst exit code across the batch under p.
+func BatchExitCode(rep *types.BatchReport, p Policy) int {
 	code := ExitOK
 	for _, it := range rep.Items {
 		c := ExitError
 		if it.Report != nil {
-			c = ExitCode(it.Report.Summary)
+			c = p.ExitCode(it.Report)
 		}
 		code = max(code, c)
 	}
