@@ -84,7 +84,7 @@ func Summarize(items []types.BatchItem) *types.BatchReport {
 		rep.Summary.Results.Cloaked += s.Cloaked
 		rep.Summary.Results.RobotsDisallow += s.RobotsDisallow
 		rep.Summary.Results.Errors += s.Errors
-		if it.Report.Score != nil {
+		if it.Report.Score != nil && it.Report.Score.Note == "" {
 			total += it.Report.Score.Value
 			rep.Summary.Scored++
 		}

@@ -34,6 +34,14 @@ var checks = []check{
 // on a page without products) are left out and the rest re-weighted.
 func Compute(rep *types.ComparisonResult) *types.Score {
 	s := &types.Score{}
+	// Without a working browser baseline the site is blocking acurl itself
+	// (often its IP address), so agent results say nothing about agents.
+	if b := classifier.BaselineIndex(rep.Results); b >= 0 && rep.Results[b].Classification != classifier.Allowed {
+		s.Grade = "-"
+		s.Note = "the browser baseline was " + rep.Results[b].Classification +
+			", so the site is treating this network or IP as a bot; scores would not reflect AI agent access"
+		return s
+	}
 	total, earned := 0.0, 0.0
 	for _, c := range checks {
 		passed, detail, applies := c.eval(rep)

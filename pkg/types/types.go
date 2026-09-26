@@ -164,7 +164,8 @@ type RenderResult struct {
 // Score is the AI-readiness score for a page.
 type Score struct {
 	Value  int          `json:"value"` // 0-100
-	Grade  string       `json:"grade"` // A-F
+	Grade  string       `json:"grade"` // A-F, or "-" when the page could not be scored
+	Note   string       `json:"note,omitempty"`
 	Checks []ScoreCheck `json:"checks"`
 }
 
