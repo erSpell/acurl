@@ -240,3 +240,15 @@ func TestFailOnPolicy(t *testing.T) {
 		t.Errorf("bad policy: code %d", code)
 	}
 }
+
+func TestQuietAndVerbose(t *testing.T) {
+	srv := shop(t)
+	_, _, stderr := run(t, srv.URL, "-a", "Googlebot", "-q", "--no-color")
+	if stderr != "" {
+		t.Errorf("--quiet should silence stderr, got %q", stderr)
+	}
+	_, _, stderr = run(t, srv.URL, "-a", "Googlebot", "-v", "--no-color")
+	if !strings.Contains(stderr, "> GET "+srv.URL+" [Googlebot] 200") {
+		t.Errorf("--verbose should trace requests, got %q", stderr)
+	}
+}

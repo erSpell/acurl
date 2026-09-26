@@ -13,6 +13,7 @@ import (
 
 	"github.com/tragent-io/acurl/internal/config"
 	"github.com/tragent-io/acurl/internal/output"
+	"github.com/tragent-io/acurl/pkg/acurl"
 )
 
 // BuildInfo describes the running binary.
@@ -28,6 +29,30 @@ type app struct {
 	stdout io.Writer
 	stderr io.Writer
 	getenv func(string) string
+
+	quiet   bool
+	verbose bool
+}
+
+// logf prints progress to stderr unless --quiet is set.
+func (a *app) logf(format string, args ...any) {
+	if !a.quiet {
+		fmt.Fprintf(a.stderr, format, args...)
+	}
+}
+
+// trace returns a per-request logger for --verbose, or nil.
+func (a *app) trace() func(acurl.TraceEvent) {
+	if !a.verbose {
+		return nil
+	}
+	return func(e acurl.TraceEvent) {
+		status := fmt.Sprint(e.Status)
+		if e.Err != nil {
+			status = "ERR " + e.Err.Error()
+		}
+		fmt.Fprintf(a.stderr, "  > %s %s [%s] %s %dms\n", e.Method, e.URL, e.Profile, status, e.Duration.Milliseconds())
+	}
 }
 
 // userAgent identifies acurl itself when fetching auxiliary files.
@@ -66,6 +91,8 @@ func newRootCmd(a *app) *cobra.Command {
 
 	var configPath string
 	cmd.PersistentFlags().StringVar(&configPath, "config", "", "config file (default ./"+config.FileName+" or the user config dir)")
+	cmd.PersistentFlags().BoolVarP(&a.quiet, "quiet", "q", false, "only print the report")
+	cmd.PersistentFlags().BoolVarP(&a.verbose, "verbose", "v", false, "log every request to stderr")
 	cmd.PersistentPreRunE = func(c *cobra.Command, _ []string) error {
 		if c.Name() == "init" {
 			return nil

@@ -42,6 +42,18 @@ type Options struct {
 	// (default, like most real crawlers) or "chrome" to make the user agent
 	// the only difference from the browser baseline.
 	BotTLS string
+	// Trace, if set, is called after every page request.
+	Trace func(TraceEvent)
+}
+
+// TraceEvent describes one completed page request.
+type TraceEvent struct {
+	Profile  string
+	Method   string
+	URL      string
+	Status   int
+	Duration time.Duration
+	Err      error
 }
 
 // DefaultMaxBody is the default response body cap (5 MiB).
@@ -145,6 +157,13 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 	}
 
 	resp, err := r.Send(f.opts.Method, url)
+	if f.opts.Trace != nil {
+		ev := TraceEvent{Profile: profile.Name, Method: f.opts.Method, URL: url, Duration: time.Since(start), Err: err}
+		if err == nil {
+			ev.Status = resp.StatusCode
+		}
+		f.opts.Trace(ev)
+	}
 	result.RedirectChain = chain
 	if err != nil {
 		result.SetDuration(time.Since(start))

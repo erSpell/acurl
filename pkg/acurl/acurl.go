@@ -53,7 +53,12 @@ type Options struct {
 
 	// UserAgent identifies acurl when it fetches robots.txt and llms.txt.
 	UserAgent string
+	// Trace, if set, is called after every page request.
+	Trace func(TraceEvent)
 }
+
+// TraceEvent describes one completed page request.
+type TraceEvent = fetcher.TraceEvent
 
 // Checker runs checks. It is safe for concurrent use and shares its HTTP
 // connections and robots.txt cache across URLs.
@@ -104,6 +109,7 @@ func New(opts Options) (*Checker, error) {
 		HTTPVersion: opts.HTTPVersion,
 		Method:      opts.Method,
 		BotTLS:      opts.BotTLS,
+		Trace:       opts.Trace,
 	})
 	if err != nil {
 		return nil, err

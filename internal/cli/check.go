@@ -92,9 +92,9 @@ func (a *app) runCheck(ctx context.Context, fl *checkFlags, rawURL string) error
 		return err
 	}
 
-	fmt.Fprintf(a.stderr, "Fetching %s with %d profiles...\n", url, len(c.Profiles()))
+	a.logf("Fetching %s with %d profiles...\n", url, len(c.Profiles()))
 	if fl.render {
-		fmt.Fprintln(a.stderr, "Rendering in headless Chrome...")
+		a.logf("Rendering in headless Chrome...\n")
 	}
 	report, err := c.Check(ctx, url)
 	if err != nil {
@@ -144,6 +144,6 @@ func (a *app) writeReport(report types.ComparisonResult, format, path string, co
 	if err := output.Write(out, format, report, false); err != nil {
 		return err
 	}
-	fmt.Fprintf(a.stderr, "Report written to %s\n", path)
+	a.logf("Report written to %s\n", path)
 	return out.Close()
 }

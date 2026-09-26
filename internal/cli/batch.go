@@ -86,12 +86,12 @@ func (a *app) runBatch(ctx context.Context, fl *batchFlags, args []string) error
 		return fmt.Errorf("no URLs to check")
 	}
 
-	fmt.Fprintf(a.stderr, "Checking %d URLs with %d profiles each...\n", len(urls), len(c.Profiles()))
+	a.logf("Checking %d URLs with %d profiles each...\n", len(urls), len(c.Profiles()))
 	rep := batch.Run(ctx, c, urls, batch.Options{
 		Parallel: fl.parallel,
 		Delay:    fl.delay,
 		Progress: func(done, total int, u string) {
-			fmt.Fprintf(a.stderr, "  [%d/%d] %s\n", done, total, u)
+			a.logf("  [%d/%d] %s\n", done, total, u)
 		},
 	})
 	rep.Timestamp = time.Now().UTC()
@@ -153,7 +153,7 @@ func (a *app) outputWriter(path string) (io.Writer, func() error, error) {
 		if err := f.Close(); err != nil {
 			return err
 		}
-		fmt.Fprintf(a.stderr, "Report written to %s\n", path)
+		a.logf("Report written to %s\n", path)
 		return nil
 	}, nil
 }
@@ -193,6 +193,6 @@ func (a *app) sitemapURLs(ctx context.Context, c *acurl.Checker, spec string, li
 		}
 		urls = append(urls, got...)
 	}
-	fmt.Fprintf(a.stderr, "Found %d URLs in %d sitemap(s)\n", len(urls), len(roots))
+	a.logf("Found %d URLs in %d sitemap(s)\n", len(urls), len(roots))
 	return batch.Dedupe(urls), nil
 }
