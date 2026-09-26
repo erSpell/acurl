@@ -252,3 +252,19 @@ func TestQuietAndVerbose(t *testing.T) {
 		t.Errorf("--verbose should trace requests, got %q", stderr)
 	}
 }
+
+func TestCompletionAndMan(t *testing.T) {
+	code, stdout, stderr := run(t, "completion", "bash")
+	if code != 0 || !strings.Contains(stdout, "__start_acurl") {
+		t.Errorf("bash completion: code=%d stderr=%s", code, stderr)
+	}
+	dir := t.TempDir()
+	if code, _, stderr := run(t, "man", dir); code != 0 {
+		t.Fatalf("man: %s", stderr)
+	}
+	for _, page := range []string{"acurl.1", "acurl-batch.1", "acurl-robots.1"} {
+		if _, err := os.Stat(dir + "/" + page); err != nil {
+			t.Errorf("missing man page %s", page)
+		}
+	}
+}
