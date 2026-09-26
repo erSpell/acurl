@@ -203,3 +203,14 @@ type BatchSummary struct {
 	AverageScore int     `json:"average_score"`
 	Results      Summary `json:"results"`
 }
+
+// Reports returns the successful reports of a batch.
+func (b *BatchReport) Reports() []*ComparisonResult {
+	var out []*ComparisonResult
+	for _, it := range b.Items {
+		if it.Report != nil {
+			out = append(out, it.Report)
+		}
+	}
+	return out
+}

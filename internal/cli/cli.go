@@ -38,6 +38,7 @@ func (a *app) userAgent() string {
 // Execute runs acurl with args and returns the process exit code.
 func Execute(ctx context.Context, info BuildInfo, args []string, stdout, stderr io.Writer) int {
 	a := &app{info: info, stdout: stdout, stderr: stderr, getenv: os.Getenv}
+	output.Version = info.Version
 	root := newRootCmd(a)
 	root.SetArgs(args)
 	root.SetOut(stdout)

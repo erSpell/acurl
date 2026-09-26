@@ -22,9 +22,15 @@ func WriteBatch(w io.Writer, format string, rep *types.BatchReport, color bool) 
 		return enc.Encode(rep)
 	case "markdown", "md":
 		return writeBatchMarkdown(w, rep)
+	case "csv":
+		return WriteCSV(w, rep.Reports())
+	case "junit":
+		return WriteJUnit(w, rep.Reports())
+	case "sarif":
+		return WriteSARIF(w, Version, rep.Reports())
 	case "table", "":
 	default:
-		return fmt.Errorf("unknown format %q for batch (supported: table, json, markdown)", format)
+		return fmt.Errorf("unknown format %q (supported: %v)", format, Formats)
 	}
 
 	style := func(s string, st func(...string) string) string {
