@@ -6,6 +6,26 @@ All notable changes to acurl are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-27
+
+### Added
+- AI readiness score (0-100, A-F) with weighted checks and a recommendation for each failure
+- Product data extraction from JSON-LD (including `@graph`, ProductGroup variants and
+  AggregateOffer), microdata and OpenGraph, plus per-agent price and availability comparison
+- Client-rendered (SPA) page detection, and `--render` to measure JavaScript-only text in headless Chrome
+- `acurl batch` for URL lists, CSV files, stdin and sitemaps (`--sitemap`, `--sitemap auto:<site>`),
+  with `--parallel`, `--limit` and a per-host `--delay`
+- `--fail-on` policy: blocked, challenged, rate-limited, cloaked, robots, error, `score<N`, none
+- CSV, JUnit XML and SARIF output formats
+- `.acurl.yaml` config files, `ACURL_*` environment variables and `acurl init`
+- `--quiet`, `--verbose` request tracing, man pages and shell completions
+- Public Go API in `pkg/acurl`
+
+### Fixed
+- Small static pages that load one script are no longer flagged as client-rendered
+- Pages are not scored when the browser baseline itself was blocked
+
+
 ## [0.2.0] - 2026-09-13
 
 ### Added
@@ -49,6 +69,7 @@ First public preview.
 - CI-friendly exit codes: 0 allowed, 1 blocked or challenged, 2 errors
 - Custom profiles via `--profiles file.yaml`, extra headers via `-H`
 
-[Unreleased]: https://github.com/tragent-io/acurl/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/tragent-io/acurl/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/tragent-io/acurl/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/tragent-io/acurl/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tragent-io/acurl/releases/tag/v0.1.0
