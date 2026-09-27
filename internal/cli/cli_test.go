@@ -226,3 +226,45 @@ func TestInit(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestFailOnPolicy(t *testing.T) {
+	srv := shop(t)
+	args := []string{srv.URL, "-a", "Chrome (Browser),ChatGPT-User,PerplexityBot", "--no-color"}
+	if code, _, _ := run(t, append(args, "--fail-on", "none")...); code != 0 {
+		t.Errorf("--fail-on none: code %d", code)
+	}
+	if code, _, stderr := run(t, append(args, "--fail-on", "robots")...); code != output.ExitBlocked || !strings.Contains(stderr, "PerplexityBot robots-disallowed") {
+		t.Errorf("--fail-on robots: code %d stderr %s", code, stderr)
+	}
+	if code, _, _ := run(t, append(args, "--fail-on", "nonsense")...); code != output.ExitError {
+		t.Errorf("bad policy: code %d", code)
+	}
+}
+
+func TestQuietAndVerbose(t *testing.T) {
+	srv := shop(t)
+	_, _, stderr := run(t, srv.URL, "-a", "Googlebot", "-q", "--no-color")
+	if stderr != "" {
+		t.Errorf("--quiet should silence stderr, got %q", stderr)
+	}
+	_, _, stderr = run(t, srv.URL, "-a", "Googlebot", "-v", "--no-color")
+	if !strings.Contains(stderr, "> GET "+srv.URL+" [Googlebot] 200") {
+		t.Errorf("--verbose should trace requests, got %q", stderr)
+	}
+}
+
+func TestCompletionAndMan(t *testing.T) {
+	code, stdout, stderr := run(t, "completion", "bash")
+	if code != 0 || !strings.Contains(stdout, "__start_acurl") {
+		t.Errorf("bash completion: code=%d stderr=%s", code, stderr)
+	}
+	dir := t.TempDir()
+	if code, _, stderr := run(t, "man", dir); code != 0 {
+		t.Fatalf("man: %s", stderr)
+	}
+	for _, page := range []string{"acurl.1", "acurl-batch.1", "acurl-robots.1"} {
+		if _, err := os.Stat(dir + "/" + page); err != nil {
+			t.Errorf("missing man page %s", page)
+		}
+	}
+}

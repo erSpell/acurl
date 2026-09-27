@@ -164,7 +164,8 @@ type RenderResult struct {
 // Score is the AI-readiness score for a page.
 type Score struct {
 	Value  int          `json:"value"` // 0-100
-	Grade  string       `json:"grade"` // A-F
+	Grade  string       `json:"grade"` // A-F, or "-" when the page could not be scored
+	Note   string       `json:"note,omitempty"`
 	Checks []ScoreCheck `json:"checks"`
 }
 
@@ -202,4 +203,15 @@ type BatchSummary struct {
 	Scored       int     `json:"scored"`
 	AverageScore int     `json:"average_score"`
 	Results      Summary `json:"results"`
+}
+
+// Reports returns the successful reports of a batch.
+func (b *BatchReport) Reports() []*ComparisonResult {
+	var out []*ComparisonResult
+	for _, it := range b.Items {
+		if it.Report != nil {
+			out = append(out, it.Report)
+		}
+	}
+	return out
 }

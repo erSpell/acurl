@@ -90,3 +90,14 @@ func TestEveryFailedCheckHasRecommendation(t *testing.T) {
 		}
 	}
 }
+
+func TestComputeSkipsWhenBaselineBlocked(t *testing.T) {
+	rep := types.ComparisonResult{Results: []types.FetchResult{
+		{Profile: "Chrome", Browser: true, Category: types.CategoryBrowser, Classification: "challenged"},
+		{Profile: "GPTBot", Category: types.CategoryAITraining, Classification: "allowed"},
+	}}
+	s := Compute(&rep)
+	if s.Grade != "-" || s.Value != 0 || s.Note == "" || len(s.Checks) != 0 {
+		t.Errorf("Compute = %+v", s)
+	}
+}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="acurl" tests="6" failures="2" errors="0">
+  <testsuite name="https://shop.example/products/runner" tests="6" failures="2" errors="0" skipped="2" timestamp="2026-09-27T09:30:00Z">
+    <testcase name="Chrome (Browser)" classname="acurl.browser" time="0.120"></testcase>
+    <testcase name="ChatGPT-User" classname="acurl.ai-assistant" time="0.045">
+      <failure message="challenged: challenge: Cloudflare" type="challenged">challenge: Cloudflare</failure>
+    </testcase>
+    <testcase name="OAI-SearchBot" classname="acurl.ai-search" time="0.098">
+      <failure message="cloaked: 31% similar to browser" type="cloaked">31% similar to browser</failure>
+    </testcase>
+    <testcase name="GPTBot" classname="acurl.ai-training" time="0.101">
+      <skipped message="robots-disallowed: robots.txt: disallowed; noai" type="robots-disallowed">robots.txt: disallowed; noai</skipped>
+    </testcase>
+    <testcase name="Google-Extended" classname="acurl.ai-training" time="0.000">
+      <skipped message="robots-disallowed: robots.txt token (not fetched); robots.txt: disallowed" type="robots-disallowed">robots.txt token (not fetched); robots.txt: disallowed</skipped>
+    </testcase>
+    <testcase name="Perplexity-User" classname="acurl.ai-assistant" time="0.130"></testcase>
+  </testsuite>
+</testsuites>

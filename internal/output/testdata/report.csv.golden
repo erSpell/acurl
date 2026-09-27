@@ -1,0 +1,7 @@
+url,profile,category,status,classification,duration_ms,body_size,bot_challenge,robots_disallowed,similarity,directives,product_issue,error,score
+https://shop.example/products/runner,Chrome (Browser),browser,200,allowed,120,48213,,false,,,,,58
+https://shop.example/products/runner,ChatGPT-User,ai-assistant,403,challenged,45,8650,Cloudflare,false,,,,,58
+https://shop.example/products/runner,OAI-SearchBot,ai-search,200,cloaked,98,2101,,false,0.310,,,,58
+https://shop.example/products/runner,GPTBot,ai-training,200,robots-disallowed,101,48190,,true,,noai,,,58
+https://shop.example/products/runner,Google-Extended,ai-training,,robots-disallowed,0,0,,true,,,,,58
+https://shop.example/products/runner,Perplexity-User,ai-assistant,200,allowed,130,48200,,false,,,price 89.00 vs browser 98.00,,58

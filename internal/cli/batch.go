@@ -44,10 +44,7 @@ file (the "url" column, or the first column), or stdin when the file is "-" or o
 	}
 	f := cmd.Flags()
 	fl.check.http.register(f)
-	f.BoolVar(&fl.check.noRobots, "no-robots", false, "skip robots.txt checks")
-	f.StringVarP(&fl.check.format, "format", "f", "table", "output format: table, json, markdown")
-	f.StringVarP(&fl.check.output, "output", "o", "", "write the report to a file instead of stdout")
-	f.Float64Var(&fl.check.cloakThreshold, "cloak-threshold", 0.5, "visible-text similarity below which a response counts as cloaked (0 disables)")
+	fl.check.registerOutput(f, "table, json, markdown, csv, junit, sarif")
 	f.BoolVar(&fl.csv, "csv", false, "treat the input as CSV (automatic for .csv files)")
 	f.IntVarP(&fl.parallel, "parallel", "p", 2, "URLs to check at the same time")
 	f.StringVar(&fl.sitemap, "sitemap", "", `read URLs from a sitemap URL, or "auto:<site>" to use the sitemaps listed in robots.txt`)
@@ -58,6 +55,10 @@ file (the "url" column, or the first column), or stdin when the file is "-" or o
 }
 
 func (a *app) runBatch(ctx context.Context, fl *batchFlags, args []string) error {
+	policy, err := output.ParsePolicy(fl.check.failOn)
+	if err != nil {
+		return err
+	}
 	opts, err := a.checkOptions(&fl.check)
 	if err != nil {
 		return err
@@ -85,12 +86,12 @@ func (a *app) runBatch(ctx context.Context, fl *batchFlags, args []string) error
 		return fmt.Errorf("no URLs to check")
 	}
 
-	fmt.Fprintf(a.stderr, "Checking %d URLs with %d profiles each...\n", len(urls), len(c.Profiles()))
+	a.logf("Checking %d URLs with %d profiles each...\n", len(urls), len(c.Profiles()))
 	rep := batch.Run(ctx, c, urls, batch.Options{
 		Parallel: fl.parallel,
 		Delay:    fl.delay,
 		Progress: func(done, total int, u string) {
-			fmt.Fprintf(a.stderr, "  [%d/%d] %s\n", done, total, u)
+			a.logf("  [%d/%d] %s\n", done, total, u)
 		},
 	})
 	rep.Timestamp = time.Now().UTC()
@@ -105,7 +106,7 @@ func (a *app) runBatch(ctx context.Context, fl *batchFlags, args []string) error
 	if err := closeOut(); err != nil {
 		return err
 	}
-	if code := output.BatchExitCode(rep); code != output.ExitOK {
+	if code := output.BatchExitCode(rep, policy); code != output.ExitOK {
 		return exitError(code)
 	}
 	return nil
@@ -152,7 +153,7 @@ func (a *app) outputWriter(path string) (io.Writer, func() error, error) {
 		if err := f.Close(); err != nil {
 			return err
 		}
-		fmt.Fprintf(a.stderr, "Report written to %s\n", path)
+		a.logf("Report written to %s\n", path)
 		return nil
 	}, nil
 }
@@ -192,6 +193,6 @@ func (a *app) sitemapURLs(ctx context.Context, c *acurl.Checker, spec string, li
 		}
 		urls = append(urls, got...)
 	}
-	fmt.Fprintf(a.stderr, "Found %d URLs in %d sitemap(s)\n", len(urls), len(roots))
+	a.logf("Found %d URLs in %d sitemap(s)\n", len(urls), len(roots))
 	return batch.Dedupe(urls), nil
 }

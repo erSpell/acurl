@@ -77,6 +77,7 @@ func (h *httpFlags) options(a *app) (acurl.Options, error) {
 		Method:      method,
 		BotTLS:      h.botTLS,
 		UserAgent:   a.userAgent(),
+		Trace:       a.trace(),
 	}, nil
 }
 

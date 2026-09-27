@@ -25,6 +25,10 @@ func writeScoreText(sb *strings.Builder, s *types.Score, style func(lipgloss.Sty
 	if s == nil {
 		return
 	}
+	if s.Note != "" {
+		fmt.Fprintf(sb, "\n%s %s\n  %s\n", style(headerStyle, "AI readiness"), style(warnStyle, "not scored"), s.Note)
+		return
+	}
 	fmt.Fprintf(sb, "\n%s %s\n", style(headerStyle, "AI readiness"),
 		style(gradeStyle(s.Grade), fmt.Sprintf("%d/100 (%s)", s.Value, s.Grade)))
 	for _, c := range s.Checks {
@@ -58,6 +62,10 @@ func writeScoreText(sb *strings.Builder, s *types.Score, style func(lipgloss.Sty
 // writeScoreMarkdown renders the score as a Markdown section.
 func writeScoreMarkdown(sb *strings.Builder, s *types.Score) {
 	if s == nil {
+		return
+	}
+	if s.Note != "" {
+		fmt.Fprintf(sb, "\n## AI readiness: not scored\n\n%s\n", s.Note)
 		return
 	}
 	fmt.Fprintf(sb, "\n## AI readiness: %d/100 (%s)\n\n", s.Value, s.Grade)

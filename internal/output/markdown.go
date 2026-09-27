@@ -19,7 +19,7 @@ func WriteMarkdown(w io.Writer, result types.ComparisonResult) error {
 	sb.WriteString("|---|---|---|---|---|---|\n")
 	for _, r := range result.Results {
 		fmt.Fprintf(&sb, "| %s | %s | %s | %s | %s | %s |\n",
-			mdEscape(r.Profile), statusText(r), durationText(r.Duration), FormatSize(r.BodySize),
+			mdEscape(r.Profile), statusText(r), timeText(r), sizeText(r),
 			r.Classification, mdEscape(details(r)))
 	}
 

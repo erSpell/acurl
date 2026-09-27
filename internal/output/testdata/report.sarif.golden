@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "acurl",
+          "informationUri": "https://github.com/tragent-io/acurl",
+          "version": "test",
+          "rules": [
+            {
+              "id": "AgentChallenged",
+              "name": "AgentChallenged",
+              "shortDescription": {
+                "text": "An AI agent or crawler received a bot challenge or CAPTCHA page."
+              },
+              "help": {
+                "text": "An AI agent or crawler received a bot challenge or CAPTCHA page. See https://github.com/tragent-io/acurl/blob/main/docs/scoring.md"
+              },
+              "properties": {
+                "tags": [
+                  "ai-agents",
+                  "accessibility"
+                ]
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "AgentCloaked",
+              "name": "AgentCloaked",
+              "shortDescription": {
+                "text": "An AI agent saw substantially different content than a browser."
+              },
+              "help": {
+                "text": "An AI agent saw substantially different content than a browser. See https://github.com/tragent-io/acurl/blob/main/docs/scoring.md"
+              },
+              "properties": {
+                "tags": [
+                  "ai-agents",
+                  "accessibility"
+                ]
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "ProductMismatch",
+              "name": "ProductMismatch",
+              "shortDescription": {
+                "text": "An AI agent saw different product price or availability than a browser."
+              },
+              "help": {
+                "text": "An AI agent saw different product price or availability than a browser. See https://github.com/tragent-io/acurl/blob/main/docs/scoring.md"
+              },
+              "properties": {
+                "tags": [
+                  "ai-agents",
+                  "accessibility"
+                ]
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "ReadinessCheckFailed",
+              "name": "ReadinessCheckFailed",
+              "shortDescription": {
+                "text": "An AI-readiness check failed."
+              },
+              "help": {
+                "text": "An AI-readiness check failed. See https://github.com/tragent-io/acurl/blob/main/docs/scoring.md"
+              },
+              "properties": {
+                "tags": [
+                  "ai-agents",
+                  "accessibility"
+                ]
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "AgentChallenged",
+          "level": "error",
+          "message": {
+            "text": "ChatGPT-User (challenged): challenge: Cloudflare"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "https://shop.example/products/runner"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "AgentCloaked",
+          "level": "warning",
+          "message": {
+            "text": "OAI-SearchBot (cloaked): 31% similar to browser"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "https://shop.example/products/runner"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "ProductMismatch",
+          "level": "warning",
+          "message": {
+            "text": "Perplexity-User: price 89.00 vs browser 98.00"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "https://shop.example/products/runner"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "ReadinessCheckFailed",
+          "level": "note",
+          "message": {
+            "text": "AI assistants can fetch the page: 1 of 2 allowed: ChatGPT-User (challenged). Allow AI assistants."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "https://shop.example/products/runner"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

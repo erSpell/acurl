@@ -1,0 +1,124 @@
+{
+  "url": "https://shop.example/products/runner",
+  "timestamp": "2026-09-27T09:30:00Z",
+  "results": [
+    {
+      "profile": "Chrome (Browser)",
+      "browser": true,
+      "category": "browser",
+      "success": false,
+      "status_code": 200,
+      "duration_ms": 120,
+      "body_size": 48213,
+      "title": "Wool Runner",
+      "rate_limited": false,
+      "robots_disallowed": false,
+      "product": {
+        "source": "json-ld",
+        "name": "Wool Runner",
+        "price": "98.00",
+        "currency": "USD",
+        "availability": "InStock"
+      },
+      "classification": "allowed"
+    },
+    {
+      "profile": "ChatGPT-User",
+      "category": "ai-assistant",
+      "success": false,
+      "status_code": 403,
+      "duration_ms": 45,
+      "body_size": 8650,
+      "bot_challenge": "Cloudflare",
+      "rate_limited": false,
+      "robots_disallowed": false,
+      "classification": "challenged"
+    },
+    {
+      "profile": "OAI-SearchBot",
+      "category": "ai-search",
+      "success": false,
+      "status_code": 200,
+      "duration_ms": 98,
+      "body_size": 2101,
+      "rate_limited": false,
+      "robots_disallowed": false,
+      "similarity": 0.31,
+      "classification": "cloaked"
+    },
+    {
+      "profile": "GPTBot",
+      "category": "ai-training",
+      "success": false,
+      "status_code": 200,
+      "duration_ms": 101,
+      "body_size": 48190,
+      "rate_limited": false,
+      "robots_disallowed": true,
+      "directives": [
+        "noai"
+      ],
+      "classification": "robots-disallowed"
+    },
+    {
+      "profile": "Google-Extended",
+      "category": "ai-training",
+      "robots_only": true,
+      "success": false,
+      "status_code": 0,
+      "duration_ms": 0,
+      "body_size": 0,
+      "rate_limited": false,
+      "robots_disallowed": true,
+      "classification": "robots-disallowed"
+    },
+    {
+      "profile": "Perplexity-User",
+      "category": "ai-assistant",
+      "success": false,
+      "status_code": 200,
+      "duration_ms": 130,
+      "body_size": 48200,
+      "rate_limited": false,
+      "robots_disallowed": false,
+      "product_issue": "price 89.00 vs browser 98.00",
+      "classification": "allowed"
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "allowed": 2,
+    "blocked": 0,
+    "challenged": 1,
+    "rate_limited": 0,
+    "cloaked": 1,
+    "robots_disallowed": 2,
+    "errors": 0
+  },
+  "score": {
+    "value": 58,
+    "grade": "D",
+    "checks": [
+      {
+        "id": "assistants-allowed",
+        "title": "AI assistants can fetch the page",
+        "weight": 25,
+        "applies": true,
+        "passed": false,
+        "points": 12.5,
+        "detail": "1 of 2 allowed: ChatGPT-User (challenged)",
+        "recommendation": "Allow AI assistants."
+      },
+      {
+        "id": "structured-data",
+        "title": "Product structured data is present",
+        "weight": 10,
+        "applies": true,
+        "passed": true,
+        "points": 10,
+        "detail": "JSON-LD Product with price and availability"
+      }
+    ]
+  },
+  "caveat": "acurl sends agent user-agent strings from your own IP address. Real AI agents come from published IP ranges and may sign their requests, so these results show how a site responds to user-agent strings, not guaranteed agent access."
+}

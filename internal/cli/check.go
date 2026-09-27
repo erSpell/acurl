@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"github.com/tragent-io/acurl/internal/classifier"
 	"github.com/tragent-io/acurl/internal/output"
@@ -25,6 +26,15 @@ type checkFlags struct {
 	diff           string
 	render         bool
 	renderWait     time.Duration
+	failOn         string
+}
+
+func (fl *checkFlags) registerOutput(f *pflag.FlagSet, formats string) {
+	f.BoolVar(&fl.noRobots, "no-robots", false, "skip robots.txt checks")
+	f.StringVarP(&fl.format, "format", "f", "table", "output format: "+formats)
+	f.StringVarP(&fl.output, "output", "o", "", "write the report to a file instead of stdout")
+	f.Float64Var(&fl.cloakThreshold, "cloak-threshold", classifier.DefaultCloakThreshold, "visible-text similarity below which a response counts as cloaked (0 disables)")
+	f.StringVar(&fl.failOn, "fail-on", output.DefaultFailOn, "exit 1 when any of these occur: blocked, challenged, rate-limited, cloaked, robots, error, score<N, or none")
 }
 
 func newCheckCmd(a *app) *cobra.Command {
@@ -41,10 +51,7 @@ AI agents, search bots) and shows how each one is treated.`,
 	}
 	f := cmd.Flags()
 	fl.http.register(f)
-	f.BoolVar(&fl.noRobots, "no-robots", false, "skip robots.txt checks")
-	f.StringVarP(&fl.format, "format", "f", "table", "output format: table, json, markdown")
-	f.StringVarP(&fl.output, "output", "o", "", "write the report to a file instead of stdout")
-	f.Float64Var(&fl.cloakThreshold, "cloak-threshold", classifier.DefaultCloakThreshold, "visible-text similarity below which a response counts as cloaked (0 disables)")
+	fl.registerOutput(f, "table, json, markdown, csv, junit, sarif")
 	f.StringVar(&fl.diff, "diff", "", "print a visible-text diff between the browser baseline and this profile")
 	f.BoolVar(&fl.render, "render", false, "also render the page in headless Chrome to measure how much text needs JavaScript")
 	f.DurationVar(&fl.renderWait, "render-wait", 2*time.Second, "how long scripts may run before the rendered page is captured")
@@ -72,6 +79,10 @@ func (a *app) runCheck(ctx context.Context, fl *checkFlags, rawURL string) error
 	if err != nil {
 		return err
 	}
+	policy, err := output.ParsePolicy(fl.failOn)
+	if err != nil {
+		return err
+	}
 	opts, err := a.checkOptions(fl)
 	if err != nil {
 		return err
@@ -81,9 +92,9 @@ func (a *app) runCheck(ctx context.Context, fl *checkFlags, rawURL string) error
 		return err
 	}
 
-	fmt.Fprintf(a.stderr, "Fetching %s with %d profiles...\n", url, len(c.Profiles()))
+	a.logf("Fetching %s with %d profiles...\n", url, len(c.Profiles()))
 	if fl.render {
-		fmt.Fprintln(a.stderr, "Rendering in headless Chrome...")
+		a.logf("Rendering in headless Chrome...\n")
 	}
 	report, err := c.Check(ctx, url)
 	if err != nil {
@@ -97,7 +108,8 @@ func (a *app) runCheck(ctx context.Context, fl *checkFlags, rawURL string) error
 			return err
 		}
 	}
-	if code := output.ExitCode(report.Summary); code != output.ExitOK {
+	if code := policy.ExitCode(report); code != output.ExitOK {
+		fmt.Fprintf(a.stderr, "acurl: failing (--fail-on %s): %s\n", fl.failOn, strings.Join(policy.Reasons(report), ", "))
 		return exitError(code)
 	}
 	return nil
@@ -132,6 +144,6 @@ func (a *app) writeReport(report types.ComparisonResult, format, path string, co
 	if err := output.Write(out, format, report, false); err != nil {
 		return err
 	}
-	fmt.Fprintf(a.stderr, "Report written to %s\n", path)
+	a.logf("Report written to %s\n", path)
 	return out.Close()
 }
