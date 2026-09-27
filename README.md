@@ -34,17 +34,18 @@ Each result is classified as `allowed`, `blocked`, `challenged` (WAF or captcha 
 
 Every run ends with an **AI readiness score** (0-100) and concrete fixes for anything that fails.
 
-More: [profiles](docs/profiles.md) · [robots.txt and llms.txt](docs/robots.md) · [scoring](docs/scoring.md)
+More: [profiles](docs/profiles.md) · [robots.txt and llms.txt](docs/robots.md) · [scoring](docs/scoring.md) · [CI](docs/ci.md)
 
-Output formats: `--format table` (default), `json` or `markdown`. Use `-o report.md` to write to a file.
+Output formats: `table` (default), `json`, `markdown`, `csv`, `junit` and `sarif`. Use `-o file` to write to a file.
 
-## Exit codes
+## CI
 
-| Code | Meaning |
-|---|---|
-| 0 | Every profile was allowed |
-| 1 | At least one profile was blocked or challenged |
-| 2 | A request failed |
+```bash
+acurl batch urls.txt -f sarif -o acurl.sarif --fail-on blocked,challenged,score<80
+```
+
+Exit code 0 means nothing matched `--fail-on`, 1 means something did, and 2 means a request failed.
+See the [CI guide](docs/ci.md) for GitHub Actions, JUnit, batch runs and `.acurl.yaml`.
 
 ## Status
 
