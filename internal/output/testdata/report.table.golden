@@ -1,0 +1,32 @@
+acurl results for https://shop.example/products/runner
+2026-09-27T09:30:00Z
+
+┌──────────────────┬────────┬───────┬────────┬───────────────────┬────────────────────────────────────────────────────────┐
+│     PROFILE      │ STATUS │ TIME  │  SIZE  │      RESULT       │                        DETAILS                         │
+├──────────────────┼────────┼───────┼────────┼───────────────────┼────────────────────────────────────────────────────────┤
+│ Chrome (Browser) │ 200    │ 120ms │ 47.1KB │ allowed           │ Wool Runner                                            │
+│ ChatGPT-User     │ 403    │ 45ms  │ 8.4KB  │ challenged        │ challenge: Cloudflare                                  │
+│ OAI-SearchBot    │ 200    │ 98ms  │ 2.1KB  │ cloaked           │ 31% similar to browser                                 │
+│ GPTBot           │ 200    │ 101ms │ 47.1KB │ robots-disallowed │ robots.txt: disallowed; noai                           │
+│ Google-Extended  │ -      │ -     │ -      │ robots-disallowed │ robots.txt token (not fetched); robots.txt: disallowed │
+│ Perplexity-User  │ 200    │ 130ms │ 47.1KB │ allowed           │ product: price 89.00 vs browser 98.00                  │
+└──────────────────┴────────┴───────┴────────┴───────────────────┴────────────────────────────────────────────────────────┘
+
+Summary
+  Allowed            2
+  Blocked            0
+  Challenged         1
+  Rate limited       0
+  Cloaked            1
+  Robots disallowed  2
+  Errors             0
+
+AI readiness 58/100 (D)
+  ✗ AI assistants can fetch the page               12.5/25  1 of 2 allowed: ChatGPT-User (challenged)
+  ✓ Product structured data is present             10.0/10  JSON-LD Product with price and availability
+
+How to improve
+  1. AI assistants can fetch the page
+     Allow AI assistants.
+
+acurl sends agent user-agent strings from your own IP address. Real AI agents come from published IP ranges and may sign their requests, so these results show how a site responds to user-agent strings, not guaranteed agent access.

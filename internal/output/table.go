@@ -43,7 +43,7 @@ func WriteTable(w io.Writer, result types.ComparisonResult, color bool) error {
 	table := tablewriter.NewTable(&sb)
 	table.Header("Profile", "Status", "Time", "Size", "Result", "Details")
 	for _, r := range result.Results {
-		if err := table.Append(r.Profile, statusText(r), durationText(r.Duration), FormatSize(r.BodySize), style(classStyle(r.Classification), r.Classification), details(r)); err != nil {
+		if err := table.Append(r.Profile, statusText(r), timeText(r), sizeText(r), style(classStyle(r.Classification), r.Classification), details(r)); err != nil {
 			return err
 		}
 	}
@@ -108,6 +108,20 @@ func statusText(r types.FetchResult) string {
 		return "ERR"
 	}
 	return strconv.Itoa(r.StatusCode)
+}
+
+func timeText(r types.FetchResult) string {
+	if r.RobotsOnly {
+		return "-"
+	}
+	return durationText(r.Duration)
+}
+
+func sizeText(r types.FetchResult) string {
+	if r.RobotsOnly {
+		return "-"
+	}
+	return FormatSize(r.BodySize)
 }
 
 func durationText(d time.Duration) string {
