@@ -268,3 +268,35 @@ func TestCompletionAndMan(t *testing.T) {
 		}
 	}
 }
+
+func TestSignedRequests(t *testing.T) {
+	dir := t.TempDir()
+	keyPath := dir + "/k.pem"
+	if code, stdout, stderr := run(t, "keygen", "-o", keyPath); code != 0 || !strings.Contains(stdout, `"kty": "OKP"`) {
+		t.Fatalf("keygen: code=%d out=%s err=%s", code, stdout, stderr)
+	}
+	var gotSig, gotAgent, chromeSig string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.UserAgent(), "Chrome/") {
+			chromeSig = r.Header.Get("Signature")
+		} else if r.URL.Path == "/" {
+			gotSig, gotAgent = r.Header.Get("Signature-Input"), r.Header.Get("Signature-Agent")
+		}
+		_, _ = w.Write([]byte("ok"))
+	}))
+	defer srv.Close()
+
+	code, _, stderr := run(t, srv.URL, "-a", "Chrome (Browser),GPTBot", "--no-robots", "--sign", keyPath, "--signature-agent", "https://bot.example", "-q")
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%s", code, stderr)
+	}
+	if !strings.Contains(gotSig, `tag="web-bot-auth"`) || gotAgent != `"https://bot.example"` {
+		t.Errorf("bot request not signed: input=%q agent=%q", gotSig, gotAgent)
+	}
+	if chromeSig != "" {
+		t.Error("browser baseline must not be signed")
+	}
+	if code, _, _ := run(t, srv.URL, "--signature-agent", "https://x"); code != output.ExitError {
+		t.Error("--signature-agent without --sign should fail")
+	}
+}

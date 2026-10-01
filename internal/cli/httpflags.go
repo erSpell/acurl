@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"crypto/ed25519"
+	"errors"
 	"net/http"
 	"time"
 
@@ -8,6 +10,7 @@ import (
 
 	"github.com/tragent-io/acurl/internal/fetcher"
 	"github.com/tragent-io/acurl/internal/profiles"
+	"github.com/tragent-io/acurl/internal/sign"
 	"github.com/tragent-io/acurl/pkg/acurl"
 	"github.com/tragent-io/acurl/pkg/types"
 )
@@ -29,6 +32,8 @@ type httpFlags struct {
 	botTLS       string
 	maxBody      int64
 	noColor      bool
+	signKey      string
+	signAgent    string
 }
 
 func (h *httpFlags) register(f *pflag.FlagSet) {
@@ -47,6 +52,8 @@ func (h *httpFlags) register(f *pflag.FlagSet) {
 	f.StringVar(&h.botTLS, "tls", "go", `TLS fingerprint for bot profiles: "go" (like real crawlers) or "chrome" (only the user agent differs)`)
 	f.Int64Var(&h.maxBody, "max-body", fetcher.DefaultMaxBody, "maximum response body bytes to read per profile")
 	f.BoolVar(&h.noColor, "no-color", false, "disable colored output")
+	f.StringVar(&h.signKey, "sign", "", "sign bot-profile requests with this Ed25519 key (Web Bot Auth, see acurl keygen)")
+	f.StringVar(&h.signAgent, "signature-agent", "", "Signature-Agent URL where your key directory is published")
 }
 
 // options builds checker options from the flags. Profile selection is
@@ -64,20 +71,30 @@ func (h *httpFlags) options(a *app) (acurl.Options, error) {
 	if h.head {
 		method = http.MethodHead
 	}
+	var key ed25519.PrivateKey
+	if h.signKey != "" {
+		if key, err = sign.LoadPrivateKey(h.signKey); err != nil {
+			return acurl.Options{}, err
+		}
+	} else if h.signAgent != "" {
+		return acurl.Options{}, errors.New("--signature-agent needs --sign")
+	}
 	return acurl.Options{
-		Profiles:    ps,
-		Concurrency: h.concurrency,
-		Timeout:     h.timeout,
-		Headers:     headers,
-		MaxBody:     h.maxBody,
-		Retries:     h.retries,
-		Proxy:       h.proxy,
-		Insecure:    h.insecure,
-		HTTPVersion: h.httpVersion,
-		Method:      method,
-		BotTLS:      h.botTLS,
-		UserAgent:   a.userAgent(),
-		Trace:       a.trace(),
+		SigningKey:     key,
+		SignatureAgent: h.signAgent,
+		Profiles:       ps,
+		Concurrency:    h.concurrency,
+		Timeout:        h.timeout,
+		Headers:        headers,
+		MaxBody:        h.maxBody,
+		Retries:        h.retries,
+		Proxy:          h.proxy,
+		Insecure:       h.insecure,
+		HTTPVersion:    h.httpVersion,
+		Method:         method,
+		BotTLS:         h.botTLS,
+		UserAgent:      a.userAgent(),
+		Trace:          a.trace(),
 	}, nil
 }
 
