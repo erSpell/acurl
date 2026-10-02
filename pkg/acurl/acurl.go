@@ -11,6 +11,7 @@ package acurl
 
 import (
 	"context"
+	"crypto/ed25519"
 	"fmt"
 	"net/url"
 	"time"
@@ -21,6 +22,7 @@ import (
 	"github.com/tragent-io/acurl/internal/render"
 	"github.com/tragent-io/acurl/internal/robots"
 	"github.com/tragent-io/acurl/internal/score"
+	"github.com/tragent-io/acurl/internal/sign"
 	"github.com/tragent-io/acurl/pkg/types"
 )
 
@@ -55,6 +57,11 @@ type Options struct {
 	UserAgent string
 	// Trace, if set, is called after every page request.
 	Trace func(TraceEvent)
+	// SigningKey, if set, signs every bot-profile request with Web Bot Auth
+	// (HTTP Message Signatures, RFC 9421). SignatureAgent is the URL where
+	// the key directory is published.
+	SigningKey     ed25519.PrivateKey
+	SignatureAgent string
 }
 
 // TraceEvent describes one completed page request.
@@ -99,6 +106,10 @@ func New(opts Options) (*Checker, error) {
 		opts.UserAgent = "acurl (+https://github.com/tragent-io/acurl)"
 	}
 
+	var signer fetcher.RequestSigner
+	if opts.SigningKey != nil {
+		signer = &sign.Signer{Key: opts.SigningKey, Agent: opts.SignatureAgent}
+	}
 	f, err := fetcher.New(fetcher.Options{
 		Timeout:     opts.Timeout,
 		Headers:     opts.Headers,
@@ -110,6 +121,7 @@ func New(opts Options) (*Checker, error) {
 		Method:      opts.Method,
 		BotTLS:      opts.BotTLS,
 		Trace:       opts.Trace,
+		Signer:      signer,
 	})
 	if err != nil {
 		return nil, err

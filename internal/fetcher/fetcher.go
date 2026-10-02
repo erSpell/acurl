@@ -44,6 +44,13 @@ type Options struct {
 	BotTLS string
 	// Trace, if set, is called after every page request.
 	Trace func(TraceEvent)
+	// Signer, if set, signs every bot-profile request (Web Bot Auth).
+	Signer RequestSigner
+}
+
+// RequestSigner returns signature headers for a request.
+type RequestSigner interface {
+	Headers(method, url string) (map[string]string, error)
 }
 
 // TraceEvent describes one completed page request.
@@ -154,6 +161,17 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 	}
 	for k, v := range f.opts.Headers {
 		r.SetHeader(k, v)
+	}
+	if f.opts.Signer != nil && !profile.Browser {
+		sig, err := f.opts.Signer.Headers(f.opts.Method, url)
+		if err != nil {
+			result.Error = err.Error()
+			return result
+		}
+		for k, v := range sig {
+			r.SetHeader(k, v)
+		}
+		result.Signed = true
 	}
 
 	resp, err := r.Send(f.opts.Method, url)

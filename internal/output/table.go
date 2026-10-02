@@ -142,6 +142,9 @@ func FormatSize(n int) string {
 
 func details(r types.FetchResult) string {
 	var parts []string
+	if r.Signed && r.Classification != "allowed" {
+		parts = append(parts, "signed")
+	}
 	if r.RobotsOnly {
 		parts = append(parts, "robots.txt token (not fetched)")
 	}

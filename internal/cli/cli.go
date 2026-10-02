@@ -87,14 +87,14 @@ func newRootCmd(a *app) *cobra.Command {
 	cmd.Version = fmt.Sprintf("%s (commit %s, built %s)", a.info.Version, a.info.Commit, a.info.Date)
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
-	cmd.AddCommand(newProfilesCmd(a), newRobotsCmd(a), newBatchCmd(a), newInitCmd(a), newManCmd(a, cmd))
+	cmd.AddCommand(newProfilesCmd(a), newRobotsCmd(a), newBatchCmd(a), newInitCmd(a), newKeygenCmd(a), newManCmd(a, cmd))
 
 	var configPath string
 	cmd.PersistentFlags().StringVar(&configPath, "config", "", "config file (default ./"+config.FileName+" or the user config dir)")
 	cmd.PersistentFlags().BoolVarP(&a.quiet, "quiet", "q", false, "only print the report")
 	cmd.PersistentFlags().BoolVarP(&a.verbose, "verbose", "v", false, "log every request to stderr")
 	cmd.PersistentPreRunE = func(c *cobra.Command, _ []string) error {
-		if c.Name() == "init" || c.Name() == "man" || c.HasParent() && c.Parent().Name() == "completion" {
+		if c.Name() == "init" || c.Name() == "man" || c.Name() == "keygen" || c.HasParent() && c.Parent().Name() == "completion" {
 			return nil
 		}
 		return applyConfig(cmd, c, configPath, a.getenv)

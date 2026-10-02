@@ -34,6 +34,7 @@ type Profile struct {
 type FetchResult struct {
 	Profile           string        `json:"profile"`
 	Browser           bool          `json:"browser,omitempty"`
+	Signed            bool          `json:"signed,omitempty"` // request carried a Web Bot Auth signature
 	Category          string        `json:"category,omitempty"`
 	RobotsOnly        bool          `json:"robots_only,omitempty"`
 	Success           bool          `json:"success"`
