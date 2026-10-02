@@ -28,6 +28,8 @@ func WriteBatch(w io.Writer, format string, rep *types.BatchReport, color bool) 
 		return WriteJUnit(w, rep.Reports())
 	case "sarif":
 		return WriteSARIF(w, Version, rep.Reports())
+	case "html":
+		return WriteHTML(w, rep.Reports())
 	case "table", "":
 	default:
 		return fmt.Errorf("unknown format %q (supported: %v)", format, Formats)
