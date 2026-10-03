@@ -44,7 +44,7 @@ file (the "url" column, or the first column), or stdin when the file is "-" or o
 	}
 	f := cmd.Flags()
 	fl.check.http.register(f)
-	fl.check.registerOutput(f, "table, json, markdown, csv, junit, sarif")
+	fl.check.registerOutput(f, "table, json, markdown, csv, junit, sarif, html")
 	f.BoolVar(&fl.csv, "csv", false, "treat the input as CSV (automatic for .csv files)")
 	f.IntVarP(&fl.parallel, "parallel", "p", 2, "URLs to check at the same time")
 	f.StringVar(&fl.sitemap, "sitemap", "", `read URLs from a sitemap URL, or "auto:<site>" to use the sitemaps listed in robots.txt`)

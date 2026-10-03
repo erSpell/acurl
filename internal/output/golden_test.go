@@ -40,7 +40,7 @@ func TestGoldenFormats(t *testing.T) {
 	Version = "test"
 	defer func() { Version = old }()
 
-	for _, format := range []string{"table", "json", "markdown", "csv", "junit", "sarif"} {
+	for _, format := range []string{"table", "json", "markdown", "csv", "junit", "sarif", "html"} {
 		t.Run(format, func(t *testing.T) {
 			var buf bytes.Buffer
 			if err := Write(&buf, format, goldenReport(), false); err != nil {

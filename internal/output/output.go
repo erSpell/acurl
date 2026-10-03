@@ -8,7 +8,7 @@ import (
 )
 
 // Formats lists the supported output formats.
-var Formats = []string{"table", "json", "markdown", "csv", "junit", "sarif"}
+var Formats = []string{"table", "json", "markdown", "csv", "junit", "sarif", "html"}
 
 // Version is reported in machine-readable formats. The CLI sets it.
 var Version = "dev"
@@ -28,6 +28,8 @@ func Write(w io.Writer, format string, result types.ComparisonResult, color bool
 		return WriteJUnit(w, []*types.ComparisonResult{&result})
 	case "sarif":
 		return WriteSARIF(w, Version, []*types.ComparisonResult{&result})
+	case "html":
+		return WriteHTML(w, []*types.ComparisonResult{&result})
 	default:
 		return fmt.Errorf("unknown format %q (supported: %v)", format, Formats)
 	}

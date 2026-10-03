@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>acurl report: https://shop.example/products/runner</title>
+<style>
+:root{--bg:#fafaf9;--fg:#1c1917;--muted:#78716c;--card:#fff;--line:#e7e5e4;--ok:#15803d;--bad:#b91c1c;--warn:#b45309;--accent:#6d28d9;--okbg:#dcfce7;--badbg:#fee2e2;--warnbg:#fef3c7}
+@media (prefers-color-scheme:dark){:root{--bg:#0c0a09;--fg:#e7e5e4;--muted:#a8a29e;--card:#1c1917;--line:#292524;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24;--accent:#a78bfa;--okbg:#052e16;--badbg:#450a0a;--warnbg:#451a03}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1100px;margin:0 auto;padding:32px 16px 48px}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:32px 0 12px}a{color:var(--accent)}
+.muted{color:var(--muted)}.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;overflow-x:auto}
+.head{display:flex;gap:24px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.score{display:flex;align-items:baseline;gap:8px}.score b{font-size:40px;line-height:1}.grade{font-size:20px;font-weight:700;padding:2px 10px;border-radius:8px}
+.g-A,.g-B{background:var(--okbg);color:var(--ok)}.g-C{background:var(--warnbg);color:var(--warn)}.g-D,.g-F,.g--{background:var(--badbg);color:var(--bad)}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.c-allowed{background:var(--okbg);color:var(--ok)}.c-blocked,.c-challenged,.c-error{background:var(--badbg);color:var(--bad)}.c-cloaked,.c-rate-limited,.c-robots-disallowed{background:var(--warnbg);color:var(--warn)}
+.checks li{margin:6px 0}.ok{color:var(--ok)}.bad{color:var(--bad)}
+.fix{margin:10px 0;padding:10px 12px;border-left:3px solid var(--warn);background:var(--warnbg);border-radius:4px}
+pre.diff{font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;margin:0;max-height:360px;overflow:auto}
+.ins{color:var(--ok)}.del{color:var(--bad)}.skip{color:var(--muted)}
+details{margin:8px 0}summary{cursor:pointer;font-weight:600}
+footer{margin-top:40px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+
+<section>
+<div class="head">
+  <div>
+    <h1>https://shop.example/products/runner</h1>
+    <div class="muted">Checked 2026-09-27 09:30 UTC with 6 profiles</div>
+  </div>
+  
+  <div class="score"><b>58</b><span class="muted">/100</span><span class="grade g-D">D</span></div>
+</div>
+
+
+<h2>AI readiness</h2>
+<div class="card"><ul class="checks" style="list-style:none;padding:0;margin:0">
+<li><span class="bad">✗</span> <b>AI assistants can fetch the page</b> <span class="muted">12.5/25 · 1 of 2 allowed: ChatGPT-User (challenged)</span></li><li><span class="ok">✓</span> <b>Product structured data is present</b> <span class="muted">10.0/10 · JSON-LD Product with price and availability</span></li>
+</ul></div>
+<h2>How to improve</h2><div class="fix"><b>AI assistants can fetch the page.</b> Allow AI assistants.</div>
+
+
+<h2>Results</h2>
+<div class="card"><table>
+<thead><tr><th>Profile</th><th>Category</th><th>Status</th><th>Time</th><th>Size</th><th>Result</th><th>Details</th></tr></thead>
+<tbody>
+<tr><td><b>Chrome (Browser)</b></td><td class="muted">browser</td><td>200</td><td>120ms</td><td>47.1KB</td><td><span class="pill c-allowed">allowed</span></td><td>Wool Runner</td></tr>
+<tr><td><b>ChatGPT-User</b></td><td class="muted">ai-assistant</td><td>403</td><td>45ms</td><td>8.4KB</td><td><span class="pill c-challenged">challenged</span></td><td>challenge: Cloudflare</td></tr>
+<tr><td><b>OAI-SearchBot</b></td><td class="muted">ai-search</td><td>200</td><td>98ms</td><td>2.1KB</td><td><span class="pill c-cloaked">cloaked</span></td><td>31% similar to browser</td></tr>
+<tr><td><b>GPTBot</b></td><td class="muted">ai-training</td><td>200</td><td>101ms</td><td>47.1KB</td><td><span class="pill c-robots-disallowed">robots-disallowed</span></td><td>robots.txt: disallowed; noai</td></tr>
+<tr><td><b>Google-Extended</b></td><td class="muted">ai-training</td><td>-</td><td>-</td><td>-</td><td><span class="pill c-robots-disallowed">robots-disallowed</span></td><td>robots.txt token (not fetched); robots.txt: disallowed</td></tr>
+<tr><td><b>Perplexity-User</b></td><td class="muted">ai-assistant</td><td>200</td><td>130ms</td><td>47.1KB</td><td><span class="pill c-allowed">allowed</span></td><td>product: price 89.00 vs browser 98.00</td></tr>
+</tbody></table></div>
+
+
+
+
+</section>
+
+
+<footer>
+<p>acurl sends agent user-agent strings from your own IP address. Real AI agents come from published IP ranges and may sign their requests, so these results show how a site responds to user-agent strings, not guaranteed agent access.</p>
+<p>Generated by <a href="https://github.com/tragent-io/acurl">acurl</a> test, a free, open-source tool by <a href="https://tragent.io">tragent.io</a>.</p>
+</footer>
+</main>
+</body>
+</html>

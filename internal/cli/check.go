@@ -51,7 +51,7 @@ AI agents, search bots) and shows how each one is treated.`,
 	}
 	f := cmd.Flags()
 	fl.http.register(f)
-	fl.registerOutput(f, "table, json, markdown, csv, junit, sarif")
+	fl.registerOutput(f, "table, json, markdown, csv, junit, sarif, html")
 	f.StringVar(&fl.diff, "diff", "", "print a visible-text diff between the browser baseline and this profile")
 	f.BoolVar(&fl.render, "render", false, "also render the page in headless Chrome to measure how much text needs JavaScript")
 	f.DurationVar(&fl.renderWait, "render-wait", 2*time.Second, "how long scripts may run before the rendered page is captured")
