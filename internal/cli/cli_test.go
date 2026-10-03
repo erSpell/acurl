@@ -300,3 +300,25 @@ func TestSignedRequests(t *testing.T) {
 		t.Error("--signature-agent without --sign should fail")
 	}
 }
+
+func TestReportFromJSON(t *testing.T) {
+	srv := shop(t)
+	dir := t.TempDir()
+	if code, _, stderr := run(t, srv.URL, "-a", "Chrome (Browser),ChatGPT-User", "-f", "json", "-o", dir+"/run.json", "-q", "--fail-on", "none"); code != 0 {
+		t.Fatalf("check: %s", stderr)
+	}
+	code, stdout, stderr := run(t, "report", dir+"/run.json", "-f", "html")
+	if code != 0 || !strings.Contains(stdout, "<!doctype html>") || !strings.Contains(stdout, "tragent.io") || !strings.Contains(stdout, "ChatGPT-User") {
+		t.Errorf("report html: code=%d stderr=%s", code, stderr)
+	}
+	code, stdout, _ = run(t, "report", dir+"/run.json", "-f", "markdown")
+	if code != 0 || !strings.Contains(stdout, "| ChatGPT-User | 403 |") {
+		t.Errorf("report markdown: %s", stdout)
+	}
+	if err := os.WriteFile(dir+"/bad.json", []byte(`{"hello":1}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if code, _, _ := run(t, "report", dir+"/bad.json"); code != output.ExitError {
+		t.Error("non-report JSON should fail")
+	}
+}
