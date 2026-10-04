@@ -26,6 +26,9 @@ acurl --category ai-assistant,ai-search https://yourstore.com
 acurl --diff GPTBot https://yourstore.com     # what text did GPTBot not see?
 acurl robots https://yourstore.com/products/1  # robots.txt, content signals, llms.txt
 acurl profiles list
+acurl watch https://yourstore.com --interval 1h --webhook https://hooks.slack.com/... --webhook-format slack
+acurl --sign mybot.key --signature-agent https://bot.example https://yourstore.com   # Web Bot Auth
+acurl -f html -o report.html https://yourstore.com
 ```
 
 Each result is classified as `allowed`, `blocked`, `challenged` (WAF or captcha page),
@@ -34,7 +37,7 @@ Each result is classified as `allowed`, `blocked`, `challenged` (WAF or captcha 
 
 Every run ends with an **AI readiness score** (0-100) and concrete fixes for anything that fails.
 
-More: [profiles](docs/profiles.md) · [robots.txt and llms.txt](docs/robots.md) · [scoring](docs/scoring.md) · [CI](docs/ci.md)
+More: [profiles](docs/profiles.md) · [robots.txt and llms.txt](docs/robots.md) · [scoring](docs/scoring.md) · [CI](docs/ci.md) · [signing](docs/signing.md) · [watch](docs/watch.md)
 
 Output formats: `table` (default), `json`, `markdown`, `csv`, `junit` and `sarif`. Use `-o file` to write to a file.
 
