@@ -322,3 +322,29 @@ func TestReportFromJSON(t *testing.T) {
 		t.Error("non-report JSON should fail")
 	}
 }
+
+func TestWatchWithStateFile(t *testing.T) {
+	blocked := false
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if blocked && strings.Contains(r.UserAgent(), "ChatGPT-User") {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		_, _ = w.Write([]byte("<html><body><p>Shoes for everyone, shipped free.</p></body></html>"))
+	}))
+	defer srv.Close()
+	state := t.TempDir() + "/state.json"
+	args := []string{"watch", srv.URL, "--interval", "0", "--state", state, "-a", "Chrome (Browser),ChatGPT-User", "--no-robots"}
+
+	if code, stdout, stderr := run(t, args...); code != 0 || stdout != "" || !strings.Contains(stderr, "baseline recorded") {
+		t.Fatalf("first run: code=%d out=%q err=%q", code, stdout, stderr)
+	}
+	blocked = true
+	code, stdout, _ := run(t, args...)
+	if code != 0 || !strings.Contains(stdout, "ChatGPT-User allowed -> blocked") {
+		t.Errorf("second run should report the change: %q", stdout)
+	}
+	if code, _, _ := run(t, "watch", srv.URL, "--interval", "10s"); code != output.ExitError {
+		t.Error("intervals under a minute should be rejected")
+	}
+}
