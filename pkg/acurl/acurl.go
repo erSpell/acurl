@@ -62,6 +62,9 @@ type Options struct {
 	// the key directory is published.
 	SigningKey     ed25519.PrivateKey
 	SignatureAgent string
+	// BlockPrivate refuses to connect to private, loopback, link-local and
+	// cloud-metadata addresses. Enable it when URLs come from untrusted input.
+	BlockPrivate bool
 }
 
 // TraceEvent describes one completed page request.
@@ -111,17 +114,18 @@ func New(opts Options) (*Checker, error) {
 		signer = &sign.Signer{Key: opts.SigningKey, Agent: opts.SignatureAgent}
 	}
 	f, err := fetcher.New(fetcher.Options{
-		Timeout:     opts.Timeout,
-		Headers:     opts.Headers,
-		MaxBody:     opts.MaxBody,
-		Retries:     opts.Retries,
-		Proxy:       opts.Proxy,
-		Insecure:    opts.Insecure,
-		HTTPVersion: opts.HTTPVersion,
-		Method:      opts.Method,
-		BotTLS:      opts.BotTLS,
-		Trace:       opts.Trace,
-		Signer:      signer,
+		Timeout:      opts.Timeout,
+		Headers:      opts.Headers,
+		MaxBody:      opts.MaxBody,
+		Retries:      opts.Retries,
+		Proxy:        opts.Proxy,
+		Insecure:     opts.Insecure,
+		HTTPVersion:  opts.HTTPVersion,
+		Method:       opts.Method,
+		BotTLS:       opts.BotTLS,
+		Trace:        opts.Trace,
+		Signer:       signer,
+		BlockPrivate: opts.BlockPrivate,
 	})
 	if err != nil {
 		return nil, err
