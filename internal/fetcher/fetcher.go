@@ -13,6 +13,7 @@ import (
 
 	"github.com/tragent-io/acurl/internal/detect"
 	"github.com/tragent-io/acurl/internal/extract"
+	"github.com/tragent-io/acurl/internal/netguard"
 	"github.com/tragent-io/acurl/internal/render"
 	"github.com/tragent-io/acurl/internal/robots"
 	"github.com/tragent-io/acurl/pkg/types"
@@ -46,6 +47,9 @@ type Options struct {
 	Trace func(TraceEvent)
 	// Signer, if set, signs every bot-profile request (Web Bot Auth).
 	Signer RequestSigner
+	// BlockPrivate refuses connections to private, loopback and other
+	// internal addresses (SSRF protection for acurl serve and mcp).
+	BlockPrivate bool
 }
 
 // RequestSigner returns signature headers for a request.
@@ -119,6 +123,9 @@ func newClient(opts Options) (*req.Client, error) {
 	}
 	if opts.Proxy != "" {
 		c.SetProxyURL(opts.Proxy)
+	}
+	if opts.BlockPrivate {
+		c.SetDial(netguard.DialContext(opts.Timeout))
 	}
 	if opts.Insecure {
 		c.EnableInsecureSkipVerify()

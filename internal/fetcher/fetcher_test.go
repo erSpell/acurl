@@ -255,3 +255,26 @@ func TestNewRejectsUnknownBotTLS(t *testing.T) {
 		t.Error("expected error for unknown bot TLS fingerprint")
 	}
 }
+
+func TestBlockPrivate(t *testing.T) {
+	srv := newServer(t, func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte("internal")) })
+	res := mustNew(t, Options{BlockPrivate: true}).Fetch(context.Background(), srv.URL, types.Profile{Name: "x", UserAgent: "x"})
+	if !strings.Contains(res.Error, "private or internal address") {
+		t.Errorf("expected SSRF block, got %+v", res)
+	}
+	_, _, err := mustNew(t, Options{BlockPrivate: true}).Get(context.Background(), srv.URL+"/robots.txt", "x", 100)
+	if err == nil {
+		t.Error("auxiliary requests must be guarded too")
+	}
+}
+
+func TestBlockPrivateTLSBrowser(t *testing.T) {
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	defer srv.Close()
+	f := mustNew(t, Options{BlockPrivate: true, Insecure: true})
+	for _, p := range []types.Profile{{Name: "Chrome", UserAgent: "Chrome", Browser: true}, {Name: "bot", UserAgent: "bot"}} {
+		if res := f.Fetch(context.Background(), srv.URL, p); !strings.Contains(res.Error, "private or internal address") {
+			t.Errorf("%s over TLS not blocked: %+v", p.Name, res.Error)
+		}
+	}
+}
