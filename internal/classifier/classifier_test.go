@@ -132,3 +132,15 @@ func TestCompareProducts(t *testing.T) {
 		}
 	}
 }
+
+func TestClassifyAllIgnoresRobotsOnlyTokensForCloaking(t *testing.T) {
+	rs := []types.FetchResult{
+		{Profile: "Chrome (Browser)", Browser: true, StatusCode: 200, Body: page(article)},
+		{Profile: "Google-Extended", RobotsOnly: true},
+		{Profile: "Applebot-Extended", RobotsOnly: true, RobotsDisallowed: true},
+	}
+	ClassifyAll(rs, DefaultCloakThreshold)
+	if rs[1].Classification != Allowed || rs[2].Classification != RobotsDisallow || rs[1].Similarity != nil {
+		t.Errorf("robots-only tokens: %q %q similarity=%v", rs[1].Classification, rs[2].Classification, rs[1].Similarity)
+	}
+}

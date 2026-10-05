@@ -63,7 +63,7 @@ func ClassifyAll(results []types.FetchResult, threshold float64) {
 	baseText := textdiff.VisibleText(results[b].Body)
 	for i := range results {
 		r := &results[i]
-		if i == b || (r.Classification != Allowed && r.Classification != RobotsDisallow) {
+		if i == b || r.RobotsOnly || (r.Classification != Allowed && r.Classification != RobotsDisallow) {
 			continue
 		}
 		sim := textdiff.Similarity(baseText, textdiff.VisibleText(r.Body))
