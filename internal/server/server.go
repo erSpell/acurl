@@ -61,6 +61,7 @@ func New(opts Options) (*Server, error) {
 	s.mux.Handle("GET /", http.FileServerFS(ui))
 	s.mux.HandleFunc("GET /api/profiles", s.handleProfiles)
 	s.mux.HandleFunc("POST /api/check", s.handleCheck)
+	s.mux.HandleFunc("GET /api/check/stream", s.handleStream)
 	s.mux.HandleFunc("GET /api/robots", s.handleRobots)
 	s.mux.HandleFunc("POST /api/report", s.handleReport)
 	s.mux.HandleFunc("GET /api/version", func(w http.ResponseWriter, _ *http.Request) {

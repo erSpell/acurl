@@ -32,6 +32,7 @@ function details(r) {
   if (r.rate_limited) parts.push("rate limited");
   if (r.redirect_chain && r.redirect_chain.length) parts.push(r.redirect_chain.length + " redirect(s)");
   if (r.error) parts.push(r.error);
+  if (!parts.length && r.classification === "blocked") parts.push("HTTP " + r.status_code + " error page");
   if (parts.length) return parts.join("; ");
   return r.browser && r.title ? r.title : "Same page as the browser";
 }
@@ -77,31 +78,33 @@ function render(rep) {
   }
 }
 
-$("#check").addEventListener("submit", async (e) => {
+let stream = null;
+
+$("#check").addEventListener("submit", (e) => {
   e.preventDefault();
   const url = $("#url").value.trim();
   if (!url) { setStatus("Enter a page URL first.", true); return; }
   const categories = [...document.querySelectorAll("#cats input:checked")].map((i) => i.value);
   const button = $("#go");
+  const finish = () => { button.disabled = false; button.textContent = "Check"; if (stream) stream.close(); stream = null; };
+  if (stream) stream.close();
   button.disabled = true;
   button.textContent = "Checking";
-  setStatus("Fetching " + url + " as each agent. This usually takes a few seconds.");
-  try {
-    const res = await fetch("api/check", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url, categories }),
-    });
-    const body = await res.json();
-    if (!res.ok) throw new Error(body.error || "The check failed (" + res.status + ").");
-    render(body);
-    setStatus("");
-  } catch (err) {
-    setStatus(err.message, true);
-  } finally {
-    button.disabled = false;
-    button.textContent = "Check";
-  }
+  setStatus("Fetching " + url + " as each agent...");
+
+  const params = new URLSearchParams({ url, categories: categories.join(",") });
+  stream = new EventSource("api/check/stream?" + params);
+  stream.addEventListener("progress", (ev) => {
+    const p = JSON.parse(ev.data);
+    setStatus(p.done + " of " + p.total + " agents done. Last: " + p.profile + " (" + (p.error ? "failed" : p.status) + ")");
+  });
+  stream.addEventListener("report", (ev) => { render(JSON.parse(ev.data)); setStatus(""); finish(); });
+  stream.addEventListener("error", (ev) => {
+    let msg = "The connection to acurl was lost. Is acurl serve still running?";
+    if (ev.data) { try { msg = JSON.parse(ev.data).error; } catch (_) { /* keep default */ } }
+    setStatus(msg, true);
+    finish();
+  });
 });
 
 document.querySelectorAll(".downloads button").forEach((b) => b.addEventListener("click", async () => {
