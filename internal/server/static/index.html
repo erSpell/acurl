@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>acurl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Martian+Mono:wght@400;600;750&display=swap">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="bar">
+  <span class="logo">acurl</span>
+  <span class="muted" id="version"></span>
+</header>
+
+<main>
+  <form id="check" class="prompt" autocomplete="off">
+    <label for="url" class="sigil">$ acurl</label>
+    <input id="url" name="url" type="text" placeholder="yourstore.com/products/best-seller" spellcheck="false" autofocus>
+    <button type="submit" id="go">Check</button>
+  </form>
+  <fieldset class="cats" id="cats">
+    <legend class="muted">Agents</legend>
+    <label><input type="checkbox" value="ai-assistant" checked> AI assistants</label>
+    <label><input type="checkbox" value="ai-search" checked> AI search</label>
+    <label><input type="checkbox" value="ai-training" checked> AI training</label>
+    <label><input type="checkbox" value="search" checked> Search engines</label>
+    <label><input type="checkbox" value="other"> curl</label>
+  </fieldset>
+
+  <p id="status" class="status" role="status" aria-live="polite">Enter a page URL to see which AI agents can read it.</p>
+
+  <section id="result" hidden>
+    <div class="summary">
+      <div class="scorebox"><span id="score" class="score"></span><span id="grade" class="grade"></span></div>
+      <div>
+        <h1 id="target"></h1>
+        <p class="muted" id="when"></p>
+        <p class="downloads">Download:
+          <button type="button" data-format="html">HTML</button>
+          <button type="button" data-format="markdown">Markdown</button>
+          <button type="button" data-format="csv">CSV</button>
+          <button type="button" data-format="json">JSON</button>
+        </p>
+      </div>
+    </div>
+
+    <table class="results">
+      <thead><tr><th>Agent</th><th>Status</th><th>Result</th><th>Details</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <div id="checks"></div>
+  </section>
+</main>
+
+<footer>
+  <p>acurl sends agent user-agent strings from this machine's IP address. Real agents come from
+  published IP ranges and may sign their requests.</p>
+  <p><a href="https://acurl.dev">acurl.dev</a> is a free, open-source tool by <a href="https://tragent.io">tragent.io</a>.</p>
+</footer>
+<script src="app.js"></script>
+</body>
+</html>

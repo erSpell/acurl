@@ -87,7 +87,7 @@ func newRootCmd(a *app) *cobra.Command {
 	cmd.Version = fmt.Sprintf("%s (commit %s, built %s)", a.info.Version, a.info.Commit, a.info.Date)
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
-	cmd.AddCommand(newProfilesCmd(a), newRobotsCmd(a), newBatchCmd(a), newInitCmd(a), newKeygenCmd(a), newReportCmd(a), newWatchCmd(a), newManCmd(a, cmd))
+	cmd.AddCommand(newProfilesCmd(a), newRobotsCmd(a), newBatchCmd(a), newInitCmd(a), newKeygenCmd(a), newReportCmd(a), newWatchCmd(a), newServeCmd(a), newManCmd(a, cmd))
 
 	var configPath string
 	cmd.PersistentFlags().StringVar(&configPath, "config", "", "config file (default ./"+config.FileName+" or the user config dir)")

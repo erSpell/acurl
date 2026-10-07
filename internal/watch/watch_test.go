@@ -71,7 +71,7 @@ func TestNotify(t *testing.T) {
 }
 
 func TestNotifyErrors(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(500) }))
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusInternalServerError) }))
 	defer srv.Close()
 	ch := []Change{{URL: "u"}}
 	if err := (&Notifier{URL: srv.URL}).Notify(context.Background(), ch); err == nil {
