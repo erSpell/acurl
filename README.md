@@ -1,6 +1,14 @@
-# acurl
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
+    <img src="assets/logo-light.svg" alt="acurl" width="72" height="72">
+  </picture>
+</p>
 
-> See your website the way AI agents see it.
+<h1 align="center">acurl</h1>
+
+<p align="center">See your website the way AI agents see it.<br>
+<a href="https://acurl.dev">acurl.dev</a> · <a href="docs/">Docs</a> · <a href="https://tragent.io">tragent.io</a></p>
 
 **acurl** is a free, open-source tool by [tragent.io](https://tragent.io).
 
