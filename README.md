@@ -29,6 +29,8 @@ acurl profiles list
 acurl watch https://yourstore.com --interval 1h --webhook https://hooks.slack.com/... --webhook-format slack
 acurl --sign mybot.key --signature-agent https://bot.example https://yourstore.com   # Web Bot Auth
 acurl -f html -o report.html https://yourstore.com
+acurl serve                                    # local web UI on 127.0.0.1:8080
+claude mcp add acurl -- acurl mcp              # let Claude run checks for you
 ```
 
 Each result is classified as `allowed`, `blocked`, `challenged` (WAF or captcha page),
@@ -37,7 +39,7 @@ Each result is classified as `allowed`, `blocked`, `challenged` (WAF or captcha 
 
 Every run ends with an **AI readiness score** (0-100) and concrete fixes for anything that fails.
 
-More: [profiles](docs/profiles.md) · [robots.txt and llms.txt](docs/robots.md) · [scoring](docs/scoring.md) · [CI](docs/ci.md) · [signing](docs/signing.md) · [watch](docs/watch.md)
+More: [profiles](docs/profiles.md) · [robots.txt and llms.txt](docs/robots.md) · [scoring](docs/scoring.md) · [CI](docs/ci.md) · [signing](docs/signing.md) · [watch](docs/watch.md) · [web UI](docs/web-ui.md) · [MCP](docs/mcp.md)
 
 Output formats: `table` (default), `json`, `markdown`, `csv`, `junit` and `sarif`. Use `-o file` to write to a file.
 
