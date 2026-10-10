@@ -182,9 +182,8 @@ func details(r types.FetchResult) string {
 	if r.Error != "" {
 		parts = append(parts, "error: "+truncate(r.Error, 50))
 	}
-	// The title is the least important detail; only show it when nothing
-	// else needs saying.
-	if len(parts) == 0 && r.Title != "" {
+	// The title only identifies the page; show it once, on the browser row.
+	if len(parts) == 0 && r.Browser && r.Title != "" {
 		parts = append(parts, truncate(r.Title, 40))
 	}
 	if len(parts) == 0 {

@@ -46,6 +46,7 @@ function render(rep) {
   const s = rep.score;
   const scored = s && !s.note;
   $("#score").textContent = scored ? s.value : "–";
+  $("#score").classList.toggle("scored", Boolean(scored));
   const grade = $("#grade");
   grade.textContent = scored ? s.grade : "not scored";
   grade.className = "grade g-" + (scored ? s.grade : "x");
