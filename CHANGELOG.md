@@ -6,6 +6,27 @@ All notable changes to acurl are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-11
+
+### Added
+- `acurl serve`: local web UI with live progress, example result and downloads, plus a JSON
+  API (`/api/check`, `/api/check/stream`, `/api/robots`, `/api/profiles`, `/api/report`)
+- `acurl mcp`: Model Context Protocol server with `check_url`, `readiness_score`,
+  `robots_audit` and `list_profiles` tools for Claude, Cursor and other assistants
+- Web Bot Auth request signing (RFC 9421, Ed25519) with `acurl keygen`, `--sign` and
+  `--signature-agent`, verified against the RFC test vector
+- Self-contained HTML reports (`-f html`) and `acurl report` to re-render saved JSON
+- `acurl watch` with change detection, JSON and Slack webhooks, and a `--state` file for cron
+- New logo and the tragent.io design language across the web UI and reports
+
+### Changed
+- Non-HTML responses (PDF, images, JSON) are no longer parsed as HTML
+
+### Fixed
+- robots.txt-only tokens are never classified as cloaked
+- SSRF guard blocks private, loopback, link-local and metadata addresses for `serve` and `mcp`
+
+
 ## [0.3.0] - 2026-09-27
 
 ### Added
@@ -69,7 +90,8 @@ First public preview.
 - CI-friendly exit codes: 0 allowed, 1 blocked or challenged, 2 errors
 - Custom profiles via `--profiles file.yaml`, extra headers via `-H`
 
-[Unreleased]: https://github.com/tragent-io/acurl/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/tragent-io/acurl/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/tragent-io/acurl/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/tragent-io/acurl/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/tragent-io/acurl/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tragent-io/acurl/releases/tag/v0.1.0
