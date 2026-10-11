@@ -45,6 +45,7 @@ type FetchResult struct {
 	DurationMs        int64         `json:"duration_ms"`
 	BodySize          int           `json:"body_size"`
 	Truncated         bool          `json:"truncated,omitempty"`
+	ContentType       string        `json:"content_type,omitempty"`
 	Title             string        `json:"title,omitempty"`
 	BotChallenge      string        `json:"bot_challenge,omitempty"`
 	RateLimited       bool          `json:"rate_limited"`

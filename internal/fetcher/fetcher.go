@@ -226,8 +226,15 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 	result.Body = body
 	result.BodySize = len(body)
 	result.ContentHash = contentHash(body)
-	result.Title = extractTitle(string(body))
+	result.ContentType = resp.Header.Get("Content-Type")
 	result.BotChallenge = detect.Challenge(resp.StatusCode, resp.Header, body)
+	if !isHTML(result.ContentType, body) {
+		// PDFs, images and JSON have no title, meta tags or product markup;
+		// parsing them as HTML is wasted work and produces noise.
+		result.Directives = robots.Directives(resp.Header, nil, profile.RobotsKey)
+		return result
+	}
+	result.Title = extractTitle(string(body))
 	result.Directives = robots.Directives(resp.Header, body, profile.RobotsKey)
 	result.Product = extract.Product(body)
 	result.JS = render.Analyze(body)
