@@ -24,20 +24,10 @@
   --sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --canvas: #160f22; --panel: #1f1630; --surface: #261c3a; --ink: #efeaf7; --gray: #c9c1d9;
-    --gray-2: #a99fbe; --gray-3: #6f6488; --line: #33284a; --line-2: #2b2140; --dot: #2e2443;
-    --brand: #b48cf0; --brand-deep: #c9a8f5; --brand-soft: #2d2147; --on-brand: #160f22;
-    --pass: #5ccf96; --pass-soft: #12301f; --fail: #f08a8c; --fail-soft: #3a1a1f;
-    --warn: #f0b55c; --warn-soft: #362611; --info: #7fb2f0; --info-soft: #14263d;
-    --shadow-window: 0 1px 3px #0006, 0 28px 64px -30px #000a;
-  }
-}
 * { box-sizing: border-box; }
 body {
   margin: 0; color: var(--ink); font: 15px/1.6 var(--sans); -webkit-font-smoothing: antialiased;
-  background: var(--canvas) radial-gradient(var(--dot) 1px, transparent 1px) 0 0 / 22px 22px;
+  background: var(--canvas);
 }
 a { color: var(--brand); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .muted { color: var(--gray-2); }
@@ -120,3 +110,14 @@ footer { max-width: 1040px; margin: 40px auto; padding: 0 24px; font-size: 13px;
   .results th:nth-child(2), .results td:nth-child(2) { display: none; }
   .prompt { flex-direction: column; }
 }
+
+.example-tag { font: 500 12px var(--mono); color: var(--brand); background: var(--brand-soft); padding: 1px 8px; border-radius: var(--radius-chip); margin-left: 8px; vertical-align: 2px; }
+.help { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 28px; }
+.help section { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 18px 20px; box-shadow: var(--shadow-card); }
+.help h2 { font-size: 15px; font-weight: 500; margin: 0 0 4px; }
+.help p { margin: 0 0 10px; font-size: 14px; color: var(--gray-2); }
+.help pre { margin: 0; background: var(--ink); color: #efeaf7; border-radius: var(--radius-btn); padding: 12px 14px; font: 13px/1.7 var(--mono); overflow-x: auto; }
+.help pre .c { color: #b1a8c4; }
+.try { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; font-size: 13px; color: var(--gray-2); align-items: center; }
+.try button { font: 13px var(--mono); background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 2px 8px; color: var(--ink); cursor: pointer; }
+.try button:hover { border-color: var(--brand); color: var(--brand); }
