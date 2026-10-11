@@ -278,3 +278,25 @@ func TestBlockPrivateTLSBrowser(t *testing.T) {
 		}
 	}
 }
+
+func TestFetchSkipsHTMLAnalysisForOtherTypes(t *testing.T) {
+	srv := newServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"title":"<title>not a page</title>","@type":"Product"}`))
+	})
+	res := mustNew(t, Options{}).Fetch(context.Background(), srv.URL, types.Profile{Name: "x", UserAgent: "x"})
+	if res.Title != "" || res.JS != nil || res.Product != nil || res.ContentType != "application/json" {
+		t.Errorf("JSON response analysed as HTML: %+v", res)
+	}
+}
+
+func TestIsHTML(t *testing.T) {
+	for ct, want := range map[string]bool{"text/html; charset=utf-8": true, "application/xhtml+xml": true, "TEXT/HTML": true, "application/pdf": false, "image/png": false} {
+		if got := isHTML(ct, nil); got != want {
+			t.Errorf("isHTML(%q) = %v", ct, got)
+		}
+	}
+	if !isHTML("", []byte("<!DOCTYPE html><html>")) {
+		t.Error("sniffing should detect HTML without a Content-Type")
+	}
+}
