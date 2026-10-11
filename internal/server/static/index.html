@@ -31,7 +31,12 @@
     <label><input type="checkbox" value="other"> curl</label>
   </fieldset>
 
-  <p id="status" class="status" role="status" aria-live="polite">Enter a page URL to see which AI agents can read it.</p>
+  <p class="try">Try:
+    <button type="button" data-url="example.com">example.com</button>
+    <button type="button" data-url="www.allbirds.com/products/mens-wool-runners">allbirds.com product</button>
+    <button type="button" data-url="www.nytimes.com">nytimes.com</button>
+  </p>
+  <p id="status" class="status" role="status" aria-live="polite">Enter a page URL to see which AI agents can read it. Below is an example result.</p>
 
   <section id="result" hidden>
     <div class="summary">
@@ -55,6 +60,33 @@
 
     <div id="checks"></div>
   </section>
+
+  <div class="help" id="help">
+    <section>
+      <h2>Same check from the terminal</h2>
+      <p>Everything here runs locally with the acurl CLI.</p>
+<pre><span class="c"># one page, every agent</span>
+acurl yourstore.com/products/1
+<span class="c"># only AI assistants, fail CI below 80</span>
+acurl --category ai-assistant --fail-on score&lt;80 yourstore.com
+<span class="c"># robots.txt, content signals and llms.txt</span>
+acurl robots yourstore.com
+<span class="c"># every URL in your sitemap</span>
+acurl batch --sitemap auto:yourstore.com --limit 50</pre>
+    </section>
+    <section>
+      <h2>JSON API</h2>
+      <p>The page uses this API. Your own tools can use it too.</p>
+<pre>curl -s -X POST localhost:8080/api/check \
+  -d '{"url":"yourstore.com","categories":["ai-assistant"]}'
+
+<span class="c"># also:</span>
+GET  /api/check/stream?url=...   <span class="c"># live progress</span>
+GET  /api/robots?url=...
+GET  /api/profiles
+POST /api/report?format=html</pre>
+    </section>
+  </div>
 </main>
 
 <footer>

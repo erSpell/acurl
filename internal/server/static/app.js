@@ -37,10 +37,12 @@ function details(r) {
   return r.browser && r.title ? r.title : "Same page as the browser";
 }
 
-function render(rep) {
-  lastReport = rep;
+function render(rep, isExample) {
+  lastReport = isExample ? null : rep;
+  $(".downloads").hidden = Boolean(isExample);
   $("#result").hidden = false;
   $("#target").textContent = rep.url;
+  if (isExample) $("#target").append(el("span", { class: "example-tag" }, "Example"));
   $("#when").textContent = "Checked " + new Date(rep.timestamp).toLocaleString() + " with " + rep.results.length + " agents";
 
   const s = rep.score;
@@ -99,7 +101,7 @@ $("#check").addEventListener("submit", (e) => {
     const p = JSON.parse(ev.data);
     setStatus(p.done + " of " + p.total + " agents done. Last: " + p.profile + " (" + (p.error ? "failed" : p.status) + ")");
   });
-  stream.addEventListener("report", (ev) => { render(JSON.parse(ev.data)); setStatus(""); finish(); });
+  stream.addEventListener("report", (ev) => { render(JSON.parse(ev.data)); setStatus(""); $("#help").hidden = true; finish(); });
   stream.addEventListener("error", (ev) => {
     let msg = "The connection to acurl was lost. Is acurl serve still running?";
     if (ev.data) { try { msg = JSON.parse(ev.data).error; } catch (_) { /* keep default */ } }
@@ -125,9 +127,17 @@ document.querySelectorAll(".downloads button").forEach((b) => b.addEventListener
   URL.revokeObjectURL(a.href);
 }));
 
+document.querySelectorAll(".try button").forEach((b) => b.addEventListener("click", () => {
+  $("#url").value = b.dataset.url;
+  $("#check").requestSubmit();
+}));
+
 // ?url=... prefills the form and runs the check, so results can be linked.
 const initial = new URLSearchParams(location.search).get("url");
 if (initial) {
   $("#url").value = initial;
   $("#check").requestSubmit();
+}
+if (!initial) {
+  fetch("example.json").then((r) => r.json()).then((rep) => render(rep, true)).catch(() => {});
 }

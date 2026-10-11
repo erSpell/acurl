@@ -1,0 +1,25 @@
+{
+  "url": "https://shop.example/products/wool-runner",
+  "timestamp": "2026-10-11T09:30:00Z",
+  "results": [
+    {"profile": "Chrome (Browser)", "browser": true, "category": "browser", "status_code": 200, "classification": "allowed", "title": "Wool Runner | Example Store"},
+    {"profile": "ChatGPT-User", "category": "ai-assistant", "status_code": 403, "classification": "challenged", "bot_challenge": "Cloudflare"},
+    {"profile": "Claude-User", "category": "ai-assistant", "status_code": 200, "classification": "allowed"},
+    {"profile": "Perplexity-User", "category": "ai-assistant", "status_code": 200, "classification": "allowed", "product_issue": "price 89.00 vs browser 98.00"},
+    {"profile": "OAI-SearchBot", "category": "ai-search", "status_code": 200, "classification": "cloaked", "similarity": 0.31},
+    {"profile": "PerplexityBot", "category": "ai-search", "status_code": 200, "classification": "allowed"},
+    {"profile": "GPTBot", "category": "ai-training", "status_code": 200, "classification": "robots-disallowed", "robots_disallowed": true},
+    {"profile": "Google-Extended", "category": "ai-training", "robots_only": true, "classification": "robots-disallowed", "robots_disallowed": true},
+    {"profile": "Googlebot", "category": "search", "status_code": 200, "classification": "allowed"}
+  ],
+  "score": {
+    "value": 71, "grade": "C",
+    "checks": [
+      {"id": "assistants-allowed", "title": "AI assistants can fetch the page", "weight": 25, "applies": true, "passed": false, "points": 16.7, "detail": "2 of 3 allowed: ChatGPT-User (challenged)", "recommendation": "AI assistants fetch pages when a shopper asks about them. Allow ChatGPT-User, Claude-User and Perplexity-User in your WAF or bot-management rules and check that robots.txt does not disallow them."},
+      {"id": "ai-search-allowed", "title": "AI search crawlers can fetch the page", "weight": 20, "applies": true, "passed": false, "points": 10, "detail": "1 of 2 allowed: OAI-SearchBot (cloaked)", "recommendation": "AI search indexes decide which products get cited. Allow OAI-SearchBot, Claude-SearchBot and PerplexityBot in robots.txt and your firewall."},
+      {"id": "no-challenges", "title": "No bot challenges for AI agents", "weight": 10, "applies": true, "passed": false, "points": 8.3, "detail": "challenged: ChatGPT-User", "recommendation": "Agents cannot solve CAPTCHAs or JavaScript challenges. Skip challenges for verified AI user agents, or allow-list their published IP ranges."},
+      {"id": "server-rendered", "title": "Content is in the HTML without JavaScript", "weight": 15, "applies": true, "passed": true, "points": 15, "detail": "page text is in the raw HTML"},
+      {"id": "structured-data", "title": "Product structured data is present", "weight": 10, "applies": true, "passed": true, "points": 10, "detail": "JSON-LD Product with price and availability"}
+    ]
+  }
+}
