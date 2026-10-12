@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>acurl: see your website the way AI agents see it</title>
+<meta name="description" content="acurl is a free, open-source CLI that fetches a page as Chrome, ChatGPT, Claude, Perplexity, Googlebot and 20 other agents and shows which were blocked, challenged, cloaked or shown a different price.">
+<meta name="theme-color" content="#fdfcff">
+<link rel="canonical" href="https://acurl.dev/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:title" content="acurl: see your website the way AI agents see it">
+<meta property="og:description" content="Free, open-source CLI that checks how ChatGPT, Claude, Perplexity and other AI agents are treated by your site.">
+<meta property="og:url" content="https://acurl.dev/">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="announce"><span class="new">New</span>acurl 1.0: Web Bot Auth signing, an MCP server for AI assistants and a local web UI. <a href="https://github.com/tragent-io/acurl/blob/main/CHANGELOG.md">Read the changelog</a></div>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="assets/logo.svg" alt="" width="24" height="24">acurl</a>
+    <nav aria-label="Main">
+      <a href="docs/">Docs</a>
+      <a href="docs/#reference">Commands</a>
+      <a href="docs/#ci">CI</a>
+      <a href="docs/#mcp">MCP</a>
+      <a href="https://github.com/tragent-io/acurl/blob/main/CHANGELOG.md">Changelog</a>
+    </nav>
+    <div class="right">
+      <a class="by" href="https://tragent.io">by <b>tragent<span>.</span></b></a>
+      <a class="btn btn-line" href="https://github.com/tragent-io/acurl">GitHub</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+<section class="hero">
+  <div class="wrap">
+    <span class="chip">Free and open source <code>Apache-2.0</code></span>
+    <h1>See your website the way AI agents see it. <span class="soft">Then fix what they can't read.</span></h1>
+    <p class="sub">acurl fetches a page as Chrome, ChatGPT, Claude, Perplexity, Googlebot and 18 other agents. It shows which ones were blocked, challenged, cloaked or shown a different price, and tells you how to fix it.</p>
+
+    <div class="install" data-copy-scope>
+      <div class="tabs" role="tablist" aria-label="Install acurl">
+        <button role="tab" id="t-brew" aria-controls="p-brew" aria-selected="true">Homebrew</button>
+        <button role="tab" id="t-sh" aria-controls="p-sh" aria-selected="false" tabindex="-1">Shell script</button>
+        <button role="tab" id="t-go" aria-controls="p-go" aria-selected="false" tabindex="-1">Go</button>
+        <button role="tab" id="t-npm" aria-controls="p-npm" aria-selected="false" tabindex="-1">npm</button>
+        <button role="tab" id="t-pip" aria-controls="p-pip" aria-selected="false" tabindex="-1">pip</button>
+        <button role="tab" id="t-docker" aria-controls="p-docker" aria-selected="false" tabindex="-1">Docker</button>
+      </div>
+      <div class="cmdline">
+        <span class="ps">$</span>
+        <code role="tabpanel" id="p-brew" aria-labelledby="t-brew">brew install tragent-io/tap/acurl</code>
+        <code role="tabpanel" id="p-sh" aria-labelledby="t-sh" hidden>curl -fsSL https://acurl.dev/install.sh | sh</code>
+        <code role="tabpanel" id="p-go" aria-labelledby="t-go" hidden>go install github.com/tragent-io/acurl/cmd/acurl@latest</code>
+        <code role="tabpanel" id="p-npm" aria-labelledby="t-npm" hidden>npx @tragent/acurl https://yourstore.com</code>
+        <code role="tabpanel" id="p-pip" aria-labelledby="t-pip" hidden>pipx install acurl</code>
+        <code role="tabpanel" id="p-docker" aria-labelledby="t-docker" hidden>docker run --rm ghcr.io/tragent-io/acurl https://yourstore.com</code>
+        <button class="copy" type="button" data-copy="[role=tabpanel]">Copy</button>
+      </div>
+    </div>
+    <div class="ctas">
+      <a class="btn btn-brand" href="docs/#quick-start">Read the quick start</a>
+      <a class="btn btn-line" href="docs/#reference">Browse all commands</a>
+    </div>
+    <p class="fine">macOS, Linux and Windows. One static binary, no account, nothing sent anywhere but the site you check.</p>
+  </div>
+</section>
+
+<section class="demo" aria-label="Example run">
+  <div class="wrap">
+    <div class="window">
+      <div class="bar" aria-hidden="true"><i></i><i></i><i></i><span>acurl shop.example/products/wool-runner</span></div>
+<pre class="term"><span class="row"><span class="p">$</span> acurl shop.example/products/wool-runner</span><span class="row d">Fetching https://shop.example/products/wool-runner with 22 profiles...</span><span class="row"> </span><span class="row h">PROFILE            STATUS  TIME    RESULT             DETAILS</span><span class="row">Chrome (Browser)   200     412ms   <span class="ok">allowed</span>            Wool Runner | Example Store</span><span class="row">ChatGPT-User       403     51ms    <span class="warn">challenged</span>         challenge: Cloudflare</span><span class="row">Claude-User        200     388ms   <span class="ok">allowed</span>            OK</span><span class="row">Perplexity-User    200     402ms   <span class="ok">allowed</span>            product: price 89.00 vs browser 98.00</span><span class="row">OAI-SearchBot      200     97ms    <span class="cl">cloaked</span>            31% similar to browser</span><span class="row">PerplexityBot      200     371ms   <span class="ok">allowed</span>            OK</span><span class="row">GPTBot             200     365ms   <span class="info">robots-disallowed</span>  robots.txt: disallowed</span><span class="row">Google-Extended    -       -       <span class="info">robots-disallowed</span>  robots.txt token (not fetched)</span><span class="row">Googlebot          200     390ms   <span class="ok">allowed</span>            OK</span><span class="row"> </span><span class="row h">AI readiness <span class="warn">71/100 (C)</span></span><span class="row">  <span class="bad">✗</span> AI assistants can fetch the page            16.7/25  <span class="d">ChatGPT-User (challenged)</span></span><span class="row">  <span class="bad">✗</span> AI search crawlers can fetch the page       10.0/20  <span class="d">OAI-SearchBot (cloaked)</span></span><span class="row">  <span class="ok">✓</span> Content is in the HTML without JavaScript   15.0/15</span><span class="row">  <span class="ok">✓</span> Product structured data is present          10.0/10</span><span class="row"> </span><span class="row h">How to improve</span><span class="row">  1. Allow ChatGPT-User, Claude-User and Perplexity-User in your WAF's verified-bot rules.</span><span class="row">  2. Serve OAI-SearchBot the same product content as browsers. <span class="d">Run with --diff OAI-SearchBot.</span></span></pre>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="verdicts">
+  <div class="wrap grid2">
+    <div>
+      <h2>Every agent gets a verdict you can act on.</h2>
+      <p class="intro">acurl compares each agent's response with what a real Chrome visit received. A 200 status is not enough: the page also has to contain the same content, prices and stock as the browser saw.</p>
+      <p class="intro" style="font-size:16px">Exit codes follow your <a href="docs/#exit-codes"><code>--fail-on</code> policy</a>, so a blocked assistant can fail a pull request.</p>
+    </div>
+    <table class="verdicts">
+      <tr><td><span class="pill allowed">allowed</span></td><td>The agent got the same page as the browser.</td></tr>
+      <tr><td><span class="pill blocked">blocked</span></td><td>An error status (403, 401, 404, 5xx) instead of the page.</td></tr>
+      <tr><td><span class="pill challenged">challenged</span></td><td>A Cloudflare, Akamai, DataDome, PerimeterX, Imperva, Kasada, AWS WAF, Sucuri or CAPTCHA page.</td></tr>
+      <tr><td><span class="pill rate-limited">rate-limited</span></td><td>A 429, with the Retry-After delay.</td></tr>
+      <tr><td><span class="pill cloaked">cloaked</span></td><td>The visible text differs substantially from what the browser got.</td></tr>
+      <tr><td><span class="pill robots">robots-disallowed</span></td><td>robots.txt tells this agent to stay out. Often deliberate, so it doesn't fail runs by default.</td></tr>
+      <tr><td><span class="pill error">error</span></td><td>The request failed: DNS, TLS, timeout or connection reset.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="section alt" id="features">
+  <div class="wrap">
+    <h2>Everything an AI agent trips over, in one tool.</h2>
+    <p class="intro">Built for online stores first. It works on any website.</p>
+    <div class="features">
+      <div><h3>22 agent profiles</h3><p>ChatGPT-User, GPTBot, OAI-SearchBot, Claude-User, ClaudeBot, Perplexity, Gemini's Google-Extended, Applebot, Meta, Amazon, Common Crawl and more, grouped by what they do.</p></div>
+      <div><h3>Real browser baseline</h3><p>The Chrome profile uses Chrome's TLS and HTTP/2 fingerprint. Bot profiles send only their own headers, like real crawlers.</p></div>
+      <div><h3>WAF and challenge detection</h3><p>Recognises the challenge and block pages of nine bot-management vendors, without flagging normal login forms.</p></div>
+      <div><h3>robots.txt, Content Signals, llms.txt</h3><p>RFC 9309 matching per agent, <code>Content-Signal</code> directives, <code>X-Robots-Tag</code>, meta robots and llms.txt validation.</p></div>
+      <div><h3>Product data parity</h3><p>Reads schema.org Product from JSON-LD, microdata and OpenGraph, and flags agents that see a different price or stock level.</p></div>
+      <div><h3>JavaScript rendering check</h3><p>Spots client-rendered shells, and <code>--render</code> measures how much text only appears after JavaScript runs.</p></div>
+      <div><h3>AI readiness score</h3><p>A 0-100 score from weighted, documented checks, with a concrete fix for each one that fails.</p></div>
+      <div><h3>Web Bot Auth signing</h3><p>Sign requests with HTTP Message Signatures (RFC 9421, Ed25519) to test your verifier or your own agent.</p></div>
+      <div><h3>Batch, watch and alerts</h3><p>Check a whole sitemap, re-check on a schedule and post changes to Slack or any webhook.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="output">
+  <div class="wrap grid2">
+    <div>
+      <h2>Output your pipeline already reads.</h2>
+      <p class="intro">Terminal tables for people. JSON, SARIF, JUnit, CSV, Markdown and self-contained HTML for machines and reports. Pick one with <code>-f</code>.</p>
+      <ol class="steps">
+        <li><div><h3>JSON for scripts</h3><p>Every field, including the score breakdown, directives and product data.</p></div></li>
+        <li><div><h3>SARIF for code scanning</h3><p>Blocked agents show up as GitHub code scanning alerts.</p></div></li>
+        <li><div><h3>JUnit for any CI</h3><p>One test suite per URL, one test case per agent.</p></div></li>
+      </ol>
+    </div>
+    <div class="code" data-copy-scope>
+      <div class="tabs" role="tablist" aria-label="Output formats">
+        <button role="tab" id="t-json" aria-controls="o-json" aria-selected="true">JSON</button>
+        <button role="tab" id="t-sarif" aria-controls="o-sarif" aria-selected="false" tabindex="-1">SARIF</button>
+        <button role="tab" id="t-junit" aria-controls="o-junit" aria-selected="false" tabindex="-1">JUnit</button>
+      </div>
+<pre role="tabpanel" id="o-json" aria-labelledby="t-json"><span class="c">$ acurl -f json shop.example/products/wool-runner</span>
+{
+  <span class="k">"url"</span>: <span class="s">"https://shop.example/products/wool-runner"</span>,
+  <span class="k">"results"</span>: [
+    {
+      <span class="k">"profile"</span>: <span class="s">"ChatGPT-User"</span>,
+      <span class="k">"category"</span>: <span class="s">"ai-assistant"</span>,
+      <span class="k">"status_code"</span>: <span class="n">403</span>,
+      <span class="k">"duration_ms"</span>: <span class="n">51</span>,
+      <span class="k">"bot_challenge"</span>: <span class="s">"Cloudflare"</span>,
+      <span class="k">"classification"</span>: <span class="s">"challenged"</span>
+    },
+    {
+      <span class="k">"profile"</span>: <span class="s">"Perplexity-User"</span>,
+      <span class="k">"status_code"</span>: <span class="n">200</span>,
+      <span class="k">"product"</span>: { <span class="k">"source"</span>: <span class="s">"json-ld"</span>, <span class="k">"price"</span>: <span class="s">"89.00"</span>, <span class="k">"currency"</span>: <span class="s">"USD"</span> },
+      <span class="k">"product_issue"</span>: <span class="s">"price 89.00 vs browser 98.00"</span>,
+      <span class="k">"classification"</span>: <span class="s">"allowed"</span>
+    }
+  ],
+  <span class="k">"summary"</span>: { <span class="k">"total"</span>: <span class="n">22</span>, <span class="k">"allowed"</span>: <span class="n">16</span>, <span class="k">"challenged"</span>: <span class="n">1</span>, <span class="k">"cloaked"</span>: <span class="n">1</span> },
+  <span class="k">"score"</span>: {
+    <span class="k">"value"</span>: <span class="n">71</span>, <span class="k">"grade"</span>: <span class="s">"C"</span>,
+    <span class="k">"checks"</span>: [ { <span class="k">"id"</span>: <span class="s">"assistants-allowed"</span>, <span class="k">"points"</span>: <span class="n">16.7</span>, <span class="k">"weight"</span>: <span class="n">25</span> } ]
+  }
+}</pre>
+<pre role="tabpanel" id="o-sarif" aria-labelledby="t-sarif" hidden><span class="c">$ acurl -f sarif -o acurl.sarif shop.example</span>
+{
+  <span class="k">"version"</span>: <span class="s">"2.1.0"</span>,
+  <span class="k">"runs"</span>: [{
+    <span class="k">"tool"</span>: { <span class="k">"driver"</span>: { <span class="k">"name"</span>: <span class="s">"acurl"</span>, <span class="k">"rules"</span>: [ { <span class="k">"id"</span>: <span class="s">"AgentChallenged"</span> } ] } },
+    <span class="k">"results"</span>: [{
+      <span class="k">"ruleId"</span>: <span class="s">"AgentChallenged"</span>,
+      <span class="k">"level"</span>: <span class="s">"error"</span>,
+      <span class="k">"message"</span>: { <span class="k">"text"</span>: <span class="s">"ChatGPT-User (challenged): challenge: Cloudflare"</span> },
+      <span class="k">"locations"</span>: [{ <span class="k">"physicalLocation"</span>: { <span class="k">"artifactLocation"</span>: { <span class="k">"uri"</span>: <span class="s">"https://shop.example/"</span> } } }]
+    }]
+  }]
+}</pre>
+<pre role="tabpanel" id="o-junit" aria-labelledby="t-junit" hidden><span class="c">$ acurl batch urls.txt -f junit -o acurl.xml</span>
+&lt;testsuites name="acurl" tests="22" failures="2" errors="0"&gt;
+  &lt;testsuite name="https://shop.example/" tests="22" failures="2" skipped="2"&gt;
+    &lt;testcase name="ChatGPT-User" classname="acurl.ai-assistant" time="0.051"&gt;
+      &lt;failure message="challenged: challenge: Cloudflare" type="challenged"/&gt;
+    &lt;/testcase&gt;
+    &lt;testcase name="Claude-User" classname="acurl.ai-assistant" time="0.388"/&gt;
+    &lt;testcase name="GPTBot" classname="acurl.ai-training" time="0.365"&gt;
+      &lt;skipped message="robots-disallowed: robots.txt: disallowed"/&gt;
+    &lt;/testcase&gt;
+  &lt;/testsuite&gt;
+&lt;/testsuites&gt;</pre>
+    </div>
+  </div>
+</section>
+
+<section class="section alt" id="ci">
+  <div class="wrap grid2">
+    <div>
+      <h2>Catch the regression before your customers' assistants do.</h2>
+      <p class="intro">A WAF update or a new bot-management default can lock out ChatGPT overnight. Run acurl on every pull request and on a schedule.</p>
+      <p><a href="docs/#ci">CI guide</a> · <a href="docs/#watch">Scheduled watching</a></p>
+    </div>
+    <div class="code">
+      <div class="tabs" role="tablist" aria-label="CI examples">
+        <button role="tab" id="t-gha" aria-controls="c-gha" aria-selected="true">GitHub Actions</button>
+        <button role="tab" id="t-cli" aria-controls="c-cli" aria-selected="false" tabindex="-1">Any CI</button>
+      </div>
+<pre role="tabpanel" id="c-gha" aria-labelledby="t-gha"><span class="k">name</span>: AI agent access
+<span class="k">on</span>: [pull_request]
+<span class="k">jobs</span>:
+  <span class="k">acurl</span>:
+    <span class="k">runs-on</span>: ubuntu-latest
+    <span class="k">permissions</span>:
+      <span class="k">security-events</span>: write
+    <span class="k">steps</span>:
+      - <span class="k">uses</span>: tragent-io/acurl@v1
+        <span class="k">with</span>:
+          <span class="k">urls</span>: |
+            https://staging.shop.example/
+            https://staging.shop.example/products/best-seller
+          <span class="k">fail-on</span>: <span class="s">blocked,challenged,score&lt;80</span></pre>
+<pre role="tabpanel" id="c-cli" aria-labelledby="t-cli" hidden><span class="c"># exit 1 when an assistant is blocked or the score drops below 80</span>
+acurl --category ai-assistant,ai-search \
+      --fail-on blocked,challenged,score&lt;80 \
+      https://staging.shop.example
+
+<span class="c"># a whole sitemap, as JUnit for your test reporter</span>
+acurl batch --sitemap auto:staging.shop.example \
+      --limit 100 -f junit -o acurl.xml</pre>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="mcp">
+  <div class="wrap grid2">
+    <div>
+      <h2>Ask your AI assistant to check it for you.</h2>
+      <p class="intro"><code>acurl mcp</code> is a Model Context Protocol server. Claude, Cursor and other MCP clients get four read-only tools: <code>check_url</code>, <code>readiness_score</code>, <code>robots_audit</code> and <code>list_profiles</code>.</p>
+      <p class="intro" style="font-size:16px">Then ask: <em>"Can ChatGPT read our new product page, and if not, why?"</em></p>
+    </div>
+    <div class="code" data-copy-scope>
+      <div class="tabs" role="tablist" aria-label="MCP setup">
+        <button role="tab" id="t-cc" aria-controls="m-cc" aria-selected="true">Claude Code</button>
+        <button role="tab" id="t-cd" aria-controls="m-cd" aria-selected="false" tabindex="-1">Claude Desktop / Cursor</button>
+      </div>
+<pre role="tabpanel" id="m-cc" aria-labelledby="t-cc">claude mcp add acurl -- acurl mcp</pre>
+<pre role="tabpanel" id="m-cd" aria-labelledby="t-cd" hidden>{
+  <span class="k">"mcpServers"</span>: {
+    <span class="k">"acurl"</span>: { <span class="k">"command"</span>: <span class="s">"acurl"</span>, <span class="k">"args"</span>: [<span class="s">"mcp"</span>] }
+  }
+}</pre>
+    </div>
+  </div>
+</section>
+
+<section class="section alt" id="commands">
+  <div class="wrap">
+    <h2>Commands</h2>
+    <p class="intro">Every command, every flag and an example for each are in the <a href="docs/#reference">command reference</a>.</p>
+    <table class="cmds">
+      <tr><td><a href="docs/#acurl">acurl &lt;url&gt;</a></td><td>Fetch a URL as every agent, classify each response and score the page.</td></tr>
+      <tr><td><a href="docs/#acurl-robots">acurl robots &lt;url&gt;</a></td><td>robots.txt verdict per agent, Content Signals, sitemaps and llms.txt.</td></tr>
+      <tr><td><a href="docs/#acurl-batch">acurl batch [file]</a></td><td>Check URL lists, CSV files, stdin or whole sitemaps.</td></tr>
+      <tr><td><a href="docs/#acurl-watch">acurl watch &lt;url&gt;...</a></td><td>Re-check on a schedule and alert on changes.</td></tr>
+      <tr><td><a href="docs/#acurl-report">acurl report &lt;file&gt;</a></td><td>Render a saved JSON report as HTML, Markdown, SARIF, JUnit or CSV.</td></tr>
+      <tr><td><a href="docs/#acurl-serve">acurl serve</a></td><td>Local web UI and JSON API.</td></tr>
+      <tr><td><a href="docs/#acurl-mcp">acurl mcp</a></td><td>MCP server for AI assistants.</td></tr>
+      <tr><td><a href="docs/#acurl-profiles-list">acurl profiles list | show</a></td><td>Browse the agent profile catalog.</td></tr>
+      <tr><td><a href="docs/#acurl-keygen">acurl keygen</a></td><td>Create an Ed25519 key for Web Bot Auth signing.</td></tr>
+      <tr><td><a href="docs/#acurl-init">acurl init</a></td><td>Write a commented <code>.acurl.yaml</code> config file.</td></tr>
+      <tr><td><a href="docs/#acurl-completion-bash">acurl completion</a></td><td>Shell completions for bash, zsh, fish and PowerShell.</td></tr>
+    </table>
+  </div>
+</section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div>
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="" width="22" height="22">acurl</a>
+      <p>A free, open-source tool by <a href="https://tragent.io">tragent.io</a>. Apache-2.0 licensed.</p>
+    </div>
+    <nav aria-label="Footer">
+      <a href="docs/">Docs</a>
+      <a href="docs/#reference">Commands</a>
+      <a href="https://github.com/tragent-io/acurl">GitHub</a>
+      <a href="https://github.com/tragent-io/acurl/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/tragent-io/acurl/blob/main/SECURITY.md">Security</a>
+      <a href="https://tragent.io">tragent.io</a>
+    </nav>
+  </div>
+</footer>
+<script src="assets/site.js"></script>
+</body>
+</html>
