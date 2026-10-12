@@ -38,13 +38,11 @@ func collect(root *cobra.Command) []refCommand {
 				Example: strings.TrimRight(c.Example, "\n"),
 			}
 			c.NonInheritedFlags().VisitAll(func(f *pflag.Flag) {
-				if f.Hidden || f.Name == "help" {
+				// Global flags are listed once, in their own section.
+				if f.Hidden || f.Name == "help" || root.PersistentFlags().Lookup(f.Name) != nil {
 					return
 				}
-				typ := f.Value.Type()
-				if typ == "bool" {
-					typ = ""
-				}
+				typ := typeName(f.Value.Type())
 				def := f.DefValue
 				if def == "[]" || def == "false" || (typ == "string" && def == "") {
 					def = ""
@@ -95,9 +93,9 @@ func writeReference(w io.Writer, root *cobra.Command) error {
 	cmds := collect(root)
 	global := refCommand{ID: "global-flags", Path: "Global flags", Use: "acurl [command] [flags]", Short: "These flags work with every command."}
 	root.PersistentFlags().VisitAll(func(f *pflag.Flag) {
-		typ, def := f.Value.Type(), f.DefValue
-		if typ == "bool" {
-			typ, def = "", ""
+		typ, def := typeName(f.Value.Type()), f.DefValue
+		if typ == "" {
+			def = ""
 		}
 		global.Flags = append(global.Flags, refFlag{Name: f.Name, Short: f.Shorthand, Type: typ, Default: def, Usage: f.Usage})
 	})
@@ -106,4 +104,21 @@ func writeReference(w io.Writer, root *cobra.Command) error {
 		return err
 	}
 	return referenceTemplate.Execute(w, cmds)
+}
+
+// typeName turns pflag type names into what a reader expects.
+func typeName(t string) string {
+	switch t {
+	case "bool":
+		return ""
+	case "stringSlice":
+		return "list"
+	case "stringArray":
+		return "string, repeatable"
+	case "int64":
+		return "int"
+	case "float64":
+		return "number"
+	}
+	return t
 }
