@@ -22,6 +22,8 @@ check_url, readiness_score, robots_audit and list_profiles.
 
 Add it to Claude Code with:
   claude mcp add acurl -- acurl mcp`,
+		Example: `  claude mcp add acurl -- acurl mcp
+  acurl mcp --timeout 20s`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			a.quiet = true // stdout belongs to the protocol

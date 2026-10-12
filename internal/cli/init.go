@@ -41,7 +41,9 @@ func newInitCmd(a *app) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Create a " + config.FileName + " config file in the current directory",
-		Args:  cobra.NoArgs,
+		Example: `  acurl init
+  acurl init --force`,
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if _, err := os.Stat(config.FileName); err == nil && !force {
 				return fmt.Errorf("%s already exists (use --force to overwrite)", config.FileName)
