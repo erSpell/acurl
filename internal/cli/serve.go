@@ -28,6 +28,8 @@ API it uses (POST /api/check, GET /api/robots, GET /api/profiles).
 
 Requests to private and internal addresses are blocked unless --allow-private is
 set, because anyone who can reach the server can make it fetch URLs.`,
+		Example: `  acurl serve
+  acurl serve --addr 0.0.0.0:8080 --render`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			opts, err := fl.options(a)

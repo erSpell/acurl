@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentation · acurl</title>
+<meta name="description" content="acurl documentation: installation, usage patterns, verdicts, scoring, CI, MCP, Web Bot Auth and the full command reference.">
+<meta name="theme-color" content="#fdfcff">
+<link rel="canonical" href="https://acurl.dev/docs/">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="../"><img src="../assets/logo.svg" alt="" width="24" height="24">acurl</a>
+    <nav aria-label="Main">
+      <a href="./" aria-current="page">Docs</a>
+      <a href="#reference">Commands</a>
+      <a href="#ci">CI</a>
+      <a href="#mcp">MCP</a>
+      <a href="https://github.com/tragent-io/acurl/blob/main/CHANGELOG.md">Changelog</a>
+    </nav>
+    <div class="right">
+      <a class="by" href="https://tragent.io">by <b>tragent<span>.</span></b></a>
+      <a class="btn btn-line" href="https://github.com/tragent-io/acurl">GitHub</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap docs">
+<aside class="side" aria-label="Documentation">
+  <h4>Getting started</h4>
+  <a href="#install">Installation</a>
+  <a href="#quick-start">Quick start</a>
+  <a href="#reading-output">Reading the output</a>
+  <a href="#patterns">Usage patterns</a>
+  <h4>Concepts</h4>
+  <a href="#verdicts">Verdicts</a>
+  <a href="#profiles">Agent profiles</a>
+  <a href="#score">AI readiness score</a>
+  <a href="#exit-codes">Exit codes and --fail-on</a>
+  <a href="#formats">Output formats</a>
+  <h4>Guides</h4>
+  <a href="#ci">CI and GitHub Actions</a>
+  <a href="#robots">robots.txt and llms.txt</a>
+  <a href="#rendering">JavaScript rendering</a>
+  <a href="#watch">Watching for changes</a>
+  <a href="#signing">Web Bot Auth signing</a>
+  <a href="#mcp">AI assistants (MCP)</a>
+  <a href="#serve">Web UI and API</a>
+  <a href="#config">Configuration</a>
+  <a href="#library">Go library</a>
+  <h4>Command reference</h4>
+  <a href="#acurl"><code>acurl</code></a>
+  <a href="#acurl-robots"><code>robots</code></a>
+  <a href="#acurl-batch"><code>batch</code></a>
+  <a href="#acurl-watch"><code>watch</code></a>
+  <a href="#acurl-report"><code>report</code></a>
+  <a href="#acurl-serve"><code>serve</code></a>
+  <a href="#acurl-mcp"><code>mcp</code></a>
+  <a href="#acurl-profiles-list"><code>profiles list</code></a>
+  <a href="#acurl-profiles-show"><code>profiles show</code></a>
+  <a href="#acurl-keygen"><code>keygen</code></a>
+  <a href="#acurl-init"><code>init</code></a>
+  <a href="#acurl-completion-bash"><code>completion</code></a>
+  <a href="#global-flags">Global flags</a>
+</aside>
+
+<main id="main" class="content">
+<h1>acurl documentation</h1>
+<p class="lead">acurl fetches a URL once per agent profile, compares every response with a real Chrome visit and tells you which AI agents and crawlers can read the page, and what to fix when they can't.</p>
+
+<h2 id="install">Installation</h2>
+<p>acurl is a single static binary for macOS, Linux and Windows (amd64 and arm64).</p>
+<table>
+  <tr><th>Method</th><th>Command</th></tr>
+  <tr><td>Homebrew</td><td><code>brew install tragent-io/tap/acurl</code></td></tr>
+  <tr><td>Shell script</td><td><code>curl -fsSL https://acurl.dev/install.sh | sh</code></td></tr>
+  <tr><td>Go 1.26+</td><td><code>go install github.com/tragent-io/acurl/cmd/acurl@latest</code></td></tr>
+  <tr><td>npm</td><td><code>npx @tragent/acurl &lt;url&gt;</code> or <code>npm i -g @tragent/acurl</code></td></tr>
+  <tr><td>pip</td><td><code>pipx install acurl</code></td></tr>
+  <tr><td>Docker</td><td><code>docker run --rm ghcr.io/tragent-io/acurl &lt;url&gt;</code></td></tr>
+  <tr><td>Binaries</td><td><a href="https://github.com/tragent-io/acurl/releases">GitHub Releases</a>, with checksums, SBOMs and cosign signatures</td></tr>
+</table>
+<p>Check the install with <code>acurl --version</code>. Shell completions: <code>acurl completion zsh &gt; "${fpath[1]}/_acurl"</code> (see <a href="#acurl-completion-bash">completion</a>).</p>
+
+<h2 id="quick-start">Quick start</h2>
+<p>Point acurl at any page. A scheme is optional: <code>https://</code> is assumed.</p>
+<pre><code>$ acurl shop.example/products/wool-runner
+Fetching https://shop.example/products/wool-runner with 22 profiles...
+
+PROFILE            STATUS  TIME    RESULT             DETAILS
+Chrome (Browser)   200     412ms   allowed            Wool Runner | Example Store
+ChatGPT-User       403     51ms    challenged         challenge: Cloudflare
+Claude-User        200     388ms   allowed            OK
+OAI-SearchBot      200     97ms    cloaked            31% similar to browser
+GPTBot             200     365ms   robots-disallowed  robots.txt: disallowed
+...
+
+AI readiness 71/100 (C)
+  ✗ AI assistants can fetch the page            16.7/25  ChatGPT-User (challenged)
+  ✓ Content is in the HTML without JavaScript   15.0/15
+...
+How to improve
+  1. AI assistants can fetch the page
+     Allow ChatGPT-User, Claude-User and Perplexity-User in your WAF or bot-management rules...</code></pre>
+<p>The exit code is <code>1</code> because an agent was challenged. <a href="#exit-codes">Change that with <code>--fail-on</code></a>.</p>
+
+<h2 id="reading-output">Reading the output</h2>
+<table>
+  <tr><th>Column</th><th>Meaning</th></tr>
+  <tr><td>PROFILE</td><td>The agent acurl pretended to be. <code>Chrome (Browser)</code> is the baseline everything is compared with.</td></tr>
+  <tr><td>STATUS</td><td>Final HTTP status after redirects. <code>-</code> for robots.txt-only tokens, <code>ERR</code> for network failures.</td></tr>
+  <tr><td>TIME / SIZE</td><td>Total request time and body size (capped by <code>--max-body</code>).</td></tr>
+  <tr><td>RESULT</td><td>The <a href="#verdicts">verdict</a> for this agent.</td></tr>
+  <tr><td>DETAILS</td><td>Why: the WAF vendor, similarity to the browser, robots.txt and meta directives, product price differences, redirects or the error.</td></tr>
+</table>
+<p>Below the table: the <a href="#score">AI readiness score</a> with each check, and a fix for every failed check.</p>
+
+<h2 id="patterns">Usage patterns</h2>
+<h3>Check only the agents you care about</h3>
+<pre><code>acurl --category ai-assistant,ai-search shop.example     # categories keep the browser baseline
+acurl --agents "Chrome (Browser),ChatGPT-User,Claude-User" shop.example
+acurl profiles list                                      # every profile and its category</code></pre>
+<h3>See exactly what an agent missed</h3>
+<pre><code>acurl --diff OAI-SearchBot shop.example/products/1      # visible-text diff vs the browser, on stderr
+acurl -f html -o report.html shop.example/products/1     # shareable report with diffs</code></pre>
+<h3>Raw output for scripts</h3>
+<pre><code>acurl -q -f json shop.example | jq '.results[] | select(.classification != "allowed") | .profile'
+acurl -q -f json shop.example | jq '.score.value'
+acurl -q -f csv  shop.example &gt; agents.csv</code></pre>
+<h3>Robots and llms.txt without fetching the page</h3>
+<pre><code>acurl robots shop.example/products/1
+acurl robots -f json shop.example | jq '.agents[] | select(.allowed | not) | .token'</code></pre>
+<h3>Whole site</h3>
+<pre><code>acurl batch urls.txt                                     # one URL per line, # comments allowed
+acurl batch --sitemap auto:shop.example --limit 100      # sitemaps listed in robots.txt
+cat urls.txt | acurl batch -f junit -o acurl.xml</code></pre>
+<h3>Staging, logins and regions</h3>
+<pre><code>acurl -H "Cookie: country=US" -H "Authorization: Basic dXNlcjpwYXNz" staging.shop.example
+acurl --proxy socks5://127.0.0.1:1080 shop.example       # check from another network
+acurl -k https://localhost:8443                          # self-signed certificates</code></pre>
+<h3>Isolate the user agent</h3>
+<pre><code>acurl --tls chrome shop.example     # bots use Chrome's TLS fingerprint too: only the UA differs
+acurl -I shop.example               # HEAD requests: status and headers only</code></pre>
+
+<h2 id="verdicts">Verdicts</h2>
+<p>Each result gets exactly one verdict, checked in this order:</p>
+<table>
+  <tr><th>Verdict</th><th>When</th><th>Fails by default</th></tr>
+  <tr><td><span class="pill error">error</span></td><td>The request failed (DNS, TLS, timeout, reset)</td><td>yes, exit 2</td></tr>
+  <tr><td><span class="pill challenged">challenged</span></td><td>A known WAF challenge or block page: Cloudflare, Akamai, DataDome, PerimeterX, Imperva, Kasada, AWS WAF, Sucuri or a CAPTCHA on an error page</td><td>yes</td></tr>
+  <tr><td><span class="pill rate-limited">rate-limited</span></td><td>HTTP 429. <code>Retry-After</code> is parsed as seconds or a date.</td><td>no</td></tr>
+  <tr><td><span class="pill blocked">blocked</span></td><td>Any 4xx or 5xx status</td><td>yes</td></tr>
+  <tr><td><span class="pill robots">robots-disallowed</span></td><td>robots.txt disallows the agent's token for this URL</td><td>no</td></tr>
+  <tr><td><span class="pill cloaked">cloaked</span></td><td>Allowed, but the visible text is less than 50% similar to the browser's (<code>--cloak-threshold</code>)</td><td>no</td></tr>
+  <tr><td><span class="pill allowed">allowed</span></td><td>Everything else</td><td></td></tr>
+</table>
+
+<h2 id="profiles">Agent profiles</h2>
+<p>A profile is a user agent string, optional headers and the robots.txt token the agent obeys. The catalog has 22 profiles in six categories:</p>
+<table>
+  <tr><th>Category</th><th>Profiles</th></tr>
+  <tr><td><code>browser</code></td><td>Chrome (Browser), the baseline</td></tr>
+  <tr><td><code>ai-assistant</code></td><td>ChatGPT-User, Claude-User, Perplexity-User, MistralAI-User, DuckAssistBot</td></tr>
+  <tr><td><code>ai-search</code></td><td>OAI-SearchBot, Claude-SearchBot, PerplexityBot, Amazonbot</td></tr>
+  <tr><td><code>ai-training</code></td><td>GPTBot, ClaudeBot, Claude-Web, anthropic-ai, Meta-ExternalAgent, Bytespider, CCBot, Google-Extended*, Applebot-Extended*</td></tr>
+  <tr><td><code>search</code></td><td>Googlebot, Bingbot, Applebot</td></tr>
+  <tr><td><code>other</code></td><td>curl (Baseline)</td></tr>
+</table>
+<p>* robots.txt-only tokens: checked against robots.txt, never fetched.</p>
+<p>Browser profiles use Chrome's TLS, HTTP/2 and client hints. Bot profiles send only their own headers over Go's TLS stack, like most real crawlers. Bring your own catalog with <code>--profiles my-profiles.yaml</code>:</p>
+<pre><code>profiles:
+  - name: "InternalBot"
+    category: other
+    user_agent: "InternalBot/2.0 (+https://example.com/bot)"
+    robots_key: "InternalBot"
+    headers:
+      X-Team: "growth"</code></pre>
+
+<h2 id="score">AI readiness score</h2>
+<p>A 0-100 score from weighted checks that only use what was observed in the run. Checks that don't apply (no product on the page, no agents of that category) are skipped and the rest re-weighted. Blocking training crawlers costs nothing: that is a business decision.</p>
+<table>
+  <tr><th>Check</th><th>Weight</th></tr>
+  <tr><td>AI assistants can fetch the page</td><td>25</td></tr>
+  <tr><td>AI search crawlers can fetch the page</td><td>20</td></tr>
+  <tr><td>Content is in the HTML without JavaScript</td><td>15</td></tr>
+  <tr><td>No bot challenges for AI agents</td><td>10</td></tr>
+  <tr><td>AI agents see the same content as browsers</td><td>10</td></tr>
+  <tr><td>Product structured data is present</td><td>10</td></tr>
+  <tr><td>AI agents see the same price and availability</td><td>10</td></tr>
+</table>
+<p>Grades: A 90+, B 80+, C 65+, D 50+, F below. If the browser baseline itself is blocked, the page is not scored: the site is blocking your network, not the agents.</p>
+
+<h2 id="exit-codes">Exit codes and --fail-on</h2>
+<table>
+  <tr><th>Code</th><th>Meaning</th></tr>
+  <tr><td><code>0</code></td><td>Nothing matched the <code>--fail-on</code> policy</td></tr>
+  <tr><td><code>1</code></td><td>Something matched (for example an assistant was blocked)</td></tr>
+  <tr><td><code>2</code></td><td>A request failed, or acurl was used incorrectly</td></tr>
+</table>
+<p>The default is <code>--fail-on blocked,challenged,error</code>. Combine <code>blocked</code>, <code>challenged</code>, <code>rate-limited</code>, <code>cloaked</code>, <code>robots</code>, <code>error</code> and <code>score&lt;N</code>, or use <code>none</code>.</p>
+<pre><code>acurl --fail-on blocked,challenged,cloaked,score&lt;80 shop.example</code></pre>
+
+<h2 id="formats">Output formats</h2>
+<table>
+  <tr><th><code>-f</code></th><th>Use it for</th></tr>
+  <tr><td><code>table</code></td><td>Terminals (default). <code>--no-color</code> for plain text.</td></tr>
+  <tr><td><code>json</code></td><td>Scripts. Every field, including score checks, directives and product data.</td></tr>
+  <tr><td><code>markdown</code></td><td>Pull request comments and issues</td></tr>
+  <tr><td><code>html</code></td><td>A self-contained report with visible-text diffs</td></tr>
+  <tr><td><code>sarif</code></td><td>GitHub code scanning</td></tr>
+  <tr><td><code>junit</code></td><td>Test reporters in any CI</td></tr>
+  <tr><td><code>csv</code></td><td>Spreadsheets: one row per URL and agent</td></tr>
+</table>
+<p>Save JSON once and render it again later without re-fetching: <code>acurl report run.json -f html -o run.html</code>.</p>
+
+<h2 id="ci">CI and GitHub Actions</h2>
+<pre><code>- uses: tragent-io/acurl@v1
+  with:
+    urls: |
+      https://staging.shop.example/
+      https://staging.shop.example/products/best-seller
+    fail-on: blocked,challenged,score&lt;80</code></pre>
+<p>The action installs acurl, writes a job summary, and uploads SARIF to code scanning when the job has <code>security-events: write</code>. Without the action:</p>
+<pre><code>go install github.com/tragent-io/acurl/cmd/acurl@latest
+acurl batch urls.txt -f sarif -o acurl.sarif --fail-on blocked,challenged</code></pre>
+<p class="callout">Results from cloud runners can differ from your laptop's: many WAFs score datacenter IP ranges. If the browser baseline is challenged, the runner is being blocked, not the agents.</p>
+
+<h2 id="robots">robots.txt and llms.txt</h2>
+<p><code>acurl robots</code> fetches only robots.txt and llms.txt, and reports per agent:</p>
+<ul>
+  <li>allow or disallow using Google's robots.txt matcher, with RFC 9309 failure rules (4xx allows all, 5xx or an unreachable server means full disallow)</li>
+  <li><code>Content-Signal</code> directives such as <code>search=yes, ai-train=no</code></li>
+  <li>sitemaps listed in robots.txt</li>
+  <li><code>/llms.txt</code> and <code>/llms-full.txt</code>: presence, title, sections, links and format problems</li>
+</ul>
+<p>The main command also reads <code>X-Robots-Tag</code> and <code>&lt;meta name="robots"&gt;</code>, including agent-specific tags like <code>&lt;meta name="GPTBot" content="noindex"&gt;</code>.</p>
+
+<h2 id="rendering">JavaScript rendering</h2>
+<p>Most AI agents do not run JavaScript. acurl flags client-rendered shells (an empty app root, a "please enable JavaScript" notice, almost no text). With <code>--render</code>, it loads the page in a local headless Chrome and reports how much visible text only exists after scripts run:</p>
+<pre><code>$ acurl --render shop.example
+JavaScript rendering
+  64% of the visible text only appears after JavaScript runs (812 -> 2254 chars).
+  Agents that do not run JavaScript miss it.</code></pre>
+
+<h2 id="watch">Watching for changes</h2>
+<pre><code>acurl watch shop.example --interval 1h \
+  --webhook https://hooks.slack.com/services/... --webhook-format slack
+
+# from cron: run once, compare with the last run, alert on changes
+acurl watch shop.example --interval 0 --state /var/lib/acurl/state.json --webhook https://ops.example/hook</code></pre>
+<p>Reports every change in an agent's verdict and score moves of at least <code>--min-score-delta</code> points.</p>
+
+<h2 id="signing">Web Bot Auth signing</h2>
+<p>Sign bot-profile requests with HTTP Message Signatures (RFC 9421, Ed25519), as proposed by Web Bot Auth. Use it to test your verifier or your own agent:</p>
+<pre><code>acurl keygen -o mybot.key           # prints the key directory JSON to publish
+acurl --sign mybot.key --signature-agent https://bot.example shop.example</code></pre>
+<p>Requests carry <code>Signature-Agent</code>, <code>Signature-Input</code> (covering <code>@authority</code> and <code>signature-agent</code>, with created, expires, nonce and <code>tag="web-bot-auth"</code>) and <code>Signature</code>. Signing is verified against the RFC 9421 Ed25519 test vector.</p>
+
+<h2 id="mcp">AI assistants (MCP)</h2>
+<pre><code>claude mcp add acurl -- acurl mcp</code></pre>
+<p>For Claude Desktop or Cursor, add <code>{"mcpServers": {"acurl": {"command": "acurl", "args": ["mcp"]}}}</code>. Tools: <code>check_url</code>, <code>readiness_score</code>, <code>robots_audit</code>, <code>list_profiles</code>. Private and internal addresses are blocked unless you start it with <code>--allow-private</code>.</p>
+
+<h2 id="serve">Web UI and API</h2>
+<pre><code>acurl serve                   # http://127.0.0.1:8080
+curl -s -X POST localhost:8080/api/check -d '{"url":"shop.example","categories":["ai-assistant"]}'</code></pre>
+<table>
+  <tr><th>Endpoint</th><th>Description</th></tr>
+  <tr><td><code>POST /api/check</code></td><td>Run a check, returns the JSON report</td></tr>
+  <tr><td><code>GET /api/check/stream</code></td><td>Server-sent events: <code>start</code>, <code>progress</code>, <code>report</code></td></tr>
+  <tr><td><code>GET /api/robots?url=</code></td><td>robots.txt audit</td></tr>
+  <tr><td><code>GET /api/profiles</code></td><td>Profile catalog</td></tr>
+  <tr><td><code>POST /api/report?format=</code></td><td>Render a JSON report as html, markdown, csv, sarif or junit</td></tr>
+</table>
+
+<h2 id="config">Configuration</h2>
+<p><code>acurl init</code> writes a commented <code>.acurl.yaml</code>. Any flag can be set by its long name. Precedence: flags, then <code>ACURL_*</code> environment variables, then the config file.</p>
+<pre><code>category: [ai-assistant, ai-search]
+fail-on: blocked,challenged,score&lt;75
+timeout: 20s
+header:
+  - "Cookie: country=US"</code></pre>
+<p>acurl looks for <code>./.acurl.yaml</code>, then <code>~/.config/acurl/config.yaml</code>, or the file given with <code>--config</code>. Unknown keys are an error, so typos never pass silently.</p>
+
+<h2 id="library">Go library</h2>
+<pre><code>import "github.com/tragent-io/acurl/pkg/acurl"
+
+c, err := acurl.New(acurl.Options{BlockPrivate: true})
+if err != nil { return err }
+rep, err := c.Check(ctx, "https://shop.example/products/1")
+if err != nil { return err }
+fmt.Println(rep.Score.Value, rep.Summary.Blocked)</code></pre>
+
+<h2 id="reference">Command reference</h2>
+<p>Generated from the CLI itself with <code>acurl reference</code>, so it always matches the installed version.</p>
+<!-- reference:start -->
+<!-- generated by acurl reference; do not edit -->
+
+<section class="cmd" id="acurl">
+  <h3><a href="#acurl">acurl</a></h3>
+  <p class="lead">Show how AI agents see a URL compared to a real browser</p>
+  <pre class="usage"><code>acurl &lt;url&gt; [flags]</code></pre>
+  <p>acurl fetches a URL with multiple user agent profiles (a real browser,
+AI agents, search bots) and shows how each one is treated.</p>
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>-a, --agents <i>list</i></code></td><td></td><td>only use these profiles (comma-separated)</td></tr>
+      <tr><td><code>--category <i>list</i></code></td><td></td><td>only use profiles in these categories: ai-assistant, ai-search, ai-training, search, other (the browser baseline is always kept)</td></tr>
+      <tr><td><code>--cloak-threshold <i>number</i></code></td><td><code>0.5</code></td><td>visible-text similarity below which a response counts as cloaked (0 disables)</td></tr>
+      <tr><td><code>-c, --concurrency <i>int</i></code></td><td><code>5</code></td><td>maximum concurrent requests</td></tr>
+      <tr><td><code>--diff <i>string</i></code></td><td></td><td>print a visible-text diff between the browser baseline and this profile</td></tr>
+      <tr><td><code>--fail-on <i>string</i></code></td><td><code>blocked,challenged,error</code></td><td>exit 1 when any of these occur: blocked, challenged, rate-limited, cloaked, robots, error, score&lt;N, or none</td></tr>
+      <tr><td><code>-f, --format <i>string</i></code></td><td><code>table</code></td><td>output format: table, json, markdown, csv, junit, sarif, html</td></tr>
+      <tr><td><code>-I, --head</code></td><td></td><td>send HEAD requests (status and headers only)</td></tr>
+      <tr><td><code>-H, --header <i>string, repeatable</i></code></td><td></td><td>extra header &#34;Name: value&#34; (repeatable)</td></tr>
+      <tr><td><code>--http <i>string</i></code></td><td></td><td>force HTTP version: &#34;1.1&#34; or &#34;2&#34;</td></tr>
+      <tr><td><code>-k, --insecure</code></td><td></td><td>skip TLS certificate verification</td></tr>
+      <tr><td><code>--max-body <i>int</i></code></td><td><code>5242880</code></td><td>maximum response body bytes to read per profile</td></tr>
+      <tr><td><code>--no-color</code></td><td></td><td>disable colored output</td></tr>
+      <tr><td><code>--no-robots</code></td><td></td><td>skip robots.txt checks</td></tr>
+      <tr><td><code>-o, --output <i>string</i></code></td><td></td><td>write the report to a file instead of stdout</td></tr>
+      <tr><td><code>--profiles <i>string</i></code></td><td></td><td>custom profiles YAML file</td></tr>
+      <tr><td><code>--proxy <i>string</i></code></td><td></td><td>proxy URL (http://, https:// or socks5://)</td></tr>
+      <tr><td><code>--render</code></td><td></td><td>also render the page in headless Chrome to measure how much text needs JavaScript</td></tr>
+      <tr><td><code>--render-wait <i>duration</i></code></td><td><code>2s</code></td><td>how long scripts may run before the rendered page is captured</td></tr>
+      <tr><td><code>-X, --request <i>string</i></code></td><td><code>GET</code></td><td>HTTP method to use</td></tr>
+      <tr><td><code>--retries <i>int</i></code></td><td><code>1</code></td><td>retries after network or gateway errors (exponential backoff with jitter)</td></tr>
+      <tr><td><code>--sign <i>string</i></code></td><td></td><td>sign bot-profile requests with this Ed25519 key (Web Bot Auth, see acurl keygen)</td></tr>
+      <tr><td><code>--signature-agent <i>string</i></code></td><td></td><td>Signature-Agent URL where your key directory is published</td></tr>
+      <tr><td><code>-t, --timeout <i>duration</i></code></td><td><code>30s</code></td><td>per-request timeout</td></tr>
+      <tr><td><code>--tls <i>string</i></code></td><td><code>go</code></td><td>TLS fingerprint for bot profiles: &#34;go&#34; (like real crawlers) or &#34;chrome&#34; (only the user agent differs)</td></tr>
+    </tbody></table></div>
+  <p class="label">Examples</p><pre class="example"><code>  acurl https://shop.example/products/1
+  acurl --category ai-assistant,ai-search shop.example
+  acurl --agents GPTBot,ClaudeBot --diff GPTBot shop.example
+  acurl -f json -o report.json --fail-on blocked,score&lt;80 shop.example
+  acurl --render shop.example          # measure JavaScript-only content</code></pre>
+</section>
+<section class="cmd" id="acurl-batch">
+  <h3><a href="#acurl-batch">acurl batch</a></h3>
+  <p class="lead">Check many URLs from a file, CSV or stdin</p>
+  <pre class="usage"><code>acurl batch [file] [flags]</code></pre>
+  <p>batch checks every URL in a file (one per line, # comments allowed), a CSV
+file (the &#34;url&#34; column, or the first column), or stdin when the file is &#34;-&#34; or omitted.</p>
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>-a, --agents <i>list</i></code></td><td></td><td>only use these profiles (comma-separated)</td></tr>
+      <tr><td><code>--category <i>list</i></code></td><td></td><td>only use profiles in these categories: ai-assistant, ai-search, ai-training, search, other (the browser baseline is always kept)</td></tr>
+      <tr><td><code>--cloak-threshold <i>number</i></code></td><td><code>0.5</code></td><td>visible-text similarity below which a response counts as cloaked (0 disables)</td></tr>
+      <tr><td><code>-c, --concurrency <i>int</i></code></td><td><code>5</code></td><td>maximum concurrent requests</td></tr>
+      <tr><td><code>--csv</code></td><td></td><td>treat the input as CSV (automatic for .csv files)</td></tr>
+      <tr><td><code>--delay <i>duration</i></code></td><td><code>500ms</code></td><td>minimum time between checks of URLs on the same host</td></tr>
+      <tr><td><code>--fail-on <i>string</i></code></td><td><code>blocked,challenged,error</code></td><td>exit 1 when any of these occur: blocked, challenged, rate-limited, cloaked, robots, error, score&lt;N, or none</td></tr>
+      <tr><td><code>-f, --format <i>string</i></code></td><td><code>table</code></td><td>output format: table, json, markdown, csv, junit, sarif, html</td></tr>
+      <tr><td><code>-I, --head</code></td><td></td><td>send HEAD requests (status and headers only)</td></tr>
+      <tr><td><code>-H, --header <i>string, repeatable</i></code></td><td></td><td>extra header &#34;Name: value&#34; (repeatable)</td></tr>
+      <tr><td><code>--http <i>string</i></code></td><td></td><td>force HTTP version: &#34;1.1&#34; or &#34;2&#34;</td></tr>
+      <tr><td><code>-k, --insecure</code></td><td></td><td>skip TLS certificate verification</td></tr>
+      <tr><td><code>--limit <i>int</i></code></td><td><code>50</code></td><td>maximum URLs to check (0 = no limit)</td></tr>
+      <tr><td><code>--max-body <i>int</i></code></td><td><code>5242880</code></td><td>maximum response body bytes to read per profile</td></tr>
+      <tr><td><code>--no-color</code></td><td></td><td>disable colored output</td></tr>
+      <tr><td><code>--no-robots</code></td><td></td><td>skip robots.txt checks</td></tr>
+      <tr><td><code>-o, --output <i>string</i></code></td><td></td><td>write the report to a file instead of stdout</td></tr>
+      <tr><td><code>-p, --parallel <i>int</i></code></td><td><code>2</code></td><td>URLs to check at the same time</td></tr>
+      <tr><td><code>--profiles <i>string</i></code></td><td></td><td>custom profiles YAML file</td></tr>
+      <tr><td><code>--proxy <i>string</i></code></td><td></td><td>proxy URL (http://, https:// or socks5://)</td></tr>
+      <tr><td><code>-X, --request <i>string</i></code></td><td><code>GET</code></td><td>HTTP method to use</td></tr>
+      <tr><td><code>--retries <i>int</i></code></td><td><code>1</code></td><td>retries after network or gateway errors (exponential backoff with jitter)</td></tr>
+      <tr><td><code>--sign <i>string</i></code></td><td></td><td>sign bot-profile requests with this Ed25519 key (Web Bot Auth, see acurl keygen)</td></tr>
+      <tr><td><code>--signature-agent <i>string</i></code></td><td></td><td>Signature-Agent URL where your key directory is published</td></tr>
+      <tr><td><code>--sitemap <i>string</i></code></td><td></td><td>read URLs from a sitemap URL, or &#34;auto:&lt;site&gt;&#34; to use the sitemaps listed in robots.txt</td></tr>
+      <tr><td><code>-t, --timeout <i>duration</i></code></td><td><code>30s</code></td><td>per-request timeout</td></tr>
+      <tr><td><code>--tls <i>string</i></code></td><td><code>go</code></td><td>TLS fingerprint for bot profiles: &#34;go&#34; (like real crawlers) or &#34;chrome&#34; (only the user agent differs)</td></tr>
+    </tbody></table></div>
+  <p class="label">Examples</p><pre class="example"><code>  acurl batch urls.txt
+  acurl batch products.csv -f json -o report.json
+  cat urls.txt | acurl batch
+  acurl batch --sitemap https://shop.example/sitemap.xml --limit 20
+  acurl batch --sitemap auto:shop.example</code></pre>
+</section>
+<section class="cmd" id="acurl-completion-bash">
+  <h3><a href="#acurl-completion-bash">acurl completion bash</a></h3>
+  <p class="lead">Generate the autocompletion script for bash</p>
+  <pre class="usage"><code>acurl completion bash</code></pre>
+  <p>Generate the autocompletion script for the bash shell.
+
+This script depends on the &#39;bash-completion&#39; package.
+If it is not installed already, you can install it via your OS&#39;s package manager.
+
+To load completions in your current shell session:
+
+	source &lt;(acurl completion bash)
+
+To load completions for every new session, execute once:
+
+#### Linux:
+
+	acurl completion bash &gt; /etc/bash_completion.d/acurl
+
+#### macOS:
+
+	acurl completion bash &gt; $(brew --prefix)/etc/bash_completion.d/acurl
+
+You will need to start a new shell for this setup to take effect.</p>
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--no-descriptions</code></td><td></td><td>disable completion descriptions</td></tr>
+    </tbody></table></div>
+  
+</section>
+<section class="cmd" id="acurl-completion-fish">
+  <h3><a href="#acurl-completion-fish">acurl completion fish</a></h3>
+  <p class="lead">Generate the autocompletion script for fish</p>
+  <pre class="usage"><code>acurl completion fish [flags]</code></pre>
+  <p>Generate the autocompletion script for the fish shell.
+
+To load completions in your current shell session:
+
+	acurl completion fish | source
+
+To load completions for every new session, execute once:
+
+	acurl completion fish &gt; ~/.config/fish/completions/acurl.fish
+
+You will need to start a new shell for this setup to take effect.</p>
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--no-descriptions</code></td><td></td><td>disable completion descriptions</td></tr>
+    </tbody></table></div>
+  
+</section>
+<section class="cmd" id="acurl-completion-powershell">
+  <h3><a href="#acurl-completion-powershell">acurl completion powershell</a></h3>
+  <p class="lead">Generate the autocompletion script for powershell</p>
+  <pre class="usage"><code>acurl completion powershell [flags]</code></pre>
+  <p>Generate the autocompletion script for powershell.
+
+To load completions in your current shell session:
+
+	acurl completion powershell | Out-String | Invoke-Expression
+
+To load completions for every new session, add the output of the above command
+to your powershell profile.</p>
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--no-descriptions</code></td><td></td><td>disable completion descriptions</td></tr>
+    </tbody></table></div>
+  
+</section>
+<section class="cmd" id="acurl-completion-zsh">
+  <h3><a href="#acurl-completion-zsh">acurl completion zsh</a></h3>
+  <p class="lead">Generate the autocompletion script for zsh</p>
+  <pre class="usage"><code>acurl completion zsh [flags]</code></pre>
+  <p>Generate the autocompletion script for the zsh shell.
+
+If shell completion is not already enabled in your environment you will need
+to enable it.  You can execute the following once:
+
+	echo &#34;autoload -U compinit; compinit&#34; &gt;&gt; ~/.zshrc
+
+To load completions in your current shell session:
+
+	source &lt;(acurl completion zsh)
+
+To load completions for every new session, execute once:
+
+#### Linux:
+
+	acurl completion zsh &gt; &#34;${fpath[1]}/_acurl&#34;
+
+#### macOS:
+
+	acurl completion zsh &gt; $(brew --prefix)/share/zsh/site-functions/_acurl
+
+You will need to start a new shell for this setup to take effect.</p>
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--no-descriptions</code></td><td></td><td>disable completion descriptions</td></tr>
+    </tbody></table></div>
+  
+</section>
+<section class="cmd" id="acurl-init">
+  <h3><a href="#acurl-init">acurl init</a></h3>
+  <p class="lead">Create a .acurl.yaml config file in the current directory</p>
+  <pre class="usage"><code>acurl init [flags]</code></pre>
+  
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--force</code></td><td></td><td>overwrite an existing file</td></tr>
+    </tbody></table></div>
+  <p class="label">Examples</p><pre class="example"><code>  acurl init
+  acurl init --force</code></pre>
+</section>
+<section class="cmd" id="acurl-keygen">
+  <h3><a href="#acurl-keygen">acurl keygen</a></h3>
+  <p class="lead">Generate an Ed25519 key for signing requests (Web Bot Auth)</p>
+  <pre class="usage"><code>acurl keygen [flags]</code></pre>
+  <p>keygen creates an Ed25519 private key for --sign and prints its key ID and
+the key directory JSON to publish at /.well-known/http-message-signatures-directory.
+
+Pass an existing key with --key to print its directory without generating one.</p>
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--force</code></td><td></td><td>overwrite an existing key file</td></tr>
+      <tr><td><code>--key <i>string</i></code></td><td></td><td>print the directory for an existing key instead of generating one</td></tr>
+      <tr><td><code>-o, --output <i>string</i></code></td><td><code>acurl-signing.key</code></td><td>where to write the new private key</td></tr>
+    </tbody></table></div>
+  <p class="label">Examples</p><pre class="example"><code>  acurl keygen -o mybot.key
+  acurl keygen --key mybot.key &gt; http-message-signatures-directory</code></pre>
+</section>
+<section class="cmd" id="acurl-mcp">
+  <h3><a href="#acurl-mcp">acurl mcp</a></h3>
+  <p class="lead">Run acurl as an MCP server for AI assistants (stdio)</p>
+  <pre class="usage"><code>acurl mcp [flags]</code></pre>
+  <p>mcp runs a Model Context Protocol server on stdin/stdout so assistants such as
+Claude Desktop, Claude Code and Cursor can call acurl&#39;s checks as tools:
+check_url, readiness_score, robots_audit and list_profiles.
+
+Add it to Claude Code with:
+  claude mcp add acurl -- acurl mcp</p>
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>-a, --agents <i>list</i></code></td><td></td><td>only use these profiles (comma-separated)</td></tr>
+      <tr><td><code>--allow-private</code></td><td></td><td>allow checking private and internal addresses</td></tr>
+      <tr><td><code>--category <i>list</i></code></td><td></td><td>only use profiles in these categories: ai-assistant, ai-search, ai-training, search, other (the browser baseline is always kept)</td></tr>
+      <tr><td><code>-c, --concurrency <i>int</i></code></td><td><code>5</code></td><td>maximum concurrent requests</td></tr>
+      <tr><td><code>-I, --head</code></td><td></td><td>send HEAD requests (status and headers only)</td></tr>
+      <tr><td><code>-H, --header <i>string, repeatable</i></code></td><td></td><td>extra header &#34;Name: value&#34; (repeatable)</td></tr>
+      <tr><td><code>--http <i>string</i></code></td><td></td><td>force HTTP version: &#34;1.1&#34; or &#34;2&#34;</td></tr>
+      <tr><td><code>-k, --insecure</code></td><td></td><td>skip TLS certificate verification</td></tr>
+      <tr><td><code>--max-body <i>int</i></code></td><td><code>5242880</code></td><td>maximum response body bytes to read per profile</td></tr>
+      <tr><td><code>--no-color</code></td><td></td><td>disable colored output</td></tr>
+      <tr><td><code>--profiles <i>string</i></code></td><td></td><td>custom profiles YAML file</td></tr>
+      <tr><td><code>--proxy <i>string</i></code></td><td></td><td>proxy URL (http://, https:// or socks5://)</td></tr>
+      <tr><td><code>-X, --request <i>string</i></code></td><td><code>GET</code></td><td>HTTP method to use</td></tr>
+      <tr><td><code>--retries <i>int</i></code></td><td><code>1</code></td><td>retries after network or gateway errors (exponential backoff with jitter)</td></tr>
+      <tr><td><code>--sign <i>string</i></code></td><td></td><td>sign bot-profile requests with this Ed25519 key (Web Bot Auth, see acurl keygen)</td></tr>
+      <tr><td><code>--signature-agent <i>string</i></code></td><td></td><td>Signature-Agent URL where your key directory is published</td></tr>
+      <tr><td><code>-t, --timeout <i>duration</i></code></td><td><code>30s</code></td><td>per-request timeout</td></tr>
+      <tr><td><code>--tls <i>string</i></code></td><td><code>go</code></td><td>TLS fingerprint for bot profiles: &#34;go&#34; (like real crawlers) or &#34;chrome&#34; (only the user agent differs)</td></tr>
+    </tbody></table></div>
+  <p class="label">Examples</p><pre class="example"><code>  claude mcp add acurl -- acurl mcp
+  acurl mcp --timeout 20s</code></pre>
+</section>
+<section class="cmd" id="acurl-profiles-list">
+  <h3><a href="#acurl-profiles-list">acurl profiles list</a></h3>
+  <p class="lead">List the available agent profiles</p>
+  <pre class="usage"><code>acurl profiles list [flags]</code></pre>
+  
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--category <i>list</i></code></td><td></td><td>only list these categories</td></tr>
+      <tr><td><code>-f, --format <i>string</i></code></td><td><code>table</code></td><td>output format: table or json</td></tr>
+    </tbody></table></div>
+  <p class="label">Examples</p><pre class="example"><code>  acurl profiles list
+  acurl profiles list --category ai-assistant -f json</code></pre>
+</section>
+<section class="cmd" id="acurl-profiles-show">
+  <h3><a href="#acurl-profiles-show">acurl profiles show</a></h3>
+  <p class="lead">Show one profile as YAML</p>
+  <pre class="usage"><code>acurl profiles show &lt;name&gt;</code></pre>
+  
+  
+  <p class="label">Examples</p><pre class="example"><code>  acurl profiles show GPTBot</code></pre>
+</section>
+<section class="cmd" id="acurl-report">
+  <h3><a href="#acurl-report">acurl report</a></h3>
+  <p class="lead">Render a saved JSON report in another format</p>
+  <pre class="usage"><code>acurl report &lt;report.json&gt; [flags]</code></pre>
+  <p>report reads a JSON report written by &#34;acurl -f json&#34; or &#34;acurl batch -f json&#34;
+and renders it as table, markdown, csv, junit, sarif or html, without fetching anything.
+Use &#34;-&#34; to read from stdin.</p>
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>-f, --format <i>string</i></code></td><td><code>html</code></td><td>output format: table, json, markdown, csv, junit, sarif, html</td></tr>
+      <tr><td><code>--no-color</code></td><td></td><td>disable colored output</td></tr>
+      <tr><td><code>-o, --output <i>string</i></code></td><td></td><td>write to a file instead of stdout</td></tr>
+    </tbody></table></div>
+  <p class="label">Examples</p><pre class="example"><code>  acurl -f json -o run.json https://shop.example
+  acurl report run.json -f html -o run.html</code></pre>
+</section>
+<section class="cmd" id="acurl-robots">
+  <h3><a href="#acurl-robots">acurl robots</a></h3>
+  <p class="lead">Audit which agents robots.txt allows for a URL</p>
+  <pre class="usage"><code>acurl robots &lt;url&gt; [flags]</code></pre>
+  <p>robots fetches robots.txt once and reports, for every agent profile with a
+robots.txt token, whether it may fetch the URL, along with Content-Signal
+directives, sitemaps and the site&#39;s llms.txt files. The page itself is not
+fetched.</p>
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>-a, --agents <i>list</i></code></td><td></td><td>only use these profiles (comma-separated)</td></tr>
+      <tr><td><code>--category <i>list</i></code></td><td></td><td>only use profiles in these categories: ai-assistant, ai-search, ai-training, search, other (the browser baseline is always kept)</td></tr>
+      <tr><td><code>-c, --concurrency <i>int</i></code></td><td><code>5</code></td><td>maximum concurrent requests</td></tr>
+      <tr><td><code>-f, --format <i>string</i></code></td><td><code>table</code></td><td>output format: table or json</td></tr>
+      <tr><td><code>-I, --head</code></td><td></td><td>send HEAD requests (status and headers only)</td></tr>
+      <tr><td><code>-H, --header <i>string, repeatable</i></code></td><td></td><td>extra header &#34;Name: value&#34; (repeatable)</td></tr>
+      <tr><td><code>--http <i>string</i></code></td><td></td><td>force HTTP version: &#34;1.1&#34; or &#34;2&#34;</td></tr>
+      <tr><td><code>-k, --insecure</code></td><td></td><td>skip TLS certificate verification</td></tr>
+      <tr><td><code>--max-body <i>int</i></code></td><td><code>5242880</code></td><td>maximum response body bytes to read per profile</td></tr>
+      <tr><td><code>--no-color</code></td><td></td><td>disable colored output</td></tr>
+      <tr><td><code>--profiles <i>string</i></code></td><td></td><td>custom profiles YAML file</td></tr>
+      <tr><td><code>--proxy <i>string</i></code></td><td></td><td>proxy URL (http://, https:// or socks5://)</td></tr>
+      <tr><td><code>-X, --request <i>string</i></code></td><td><code>GET</code></td><td>HTTP method to use</td></tr>
+      <tr><td><code>--retries <i>int</i></code></td><td><code>1</code></td><td>retries after network or gateway errors (exponential backoff with jitter)</td></tr>
+      <tr><td><code>--sign <i>string</i></code></td><td></td><td>sign bot-profile requests with this Ed25519 key (Web Bot Auth, see acurl keygen)</td></tr>
+      <tr><td><code>--signature-agent <i>string</i></code></td><td></td><td>Signature-Agent URL where your key directory is published</td></tr>
+      <tr><td><code>-t, --timeout <i>duration</i></code></td><td><code>30s</code></td><td>per-request timeout</td></tr>
+      <tr><td><code>--tls <i>string</i></code></td><td><code>go</code></td><td>TLS fingerprint for bot profiles: &#34;go&#34; (like real crawlers) or &#34;chrome&#34; (only the user agent differs)</td></tr>
+    </tbody></table></div>
+  <p class="label">Examples</p><pre class="example"><code>  acurl robots shop.example
+  acurl robots --category ai-training -f json shop.example/products/1</code></pre>
+</section>
+<section class="cmd" id="acurl-serve">
+  <h3><a href="#acurl-serve">acurl serve</a></h3>
+  <p class="lead">Run the acurl web UI and JSON API locally</p>
+  <pre class="usage"><code>acurl serve [flags]</code></pre>
+  <p>serve starts a local web UI for running checks in the browser, plus the JSON
+API it uses (POST /api/check, GET /api/robots, GET /api/profiles).
+
+Requests to private and internal addresses are blocked unless --allow-private is
+set, because anyone who can reach the server can make it fetch URLs.</p>
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--addr <i>string</i></code></td><td><code>127.0.0.1:8080</code></td><td>address to listen on</td></tr>
+      <tr><td><code>-a, --agents <i>list</i></code></td><td></td><td>only use these profiles (comma-separated)</td></tr>
+      <tr><td><code>--allow-private</code></td><td></td><td>allow checking private and internal addresses</td></tr>
+      <tr><td><code>--category <i>list</i></code></td><td></td><td>only use profiles in these categories: ai-assistant, ai-search, ai-training, search, other (the browser baseline is always kept)</td></tr>
+      <tr><td><code>-c, --concurrency <i>int</i></code></td><td><code>5</code></td><td>maximum concurrent requests</td></tr>
+      <tr><td><code>-I, --head</code></td><td></td><td>send HEAD requests (status and headers only)</td></tr>
+      <tr><td><code>-H, --header <i>string, repeatable</i></code></td><td></td><td>extra header &#34;Name: value&#34; (repeatable)</td></tr>
+      <tr><td><code>--http <i>string</i></code></td><td></td><td>force HTTP version: &#34;1.1&#34; or &#34;2&#34;</td></tr>
+      <tr><td><code>-k, --insecure</code></td><td></td><td>skip TLS certificate verification</td></tr>
+      <tr><td><code>--max-body <i>int</i></code></td><td><code>5242880</code></td><td>maximum response body bytes to read per profile</td></tr>
+      <tr><td><code>--no-color</code></td><td></td><td>disable colored output</td></tr>
+      <tr><td><code>--profiles <i>string</i></code></td><td></td><td>custom profiles YAML file</td></tr>
+      <tr><td><code>--proxy <i>string</i></code></td><td></td><td>proxy URL (http://, https:// or socks5://)</td></tr>
+      <tr><td><code>--render</code></td><td></td><td>allow headless Chrome rendering from the UI</td></tr>
+      <tr><td><code>-X, --request <i>string</i></code></td><td><code>GET</code></td><td>HTTP method to use</td></tr>
+      <tr><td><code>--retries <i>int</i></code></td><td><code>1</code></td><td>retries after network or gateway errors (exponential backoff with jitter)</td></tr>
+      <tr><td><code>--sign <i>string</i></code></td><td></td><td>sign bot-profile requests with this Ed25519 key (Web Bot Auth, see acurl keygen)</td></tr>
+      <tr><td><code>--signature-agent <i>string</i></code></td><td></td><td>Signature-Agent URL where your key directory is published</td></tr>
+      <tr><td><code>-t, --timeout <i>duration</i></code></td><td><code>30s</code></td><td>per-request timeout</td></tr>
+      <tr><td><code>--tls <i>string</i></code></td><td><code>go</code></td><td>TLS fingerprint for bot profiles: &#34;go&#34; (like real crawlers) or &#34;chrome&#34; (only the user agent differs)</td></tr>
+    </tbody></table></div>
+  <p class="label">Examples</p><pre class="example"><code>  acurl serve
+  acurl serve --addr 0.0.0.0:8080 --render</code></pre>
+</section>
+<section class="cmd" id="acurl-watch">
+  <h3><a href="#acurl-watch">acurl watch</a></h3>
+  <p class="lead">Re-check URLs and report when agent access changes</p>
+  <pre class="usage"><code>acurl watch &lt;url&gt;... [flags]</code></pre>
+  <p>watch checks URLs repeatedly and prints every change in how an agent is
+treated, or a score change of --min-score-delta points or more.
+
+With --interval 0 it runs once and compares with the --state file, which suits cron.</p>
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>-a, --agents <i>list</i></code></td><td></td><td>only use these profiles (comma-separated)</td></tr>
+      <tr><td><code>--category <i>list</i></code></td><td></td><td>only use profiles in these categories: ai-assistant, ai-search, ai-training, search, other (the browser baseline is always kept)</td></tr>
+      <tr><td><code>-c, --concurrency <i>int</i></code></td><td><code>5</code></td><td>maximum concurrent requests</td></tr>
+      <tr><td><code>-I, --head</code></td><td></td><td>send HEAD requests (status and headers only)</td></tr>
+      <tr><td><code>-H, --header <i>string, repeatable</i></code></td><td></td><td>extra header &#34;Name: value&#34; (repeatable)</td></tr>
+      <tr><td><code>--http <i>string</i></code></td><td></td><td>force HTTP version: &#34;1.1&#34; or &#34;2&#34;</td></tr>
+      <tr><td><code>-k, --insecure</code></td><td></td><td>skip TLS certificate verification</td></tr>
+      <tr><td><code>--interval <i>duration</i></code></td><td><code>1h0m0s</code></td><td>time between checks (0 = check once)</td></tr>
+      <tr><td><code>--max-body <i>int</i></code></td><td><code>5242880</code></td><td>maximum response body bytes to read per profile</td></tr>
+      <tr><td><code>--min-score-delta <i>int</i></code></td><td><code>5</code></td><td>report score changes of at least this many points</td></tr>
+      <tr><td><code>--no-color</code></td><td></td><td>disable colored output</td></tr>
+      <tr><td><code>--no-robots</code></td><td></td><td>skip robots.txt checks</td></tr>
+      <tr><td><code>--profiles <i>string</i></code></td><td></td><td>custom profiles YAML file</td></tr>
+      <tr><td><code>--proxy <i>string</i></code></td><td></td><td>proxy URL (http://, https:// or socks5://)</td></tr>
+      <tr><td><code>-X, --request <i>string</i></code></td><td><code>GET</code></td><td>HTTP method to use</td></tr>
+      <tr><td><code>--retries <i>int</i></code></td><td><code>1</code></td><td>retries after network or gateway errors (exponential backoff with jitter)</td></tr>
+      <tr><td><code>--sign <i>string</i></code></td><td></td><td>sign bot-profile requests with this Ed25519 key (Web Bot Auth, see acurl keygen)</td></tr>
+      <tr><td><code>--signature-agent <i>string</i></code></td><td></td><td>Signature-Agent URL where your key directory is published</td></tr>
+      <tr><td><code>--state <i>string</i></code></td><td></td><td>file that keeps the last results between runs</td></tr>
+      <tr><td><code>-t, --timeout <i>duration</i></code></td><td><code>30s</code></td><td>per-request timeout</td></tr>
+      <tr><td><code>--tls <i>string</i></code></td><td><code>go</code></td><td>TLS fingerprint for bot profiles: &#34;go&#34; (like real crawlers) or &#34;chrome&#34; (only the user agent differs)</td></tr>
+      <tr><td><code>--webhook <i>string</i></code></td><td></td><td>POST changes to this URL</td></tr>
+      <tr><td><code>--webhook-format <i>string</i></code></td><td><code>json</code></td><td>webhook body: &#34;json&#34; or &#34;slack&#34;</td></tr>
+    </tbody></table></div>
+  <p class="label">Examples</p><pre class="example"><code>  acurl watch https://shop.example --interval 1h --webhook https://hooks.slack.com/... --webhook-format slack
+  acurl watch https://shop.example --interval 0 --state acurl-state.json   # from cron</code></pre>
+</section>
+<section class="cmd" id="global-flags">
+  <h3><a href="#global-flags">Global flags</a></h3>
+  <p class="lead">These flags work with every command.</p>
+  <pre class="usage"><code>acurl [command] [flags]</code></pre>
+  
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--config <i>string</i></code></td><td></td><td>config file (default ./.acurl.yaml or the user config dir)</td></tr>
+      <tr><td><code>-q, --quiet</code></td><td></td><td>only print the report</td></tr>
+      <tr><td><code>-v, --verbose</code></td><td></td><td>log every request to stderr</td></tr>
+    </tbody></table></div>
+  
+</section>
+<!-- reference:end -->
+
+<p style="margin-top:56px">acurl is a free, open-source tool by <a href="https://tragent.io">tragent.io</a>. Found a mistake in these docs? <a href="https://github.com/tragent-io/acurl/edit/main/site/docs/index.html">Edit this page</a>.</p>
+</main>
+</div>
+<script src="../assets/site.js"></script>
+</body>
+</html>

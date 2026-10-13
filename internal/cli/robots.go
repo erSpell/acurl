@@ -23,6 +23,8 @@ func newRobotsCmd(a *app) *cobra.Command {
 robots.txt token, whether it may fetch the URL, along with Content-Signal
 directives, sitemaps and the site's llms.txt files. The page itself is not
 fetched.`,
+		Example: `  acurl robots shop.example
+  acurl robots --category ai-training -f json shop.example/products/1`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return a.runRobots(cmd.Context(), &fl, format, args[0])

@@ -44,6 +44,11 @@ func newCheckCmd(a *app) *cobra.Command {
 		Short: "Show how AI agents see a URL compared to a real browser",
 		Long: `acurl fetches a URL with multiple user agent profiles (a real browser,
 AI agents, search bots) and shows how each one is treated.`,
+		Example: `  acurl https://shop.example/products/1
+  acurl --category ai-assistant,ai-search shop.example
+  acurl --agents GPTBot,ClaudeBot --diff GPTBot shop.example
+  acurl -f json -o report.json --fail-on blocked,score<80 shop.example
+  acurl --render shop.example          # measure JavaScript-only content`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return a.runCheck(cmd.Context(), &fl, args[0])

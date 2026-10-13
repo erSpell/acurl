@@ -21,6 +21,8 @@ func newKeygenCmd(a *app) *cobra.Command {
 the key directory JSON to publish at /.well-known/http-message-signatures-directory.
 
 Pass an existing key with --key to print its directory without generating one.`,
+		Example: `  acurl keygen -o mybot.key
+  acurl keygen --key mybot.key > http-message-signatures-directory`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			existing, _ := cmd.Flags().GetString("key")

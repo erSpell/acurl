@@ -26,7 +26,9 @@ func newProfilesCmd(a *app) *cobra.Command {
 	list := &cobra.Command{
 		Use:   "list",
 		Short: "List the available agent profiles",
-		Args:  cobra.NoArgs,
+		Example: `  acurl profiles list
+  acurl profiles list --category ai-assistant -f json`,
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			ps, err := profiles.Load(file)
 			if err != nil {
@@ -45,9 +47,10 @@ func newProfilesCmd(a *app) *cobra.Command {
 	list.Flags().StringVarP(&format, "format", "f", "table", "output format: table or json")
 
 	show := &cobra.Command{
-		Use:   "show <name>",
-		Short: "Show one profile as YAML",
-		Args:  cobra.ExactArgs(1),
+		Use:     "show <name>",
+		Short:   "Show one profile as YAML",
+		Example: "  acurl profiles show GPTBot",
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ps, err := profiles.Load(file)
 			if err != nil {
