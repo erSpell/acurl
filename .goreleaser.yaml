@@ -1,0 +1,163 @@
+# Release configuration for acurl. See https://goreleaser.com
+version: 2
+project_name: acurl
+
+before:
+  hooks:
+    - go mod tidy
+    - scripts/release-extras.sh
+
+builds:
+  - id: acurl
+    main: ./cmd/acurl
+    binary: acurl
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }} -X main.commit={{ .ShortCommit }} -X main.date={{ .CommitDate }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: acurl
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - README.md
+      - LICENSE
+      - CHANGELOG.md
+      - src: dist-extra/man/*
+        dst: man
+      - src: dist-extra/completions/*
+        dst: completions
+
+checksum:
+  name_template: checksums.txt
+
+sboms:
+  - artifacts: archive
+
+signs:
+  - cmd: cosign
+    certificate: "${artifact}.pem"
+    signature: "${artifact}.sig"
+    args:
+      - sign-blob
+      - --yes
+      - --output-certificate=${certificate}
+      - --output-signature=${signature}
+      - ${artifact}
+    artifacts: checksum
+
+nfpms:
+  - id: packages
+    package_name: acurl
+    vendor: tragent
+    homepage: https://acurl.dev
+    maintainer: tragent <hello@tragent.io>
+    description: See your website the way AI agents see it.
+    license: Apache-2.0
+    formats: [deb, rpm, apk]
+    contents:
+      - src: dist-extra/man/*.1
+        dst: /usr/share/man/man1/
+      - src: dist-extra/completions/acurl.bash
+        dst: /usr/share/bash-completion/completions/acurl
+      - src: dist-extra/completions/acurl.zsh
+        dst: /usr/share/zsh/vendor-completions/_acurl
+      - src: dist-extra/completions/acurl.fish
+        dst: /usr/share/fish/vendor_completions.d/acurl.fish
+
+homebrew_casks:
+  - name: acurl
+    repository:
+      owner: tragent-io
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    skip_upload: '{{ if isEnvSet "HOMEBREW_TAP_TOKEN" }}false{{ else }}true{{ end }}'
+    directory: Casks
+    homepage: https://acurl.dev
+    description: See your website the way AI agents see it
+    binaries: [acurl]
+    manpages: [man/acurl.1]
+    completions:
+      bash: completions/acurl.bash
+      zsh: completions/acurl.zsh
+      fish: completions/acurl.fish
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/acurl"]
+          end
+
+scoops:
+  - name: acurl
+    repository:
+      owner: tragent-io
+      name: scoop-bucket
+      token: "{{ .Env.SCOOP_BUCKET_TOKEN }}"
+    skip_upload: '{{ if isEnvSet "SCOOP_BUCKET_TOKEN" }}false{{ else }}true{{ end }}'
+    homepage: https://acurl.dev
+    description: See your website the way AI agents see it
+    license: Apache-2.0
+
+dockers_v2:
+  - id: acurl
+    images:
+      - ghcr.io/tragent-io/acurl
+    tags:
+      - "{{ .Version }}"
+      - "v{{ .Major }}"
+      - latest
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    labels:
+      org.opencontainers.image.title: acurl
+      org.opencontainers.image.description: See your website the way AI agents see it
+      org.opencontainers.image.url: https://acurl.dev
+      org.opencontainers.image.source: https://github.com/tragent-io/acurl
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.licenses: Apache-2.0
+      org.opencontainers.image.vendor: tragent
+
+changelog:
+  use: github
+  sort: asc
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: Bug fixes
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 1
+    - title: Performance
+      regexp: '^.*?perf(\(.+\))??!?:.+$'
+      order: 2
+    - title: Other changes
+      order: 999
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - '^ci:'
+      - '^style:'
+      - Merge branch
+
+release:
+  github:
+    owner: tragent-io
+    name: acurl
+  footer: |
+    **Install:** `brew install tragent-io/tap/acurl` · `curl -fsSL https://acurl.dev/install.sh | sh` · `go install github.com/tragent-io/acurl/cmd/acurl@{{ .Tag }}`
+
+    Docs: https://acurl.dev/docs/ · acurl is a free, open-source tool by [tragent.io](https://tragent.io).
