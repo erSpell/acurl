@@ -21,3 +21,4 @@ testdata/e2e-results/
 # Local config and keys
 .acurl.local.yaml
 *.key
+/dist-extra/
