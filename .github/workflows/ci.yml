@@ -46,6 +46,27 @@ jobs:
           ACURL_TEST_RENDER: "1"
         run: go test -run 'TestHeadless' -v ./internal/render/
 
+  action:
+    name: GitHub Action
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.x"
+      - id: acurl
+        uses: ./
+        with:
+          version: source
+          urls: https://example.com
+          categories: ai-assistant
+          fail-on: none
+          upload-sarif: "false"
+      - name: Check outputs
+        run: |
+          test -s "${{ steps.acurl.outputs.report }}"
+          echo "score=${{ steps.acurl.outputs.score }}"
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
