@@ -1,0 +1,123 @@
+name: acurl AI agent check
+description: 'Check how ChatGPT, Claude, Perplexity and other AI agents are treated by your pages. A free, open-source tool by tragent.io.'
+author: tragent.io
+branding:
+  icon: terminal
+  color: purple
+
+inputs:
+  urls:
+    description: 'URLs to check, one per line.'
+    required: false
+  sitemap:
+    description: 'Check URLs from this sitemap URL, or "auto:<site>" for the sitemaps in robots.txt.'
+    required: false
+  limit:
+    description: 'Maximum number of URLs to check from a sitemap.'
+    default: "50"
+  categories:
+    description: 'Comma-separated agent categories (ai-assistant, ai-search, ai-training, search, other). Empty means all.'
+    default: ""
+  agents:
+    description: 'Comma-separated profile names. Empty means all.'
+    default: ""
+  fail-on:
+    description: 'Conditions that fail the step, e.g. "blocked,challenged,score<80". Use "none" to never fail.'
+    default: blocked,challenged,error
+  upload-sarif:
+    description: 'Upload findings to GitHub code scanning (needs "security-events: write").'
+    default: "true"
+  version:
+    description: 'acurl version to install, "latest", or "source" to build from this action''s checkout.'
+    default: latest
+  args:
+    description: 'Extra flags passed to acurl batch.'
+    default: ""
+
+outputs:
+  score:
+    description: 'Average AI readiness score across the checked URLs.'
+    value: ${{ steps.run.outputs.score }}
+  report:
+    description: 'Path to the JSON report.'
+    value: ${{ steps.run.outputs.report }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install acurl
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        set -euo pipefail
+        bin="$RUNNER_TEMP/acurl-bin"
+        mkdir -p "$bin"
+        if [ "$VERSION" = "source" ]; then
+          (cd "$ACTION_PATH" && go build -trimpath -o "$bin/acurl" ./cmd/acurl)
+        else
+          sh "$ACTION_PATH/site/install.sh" --version "$VERSION" --dir "$bin"
+        fi
+        echo "$bin" >> "$GITHUB_PATH"
+
+    - name: Run acurl
+      id: run
+      shell: bash
+      env:
+        URLS: ${{ inputs.urls }}
+        SITEMAP: ${{ inputs.sitemap }}
+        LIMIT: ${{ inputs.limit }}
+        CATEGORIES: ${{ inputs.categories }}
+        AGENTS: ${{ inputs.agents }}
+        FAIL_ON: ${{ inputs.fail-on }}
+        EXTRA: ${{ inputs.args }}
+      run: |
+        set -uo pipefail
+        out="$RUNNER_TEMP/acurl"
+        mkdir -p "$out"
+        args=(batch -q --no-color -f json -o "$out/report.json" --fail-on "$FAIL_ON")
+        [ -n "$CATEGORIES" ] && args+=(--category "$CATEGORIES")
+        [ -n "$AGENTS" ] && args+=(--agents "$AGENTS")
+        if [ -n "$SITEMAP" ]; then
+          args+=(--sitemap "$SITEMAP" --limit "$LIMIT")
+        elif [ -n "$URLS" ]; then
+          printf '%s\n' "$URLS" > "$out/urls.txt"
+          args+=("$out/urls.txt")
+        else
+          echo "::error::Set either 'urls' or 'sitemap'."
+          exit 2
+        fi
+        # shellcheck disable=SC2206
+        [ -n "$EXTRA" ] && args+=($EXTRA)
+
+        acurl "${args[@]}"
+        code=$?
+        echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+        echo "report=$out/report.json" >> "$GITHUB_OUTPUT"
+        if [ -f "$out/report.json" ]; then
+          acurl report "$out/report.json" -f markdown >> "$GITHUB_STEP_SUMMARY" || true
+          acurl report "$out/report.json" -f sarif -o "$out/acurl.sarif" || true
+          score=$(sed -n 's/.*"average_score": *\([0-9]*\).*/\1/p' "$out/report.json" | tail -n1)
+          echo "score=${score:-0}" >> "$GITHUB_OUTPUT"
+        fi
+        exit 0
+
+    - name: Upload to code scanning
+      if: inputs.upload-sarif == 'true' && hashFiles(format('{0}/acurl/acurl.sarif', runner.temp)) != ''
+      uses: github/codeql-action/upload-sarif@v4
+      continue-on-error: true
+      with:
+        sarif_file: ${{ runner.temp }}/acurl/acurl.sarif
+        category: acurl
+
+    - name: Apply --fail-on
+      shell: bash
+      env:
+        CODE: ${{ steps.run.outputs.exit_code }}
+        FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        if [ "${CODE:-2}" != "0" ]; then
+          echo "::error::acurl found problems matching --fail-on $FAIL_ON (exit $CODE). See the job summary."
+          exit "$CODE"
+        fi
