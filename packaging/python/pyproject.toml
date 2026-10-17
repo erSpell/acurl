@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "acurl"
+version = "1.0.0"
+description = "See your website the way AI agents see it. A free, open-source tool by tragent.io."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.9"
+authors = [{ name = "tragent.io", email = "hello@tragent.io" }]
+keywords = ["ai-agents", "robots.txt", "seo", "ecommerce", "chatgpt", "claude", "bot-detection", "cli"]
+classifiers = [
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: Microsoft :: Windows",
+  "Programming Language :: Python :: 3",
+  "Topic :: Internet :: WWW/HTTP :: Site Management",
+]
+
+[project.urls]
+Homepage = "https://acurl.dev"
+Documentation = "https://acurl.dev/docs/"
+Source = "https://github.com/tragent-io/acurl"
+
+[project.scripts]
+acurl = "acurl_cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
