@@ -1,0 +1,26 @@
+{
+  "name": "@tragent/acurl",
+  "version": "1.0.0",
+  "description": "See your website the way AI agents see it. A free, open-source tool by tragent.io.",
+  "homepage": "https://acurl.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tragent-io/acurl.git",
+    "directory": "packaging/npm"
+  },
+  "bugs": "https://github.com/tragent-io/acurl/issues",
+  "license": "Apache-2.0",
+  "author": "tragent.io <hello@tragent.io> (https://tragent.io)",
+  "keywords": ["ai-agents", "robots.txt", "seo", "ecommerce", "chatgpt", "claude", "perplexity", "bot-detection", "cli"],
+  "bin": {
+    "acurl": "bin/acurl.js"
+  },
+  "files": ["bin", "lib", "README.md"],
+  "scripts": {
+    "postinstall": "node lib/install.js",
+    "test": "node --test lib/"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
