@@ -1,0 +1,11 @@
+# Show acurl results as test results in GitLab merge requests.
+acurl:
+  image: golang:1.26
+  stage: test
+  script:
+    - go install github.com/tragent-io/acurl/cmd/acurl@latest
+    - acurl batch urls.txt -f junit -o acurl.xml --fail-on blocked,challenged
+  artifacts:
+    when: always
+    reports:
+      junit: acurl.xml
