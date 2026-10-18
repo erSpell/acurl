@@ -1,0 +1,29 @@
+# A custom profile catalog: the browser baseline, two public agents and your
+# own crawler. Use it with: acurl --profiles examples/config/profiles.yaml <url>
+profiles:
+  - name: "Chrome (Browser)"
+    browser: true
+    category: browser
+    user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    headers:
+      Accept-Language: "en-US,en;q=0.9"
+
+  - name: "ChatGPT-User"
+    category: ai-assistant
+    operator: OpenAI
+    user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+    robots_key: "ChatGPT-User"
+
+  - name: "Claude-User"
+    category: ai-assistant
+    operator: Anthropic
+    user_agent: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Claude-User/1.0; +Claude-User@anthropic.com)"
+    robots_key: "Claude-User"
+
+  - name: "PriceWatchBot"
+    category: other
+    operator: Example Inc.
+    user_agent: "PriceWatchBot/2.1 (+https://example.com/bot)"
+    robots_key: "PriceWatchBot"
+    headers:
+      X-Team: "growth"

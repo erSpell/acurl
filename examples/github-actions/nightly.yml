@@ -1,0 +1,28 @@
+# Check every page in the sitemap each night and keep an HTML report.
+name: Nightly AI agent audit
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - id: acurl
+        uses: tragent-io/acurl@v1
+        with:
+          sitemap: auto:shop.example
+          limit: "200"
+          fail-on: none
+      - name: Build the HTML report
+        run: acurl report "${{ steps.acurl.outputs.report }}" -f html -o acurl-report.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: acurl-report
+          path: acurl-report.html

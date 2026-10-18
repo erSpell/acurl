@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "acurl": {
+      "command": "acurl",
+      "args": ["mcp", "--timeout", "20s"]
+    }
+  }
+}

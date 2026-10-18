@@ -1,0 +1,13 @@
+# Project defaults for acurl. Flags and ACURL_* environment variables override these.
+category: [ai-assistant, ai-search, ai-training]
+fail-on: blocked,challenged,score<75
+timeout: 20s
+retries: 2
+
+# Staging is behind a cookie gate and serves US prices.
+header:
+  - "Cookie: preview=1; country=US"
+
+# Batch defaults
+delay: 1s
+limit: 100

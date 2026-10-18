@@ -8,68 +8,131 @@
 <h1 align="center">acurl</h1>
 
 <p align="center">See your website the way AI agents see it.<br>
-<a href="https://acurl.dev">acurl.dev</a> · <a href="docs/">Docs</a> · <a href="https://tragent.io">tragent.io</a></p>
+<a href="https://acurl.dev">acurl.dev</a> · <a href="https://acurl.dev/docs/">Documentation</a> · <a href="https://acurl.dev/docs/#reference">Command reference</a> · <a href="https://tragent.io">tragent.io</a></p>
 
-**acurl** is a free, open-source tool by [tragent.io](https://tragent.io).
+<p align="center">
+  <a href="https://github.com/tragent-io/acurl/actions/workflows/ci.yml"><img src="https://github.com/tragent-io/acurl/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/tragent-io/acurl/releases"><img src="https://img.shields.io/github/v/release/tragent-io/acurl?color=6a2bc4" alt="Release"></a>
+  <a href="https://pkg.go.dev/github.com/tragent-io/acurl/pkg/acurl"><img src="https://pkg.go.dev/badge/github.com/tragent-io/acurl/pkg/acurl.svg" alt="Go Reference"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-1f1534" alt="License"></a>
+</p>
 
-`acurl` fetches a URL several times, once per agent profile: a real Chrome browser, AI agents
-such as ChatGPT-User and Claude-Web, search crawlers, and plain curl. It then shows how each one was
-treated side by side.
+**acurl** fetches a page as a real Chrome browser and as ChatGPT, Claude, Perplexity, Googlebot
+and 18 other agents. It shows which ones were blocked, challenged, cloaked or shown a different
+price, scores how ready the page is for AI agents, and tells you how to fix what fails.
 
-It is built for store owners and developers who want to know whether AI shopping and
-search agents can actually read their pages.
+It's a free, open-source tool by [tragent.io](https://tragent.io), built for online stores and
+useful on any website.
+
+```console
+$ acurl shop.example/products/wool-runner
+Fetching https://shop.example/products/wool-runner with 22 profiles...
+
+PROFILE            STATUS  TIME    RESULT             DETAILS
+Chrome (Browser)   200     412ms   allowed            Wool Runner | Example Store
+ChatGPT-User       403     51ms    challenged         challenge: Cloudflare
+Claude-User        200     388ms   allowed            OK
+Perplexity-User    200     402ms   allowed            product: price 89.00 vs browser 98.00
+OAI-SearchBot      200     97ms    cloaked            31% similar to browser
+GPTBot             200     365ms   robots-disallowed  robots.txt: disallowed
+Google-Extended    -       -       robots-disallowed  robots.txt token (not fetched)
+
+AI readiness 71/100 (C)
+  ✗ AI assistants can fetch the page            16.7/25  ChatGPT-User (challenged)
+  ✗ AI search crawlers can fetch the page       10.0/20  OAI-SearchBot (cloaked)
+  ✓ Content is in the HTML without JavaScript   15.0/15
+  ✓ Product structured data is present          10.0/10
+
+How to improve
+  1. AI assistants can fetch the page
+     Allow ChatGPT-User, Claude-User and Perplexity-User in your WAF or bot-management rules...
+```
 
 ## Install
 
-```bash
-go install github.com/tragent-io/acurl/cmd/acurl@latest
+| | |
+|---|---|
+| Homebrew | `brew install tragent-io/tap/acurl` |
+| Shell | `curl -fsSL https://acurl.dev/install.sh \| sh` |
+| Go | `go install github.com/tragent-io/acurl/cmd/acurl@latest` |
+| npm | `npx @tragent/acurl <url>` |
+| pip | `pipx install acurl` |
+| Docker | `docker run --rm ghcr.io/tragent-io/acurl <url>` |
+| Binaries | [GitHub Releases](https://github.com/tragent-io/acurl/releases), with checksums, SBOMs and cosign signatures |
+
+## What it checks
+
+- **22 agent profiles** in five categories: AI assistants (ChatGPT-User, Claude-User, Perplexity-User, ...),
+  AI search (OAI-SearchBot, Claude-SearchBot, PerplexityBot, ...), AI training (GPTBot, ClaudeBot, CCBot,
+  Google-Extended, ...), search engines, and a curl baseline
+- **A real browser baseline** with Chrome's TLS and HTTP/2 fingerprint. Bot profiles send only their own
+  headers, like real crawlers.
+- **WAF challenges** from Cloudflare, Akamai, DataDome, PerimeterX, Imperva, Kasada, AWS WAF, Sucuri and CAPTCHAs
+- **Cloaking**: agents shown substantially different visible text than the browser, with `--diff` to see what's missing
+- **robots.txt** (RFC 9309), **Content Signals**, `X-Robots-Tag`, meta robots and **llms.txt**
+- **Product data parity**: schema.org Product from JSON-LD, microdata or OpenGraph, and agents shown a different price or stock
+- **JavaScript dependence**: client-rendered shells, and `--render` to measure JavaScript-only text in headless Chrome
+- **An AI readiness score** (0-100) from [documented checks](docs/scoring.md), with a fix for each failure
+
+## Commands
+
+| Command | |
+|---|---|
+| `acurl <url>` | Check a page with every agent and score it |
+| `acurl robots <url>` | robots.txt verdict per agent, Content Signals, sitemaps and llms.txt |
+| `acurl batch [file]` | URL lists, CSV, stdin or whole sitemaps (`--sitemap auto:shop.example`) |
+| `acurl watch <url>...` | Re-check on a schedule and alert Slack or a webhook on changes |
+| `acurl report <file>` | Render saved JSON as HTML, Markdown, SARIF, JUnit or CSV |
+| `acurl serve` | Local web UI and JSON API |
+| `acurl mcp` | MCP server so Claude, Cursor and other assistants can run checks |
+| `acurl keygen` | Ed25519 key for [Web Bot Auth](docs/signing.md) request signing |
+| `acurl profiles list` | The agent catalog |
+| `acurl init` | Create a `.acurl.yaml` config file |
+
+Every flag is in the [command reference](https://acurl.dev/docs/#reference).
+
+## In CI
+
+```yaml
+- uses: tragent-io/acurl@v1
+  with:
+    urls: |
+      https://staging.shop.example/
+      https://staging.shop.example/products/best-seller
+    fail-on: blocked,challenged,score<80
 ```
 
-## Usage
+Output formats: `table`, `json`, `markdown`, `html`, `sarif`, `junit` and `csv`. Exit codes follow
+`--fail-on`. See the [CI guide](docs/ci.md).
+
+## With your AI assistant
 
 ```bash
-acurl https://example.com
-acurl --agents ChatGPT-User,Googlebot https://yourstore.com/products/1
-acurl --category ai-assistant,ai-search https://yourstore.com
-acurl --diff GPTBot https://yourstore.com     # what text did GPTBot not see?
-acurl robots https://yourstore.com/products/1  # robots.txt, content signals, llms.txt
-acurl profiles list
-acurl watch https://yourstore.com --interval 1h --webhook https://hooks.slack.com/... --webhook-format slack
-acurl --sign mybot.key --signature-agent https://bot.example https://yourstore.com   # Web Bot Auth
-acurl -f html -o report.html https://yourstore.com
-acurl serve                                    # local web UI on 127.0.0.1:8080
-claude mcp add acurl -- acurl mcp              # let Claude run checks for you
+claude mcp add acurl -- acurl mcp
 ```
 
-Each result is classified as `allowed`, `blocked`, `challenged` (WAF or captcha page),
-`rate-limited`, `cloaked` (visible text differs a lot from what Chrome got),
-`robots-disallowed` or `error`.
+Then ask *"Can ChatGPT read our new product page?"* See [MCP setup](docs/mcp.md) for Claude Desktop and Cursor.
 
-Every run ends with an **AI readiness score** (0-100) and concrete fixes for anything that fails.
+## As a Go library
 
-More: [profiles](docs/profiles.md) · [robots.txt and llms.txt](docs/robots.md) · [scoring](docs/scoring.md) · [CI](docs/ci.md) · [signing](docs/signing.md) · [watch](docs/watch.md) · [web UI](docs/web-ui.md) · [MCP](docs/mcp.md)
-
-Output formats: `table` (default), `json`, `markdown`, `csv`, `junit` and `sarif`. Use `-o file` to write to a file.
-
-## CI
-
-```bash
-acurl batch urls.txt -f sarif -o acurl.sarif --fail-on blocked,challenged,score<80
+```go
+c, _ := acurl.New(acurl.Options{BlockPrivate: true})
+rep, _ := c.Check(ctx, "https://shop.example/products/1")
+fmt.Println(rep.Score.Value)
 ```
 
-Exit code 0 means nothing matched `--fail-on`, 1 means something did, and 2 means a request failed.
-See the [CI guide](docs/ci.md) for GitHub Actions, JUnit, batch runs and `.acurl.yaml`.
+## Caveat
 
-## Status
+acurl sends agent user-agent strings from your own IP address. Real AI agents come from published IP
+ranges and may sign their requests, so results show how a site responds to agent user agents, not
+guaranteed agent access. It's the fastest first check, and it catches most real-world blocking.
 
-Early development. Expect breaking changes until v1.0.
+## Contributing
+
+Bug reports, new agent profiles and detection signatures are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Security issues: [SECURITY.md](SECURITY.md).
 
 ## License
 
-Apache 2.0. See [LICENSE](LICENSE).
-
-## About
-
-acurl is built and maintained by [tragent.io](https://tragent.io), which helps online stores
-get found, understood and bought from by AI shopping agents. acurl is the free, open-source
-diagnostic we use ourselves, and contributions are welcome.
+Apache 2.0. Copyright tragent. acurl is built and maintained by [tragent.io](https://tragent.io), which
+helps online stores get found, understood and bought from by AI shopping agents.

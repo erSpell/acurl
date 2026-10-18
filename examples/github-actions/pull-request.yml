@@ -1,0 +1,23 @@
+# Fail a pull request when an AI assistant or AI search crawler is blocked on
+# staging, or the AI readiness score drops below 80.
+name: AI agent access
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write   # SARIF upload to code scanning
+
+jobs:
+  acurl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: tragent-io/acurl@v1
+        with:
+          urls: |
+            https://staging.shop.example/
+            https://staging.shop.example/products/best-seller
+            https://staging.shop.example/collections/new
+          categories: ai-assistant,ai-search
+          fail-on: blocked,challenged,score<80
