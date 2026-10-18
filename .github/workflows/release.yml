@@ -60,7 +60,9 @@ jobs:
   pypi:
     needs: release
     runs-on: ubuntu-latest
-    if: ${{ !contains(github.ref_name, '-') }}
+    # Enable after configuring PyPI trusted publishing: set the repository
+    # variable PUBLISH_PYPI to "true".
+    if: ${{ !contains(github.ref_name, '-') && vars.PUBLISH_PYPI == 'true' }}
     environment: pypi
     permissions:
       id-token: write   # PyPI trusted publishing
