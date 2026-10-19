@@ -34,6 +34,14 @@ func TestChallengeFixtures(t *testing.T) {
 		{"login-with-recaptcha.html", 403, "CAPTCHA"},
 		// Akamai's page only counts as a block on 403.
 		{"akamai-denied.html", 200, ""},
+		// Healthy pages that load a vendor's script are not challenges (B1).
+		{"healthy-cloudflare-jsd.html", 200, ""},
+		{"healthy-awswaf-sdk.html", 200, ""},
+		{"healthy-imperva-script.html", 200, ""},
+		// The same scripts on an error or AWS's 202 challenge still count.
+		{"healthy-cloudflare-jsd.html", 403, "Cloudflare"},
+		{"healthy-awswaf-sdk.html", 202, "AWS WAF"},
+		{"healthy-imperva-script.html", 403, "Imperva"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.file, func(t *testing.T) {
