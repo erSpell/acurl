@@ -224,14 +224,14 @@ footer.site nav a:hover { color: var(--brand); }
 
 /* Mobile and tablet (below 920px). */
 .menu-btn { display: none; height: 40px; padding: 0 14px; border: 1px solid var(--line); border-radius: var(--radius-btn); background: var(--panel); color: var(--ink); font: 500 15px var(--sans); cursor: pointer; }
-.mobile-nav { display: none; }
+.nav .mobile-nav { display: none; }
 .side-panel > summary { display: none; }
 .content table { display: block; overflow-x: auto; max-width: 100%; }
 .content td code, .content th code { white-space: nowrap; }
 @media (max-width: 920px) {
   .menu-btn { display: inline-flex; align-items: center; }
   .nav .right:has(.menu-btn) .btn-line { display: none; }
-  .mobile-nav:not([hidden]) { display: flex; flex-direction: column; padding: 8px 20px 16px; border-top: 1px solid var(--line); background: var(--panel); }
+  .nav .mobile-nav:not([hidden]) { display: flex; flex-direction: column; padding: 8px 20px 16px; border-top: 1px solid var(--line); background: var(--panel); }
   .mobile-nav a { color: var(--ink); text-decoration: none; padding: 10px 0; border-bottom: 1px solid var(--line-2); font-size: 16px; }
   .mobile-nav a:last-child { border-bottom: 0; }
   .docs { gap: 24px; padding-top: 24px; }
