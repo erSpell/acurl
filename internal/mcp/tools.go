@@ -44,7 +44,7 @@ func New(base acurl.Options, version string) (*Server, error) {
 				Description: "Fetch a URL as a real browser and as AI agents and crawlers, classify how each was treated " +
 					"(allowed, blocked, challenged, cloaked, rate-limited, robots-disallowed), and return the AI readiness score with fixes.",
 				InputSchema: schema(map[string]any{
-					"url":        prop("string", "The page to check, e.g. https://shop.example/products/1"),
+					"url":        stringProp("The page to check, e.g. https://shop.example/products/1"),
 					"categories": arrayProp("Only these agent categories: ai-assistant, ai-search, ai-training, search, other"),
 					"agents":     arrayProp("Only these profile names, e.g. ChatGPT-User, GPTBot"),
 				}, "url"),
@@ -55,7 +55,7 @@ func New(base acurl.Options, version string) (*Server, error) {
 				Name:        "readiness_score",
 				Title:       "AI readiness score",
 				Description: "Return only the AI readiness score (0-100), the failed checks and how to fix them for a URL.",
-				InputSchema: schema(map[string]any{"url": prop("string", "The page to score")}, "url"),
+				InputSchema: schema(map[string]any{"url": stringProp("The page to score")}, "url"),
 				Annotations: readOnly(),
 				handle:      t.score,
 			},
@@ -63,7 +63,7 @@ func New(base acurl.Options, version string) (*Server, error) {
 				Name:        "robots_audit",
 				Title:       "Audit robots.txt for AI agents",
 				Description: "Report which AI agents robots.txt allows for a URL, Content-Signal directives, sitemaps and llms.txt status. Does not fetch the page itself.",
-				InputSchema: schema(map[string]any{"url": prop("string", "Any URL on the site")}, "url"),
+				InputSchema: schema(map[string]any{"url": stringProp("Any URL on the site")}, "url"),
 				Annotations: readOnly(),
 				handle:      t.robots,
 			},
@@ -71,7 +71,7 @@ func New(base acurl.Options, version string) (*Server, error) {
 				Name:        "list_profiles",
 				Title:       "List agent profiles",
 				Description: "List the AI agent and crawler profiles acurl can check, with category and operator.",
-				InputSchema: schema(map[string]any{"category": prop("string", "Optional category filter")}),
+				InputSchema: schema(map[string]any{"category": stringProp("Optional category filter")}),
 				Annotations: readOnly(),
 				handle:      t.list,
 			},
@@ -87,7 +87,9 @@ func schema(props map[string]any, required ...string) map[string]any {
 	return s
 }
 
-func prop(typ, desc string) map[string]any { return map[string]any{"type": typ, "description": desc} }
+func stringProp(desc string) map[string]any {
+	return map[string]any{"type": "string", "description": desc}
+}
 
 func arrayProp(desc string) map[string]any {
 	return map[string]any{"type": "array", "items": map[string]any{"type": "string"}, "description": desc}
