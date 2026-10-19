@@ -7,7 +7,7 @@ import (
 )
 
 func errNoProfiles(names []string) error {
-	return fmt.Errorf("no profiles match %v (see the profile list in the README)", names)
+	return fmt.Errorf("no profiles match %v; run `acurl profiles list` to see them", names)
 }
 
 // normalizeURL adds https:// when no scheme is given and rejects anything
