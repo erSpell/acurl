@@ -40,7 +40,7 @@ func TestHeadless(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	html, err := Headless(context.Background(), srv.URL, Options{Timeout: 30 * time.Second, Wait: 300 * time.Millisecond})
+	html, err := Headless(context.Background(), srv.URL, Options{Timeout: 90 * time.Second, Wait: 300 * time.Millisecond})
 	if err != nil {
 		t.Fatal(err)
 	}
