@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/tragent-io/acurl/pkg/acurl"
 	"github.com/tragent-io/acurl/pkg/types"
@@ -96,4 +98,34 @@ func ExampleChecker_Check() {
 	// Output:
 	// Chrome allowed
 	// ChatGPT-User allowed
+}
+
+func TestSamplesMarkFlakyVerdicts(t *testing.T) {
+	var n int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// ChatGPT-User is blocked on every other request.
+		if strings.Contains(r.UserAgent(), "ChatGPT-User") && atomic.AddInt32(&n, 1)%2 == 0 {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		_, _ = w.Write([]byte("<html><body><p>Stable page text for every agent here.</p></body></html>"))
+	}))
+	defer srv.Close()
+
+	c, err := acurl.New(acurl.Options{Profiles: profiles("Chrome", "ChatGPT-User"), SkipRobots: true, Samples: 3, SampleDelay: time.Millisecond})
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep, err := c.Check(context.Background(), srv.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := rep.Results[1]
+	// Samples: allowed, blocked, allowed. Allowed wins 2/3 and the agent is flaky.
+	if r.Classification != "allowed" || !r.Flaky || len(r.SampleVerdicts) != 2 || rep.Summary.Flaky != 1 {
+		t.Errorf("merged = %q flaky=%v verdicts=%v summary=%+v", r.Classification, r.Flaky, r.SampleVerdicts, rep.Summary)
+	}
+	if rep.Results[0].Flaky {
+		t.Error("the stable browser baseline should not be flaky")
+	}
 }

@@ -67,6 +67,9 @@ func WriteTable(w io.Writer, result types.ComparisonResult, color bool) error {
 	line("Cloaked", sm.Cloaked, warnStyle)
 	line("Robots disallowed", sm.RobotsDisallow, warnStyle)
 	line("Errors", sm.Errors, badStyle)
+	if sm.Flaky > 0 {
+		line("Flaky", sm.Flaky, warnStyle)
+	}
 
 	writeScoreText(&sb, result.Score, style)
 
@@ -142,6 +145,9 @@ func FormatSize(n int) string {
 
 func details(r types.FetchResult) string {
 	var parts []string
+	if r.Flaky {
+		parts = append(parts, "flaky: "+strings.Join(r.SampleVerdicts, ", "))
+	}
 	if r.StatusCode >= 400 && r.BotChallenge == "" && !r.RateLimited {
 		p := fmt.Sprintf("HTTP %d", r.StatusCode)
 		if r.Edge != "" {

@@ -66,6 +66,8 @@ type FetchResult struct {
 	ProductIssue      string        `json:"product_issue,omitempty"` // how product data differs from the browser
 	Similarity        *float64      `json:"similarity,omitempty"`    // visible-text similarity to the browser baseline
 	Classification    string        `json:"classification"`
+	Flaky             bool          `json:"flaky,omitempty"`           // verdict changed between --samples
+	SampleVerdicts    []string      `json:"sample_verdicts,omitempty"` // e.g. "allowed 2/3"
 	Error             string        `json:"error,omitempty"`
 	ContentHash       string        `json:"content_hash,omitempty"`
 
@@ -103,6 +105,7 @@ type Summary struct {
 	Cloaked        int `json:"cloaked"`
 	RobotsDisallow int `json:"robots_disallowed"`
 	Errors         int `json:"errors"`
+	Flaky          int `json:"flaky,omitempty"`
 }
 
 // RobotsAudit is the result of `acurl robots`.
