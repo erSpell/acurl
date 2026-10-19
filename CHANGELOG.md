@@ -6,6 +6,15 @@ All notable changes to acurl are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-19
+
+### Fixed
+- `batch --delay` measures the gap from when the previous check of a host started, so
+  checks are never closer together than the delay; on Windows they could be about half
+- acurl.dev no longer shows the phone menu under the header on desktop
+- acurl.dev versions its stylesheet and script links, so a deploy never pairs new pages
+  with cached styles
+
 ## [1.1.0] - 2026-10-19
 
 ### Fixed
@@ -142,7 +151,8 @@ First public preview.
 - CI-friendly exit codes: 0 allowed, 1 blocked or challenged, 2 errors
 - Custom profiles via `--profiles file.yaml`, extra headers via `-H`
 
-[Unreleased]: https://github.com/tragent-io/acurl/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/tragent-io/acurl/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/tragent-io/acurl/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/tragent-io/acurl/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/tragent-io/acurl/compare/v0.4.0...v1.0.0
 [0.4.0]: https://github.com/tragent-io/acurl/compare/v0.3.0...v0.4.0
