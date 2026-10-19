@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -352,4 +353,22 @@ func compress(t *testing.T, enc string, b []byte) []byte {
 		t.Fatal(err)
 	}
 	return buf.Bytes()
+}
+
+func TestRedirectLoopIsNotRetriedOrDoubleCounted(t *testing.T) {
+	var hits int32
+	srv := newServer(t, func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&hits, 1)
+		http.Redirect(w, r, fmt.Sprintf("/hop%d", atomic.LoadInt32(&hits)), http.StatusFound)
+	})
+	res := mustNew(t, Options{Retries: 2}).Fetch(context.Background(), srv.URL+"/start", types.Profile{Name: "x", UserAgent: "x"})
+	if res.Error != "stopped after 10 redirects" {
+		t.Errorf("error = %q", res.Error)
+	}
+	if len(res.RedirectChain) != maxRedirects || hits != maxRedirects {
+		t.Errorf("chain=%d hits=%d, want %d of each from a single attempt", len(res.RedirectChain), hits, maxRedirects)
+	}
+	if res.FinalURL == "" || res.FinalURL != res.RedirectChain[maxRedirects-1] {
+		t.Errorf("final URL = %q", res.FinalURL)
+	}
 }

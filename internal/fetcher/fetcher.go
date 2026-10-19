@@ -3,6 +3,7 @@ package fetcher
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -150,6 +151,9 @@ func newClient(opts Options) (*req.Client, error) {
 }
 
 func shouldRetry(resp *req.Response, err error) bool {
+	if errors.Is(err, errTooManyRedirects) || errors.Is(err, netguard.ErrBlocked) {
+		return false // retrying cannot change the answer
+	}
 	if err != nil {
 		return true
 	}
@@ -200,6 +204,12 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 	if err != nil {
 		result.SetDuration(time.Since(start))
 		result.Error = err.Error()
+		if errors.Is(err, errTooManyRedirects) {
+			result.Error = errTooManyRedirects.Error()
+		}
+		if n := len(chain); n > 0 {
+			result.FinalURL = chain[n-1]
+		}
 		return result
 	}
 	defer resp.Body.Close()
