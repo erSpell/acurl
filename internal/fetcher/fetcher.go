@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/imroc/req/v3"
+	utls "github.com/refraction-networking/utls"
 
 	"github.com/tragent-io/acurl/internal/detect"
 	"github.com/tragent-io/acurl/internal/extract"
@@ -96,7 +97,10 @@ func New(opts Options) (*Fetcher, error) {
 	if err != nil {
 		return nil, err
 	}
-	browser.ImpersonateChrome()
+	// ImpersonateChrome sets Chrome's HTTP/2 settings and header order; the
+	// TLS hello is then moved to the newest Chrome fingerprint uTLS ships,
+	// which has the post-quantum key share current Chrome sends.
+	browser.ImpersonateChrome().SetTLSFingerprint(utls.HelloChrome_133)
 
 	bot, err := newClient(opts)
 	if err != nil {
@@ -115,7 +119,10 @@ func New(opts Options) (*Fetcher, error) {
 func newClient(opts Options) (*req.Client, error) {
 	c := req.C().
 		SetTimeout(opts.Timeout).
-		SetRedirectPolicy(recordRedirects)
+		SetRedirectPolicy(recordRedirects).
+		// Profiles set Accept-Encoding themselves (Chrome sends br and zstd),
+		// which turns off Go's transparent gzip; decode every encoding here.
+		EnableAutoDecompress()
 	if opts.Retries > 0 {
 		c.SetCommonRetryCount(opts.Retries).
 			SetCommonRetryBackoffInterval(250*time.Millisecond, 4*time.Second).

@@ -3,11 +3,14 @@ module github.com/tragent-io/acurl
 go 1.26.0
 
 require (
+	github.com/andybalholm/brotli v1.2.2
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/chromedp/chromedp v0.21.0
 	github.com/imroc/req/v3 v3.61.0
 	github.com/jimsmart/grobotstxt v1.0.3
+	github.com/klauspost/compress v1.19.2
 	github.com/olekukonko/tablewriter v1.1.5
+	github.com/refraction-networking/utls v1.8.2
 	github.com/sergi/go-diff v1.4.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.9
@@ -16,7 +19,6 @@ require (
 )
 
 require (
-	github.com/andybalholm/brotli v1.2.2 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc // indirect
@@ -32,7 +34,6 @@ require (
 	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/icholy/digest v1.2.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/klauspost/compress v1.19.2 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
@@ -44,7 +45,6 @@ require (
 	github.com/olekukonko/ll v0.1.6 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/quic-go/quic-go v0.61.0 // indirect
-	github.com/refraction-networking/utls v1.8.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect

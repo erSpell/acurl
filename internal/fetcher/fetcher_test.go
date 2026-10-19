@@ -1,13 +1,19 @@
 package fetcher
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/andybalholm/brotli"
+	"github.com/klauspost/compress/zstd"
 
 	"github.com/tragent-io/acurl/pkg/types"
 )
@@ -299,4 +305,51 @@ func TestIsHTML(t *testing.T) {
 	if !isHTML("", []byte("<!DOCTYPE html><html>")) {
 		t.Error("sniffing should detect HTML without a Content-Type")
 	}
+}
+
+func TestBrowserDecodesModernEncodings(t *testing.T) {
+	page := []byte("<html><head><title>Compressed page</title></head><body>hello</body></html>")
+	for _, enc := range []string{"zstd", "br", "gzip"} {
+		t.Run(enc, func(t *testing.T) {
+			srv := newServer(t, func(w http.ResponseWriter, r *http.Request) {
+				if !strings.Contains(r.Header.Get("Accept-Encoding"), enc) {
+					t.Errorf("browser did not advertise %s: %q", enc, r.Header.Get("Accept-Encoding"))
+				}
+				w.Header().Set("Content-Type", "text/html")
+				w.Header().Set("Content-Encoding", enc)
+				_, _ = w.Write(compress(t, enc, page))
+			})
+			p := types.Profile{Name: "Chrome", Browser: true, UserAgent: "Mozilla/5.0 Chrome/156.0.0.0",
+				Headers: map[string]string{"Accept-Encoding": "gzip, deflate, br, zstd"}}
+			res := mustNew(t, Options{}).Fetch(context.Background(), srv.URL, p)
+			if res.Error != "" || res.Title != "Compressed page" {
+				t.Errorf("%s body not decoded: title=%q err=%q", enc, res.Title, res.Error)
+			}
+		})
+	}
+}
+
+func compress(t *testing.T, enc string, b []byte) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	var w io.WriteCloser
+	switch enc {
+	case "zstd":
+		zw, err := zstd.NewWriter(&buf)
+		if err != nil {
+			t.Fatal(err)
+		}
+		w = zw
+	case "br":
+		w = brotli.NewWriter(&buf)
+	default:
+		w = gzip.NewWriter(&buf)
+	}
+	if _, err := w.Write(b); err != nil {
+		t.Fatal(err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return buf.Bytes()
 }
