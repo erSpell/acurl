@@ -6,6 +6,23 @@ All notable changes to acurl are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-19
+
+The first stable release. The CLI flags, JSON report format, exit codes and the
+`pkg/acurl` Go API now follow semantic versioning.
+
+### Added
+- [acurl.dev](https://acurl.dev): website and documentation with a command reference
+  generated from the CLI
+- Install with Homebrew, `install.sh`, npm (`@tragent/acurl`), pip (`acurl`), Docker
+  (`ghcr.io/tragent-io/acurl`), deb/rpm/apk packages or release archives
+- Release archives include man pages and shell completions; checksums are signed with
+  cosign and every archive has an SBOM
+- GitHub Action (`uses: tragent-io/acurl@v1`) with a job summary, SARIF upload and `--fail-on`
+- Examples for GitHub Actions, GitLab CI, config files, custom profiles, cron and the Go API
+- CodeQL scanning
+
+
 ## [0.4.0] - 2026-10-11
 
 ### Added
@@ -90,7 +107,8 @@ First public preview.
 - CI-friendly exit codes: 0 allowed, 1 blocked or challenged, 2 errors
 - Custom profiles via `--profiles file.yaml`, extra headers via `-H`
 
-[Unreleased]: https://github.com/tragent-io/acurl/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/tragent-io/acurl/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/tragent-io/acurl/compare/v0.4.0...v1.0.0
 [0.4.0]: https://github.com/tragent-io/acurl/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/tragent-io/acurl/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/tragent-io/acurl/compare/v0.1.0...v0.2.0
