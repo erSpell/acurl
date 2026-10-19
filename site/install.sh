@@ -12,11 +12,25 @@ REPO="tragent-io/acurl"
 VERSION="latest"
 DIR=""
 
+usage() {
+  cat <<'USAGE'
+Install acurl, a free, open-source tool by tragent.io (https://acurl.dev).
+
+  curl -fsSL https://acurl.dev/install.sh | sh
+  curl -fsSL https://acurl.dev/install.sh | sh -s -- --version v1.1.0 --dir ~/.local/bin
+
+Options:
+  --version <tag>   release to install (default: the latest)
+  --dir <path>      where to put the binary (default: /usr/local/bin if writable, else ~/.local/bin)
+  -h, --help        show this help
+USAGE
+}
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --version) VERSION="$2"; shift 2 ;;
     --dir) DIR="$2"; shift 2 ;;
-    -h|--help) sed -n '2,9p' "$0" 2>/dev/null || true; exit 0 ;;
+    -h|--help) usage; exit 0 ;;
     *) echo "install.sh: unknown option $1" >&2; exit 2 ;;
   esac
 done
