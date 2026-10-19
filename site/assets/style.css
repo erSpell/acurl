@@ -61,12 +61,12 @@ code, pre, kbd { font-family: var(--mono); font-variant-ligatures: none; }
 .btn-line:hover { border-color: var(--brand-tint); }
 
 /* hero */
-.hero { padding: 88px 0 56px; background: radial-gradient(var(--dot) 1px, transparent 1px) 0 0 / 22px 22px; border-bottom: 1px solid var(--line); }
+.hero { padding: 72px 0 48px; background: radial-gradient(var(--dot) 1px, transparent 1px) 0 0 / 22px 22px; border-bottom: 1px solid var(--line); }
 .chip { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--gray); }
 .chip code { font-size: 12px; background: var(--surface); border-radius: var(--radius-chip); padding: 1px 6px; color: var(--ink); }
-.hero h1 { font-size: clamp(40px, 6.2vw, 68px); line-height: 1.04; letter-spacing: -0.045em; font-weight: 500; margin: 22px 0 22px; max-width: 900px; }
+.hero h1 { font-size: clamp(36px, 5vw, 56px); line-height: 1.05; letter-spacing: -0.045em; font-weight: 500; margin: 0 0 16px; max-width: 760px; }
 .hero h1 .soft { color: var(--gray); }
-.hero .sub { font-size: 19px; color: var(--gray); max-width: 660px; margin: 0 0 32px; }
+.hero .sub { font-size: 18px; color: var(--gray); max-width: 620px; margin: 0 0 28px; }
 .install { max-width: 640px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow-card); overflow: hidden; }
 .tabs { display: flex; gap: 2px; padding: 6px 6px 0; border-bottom: 1px solid var(--line); background: var(--stage); overflow-x: auto; }
 .tabs button { border: 0; background: none; font: 14px var(--sans); color: var(--gray-2); padding: 7px 12px 9px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
@@ -189,3 +189,7 @@ footer.site nav a:hover { color: var(--brand); }
   .hero { padding-top: 56px; }
   .by { display: none; }
 }
+
+.wrap.narrow > * { max-width: 920px; }
+.section h2 + .verdicts, .section h2 + .code, .section h2 + .cmds { margin-top: 24px; }
+.more { margin: 18px 0 0; font-size: 15px; }
