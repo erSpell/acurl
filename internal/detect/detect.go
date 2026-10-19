@@ -64,6 +64,12 @@ var Signatures = []Signature{
 		Embedded: regexp.MustCompile(`(?i)/cdn-cgi/challenge-platform/`),
 	},
 	{
+		// Akamai Bot Manager's interstitial challenge is served with a 200 and
+		// reloads the page after a JavaScript proof of work.
+		Vendor: "Akamai",
+		Body:   regexp.MustCompile(`(?i)(/_sec/verify\?provider=interstitial|triggerInterstitialChallenge|[?&]bm-verify=)`),
+	},
+	{
 		Vendor:   "Akamai",
 		Statuses: []int{403},
 		// AkamaiGHost is on every Akamai response, so only the block page counts.

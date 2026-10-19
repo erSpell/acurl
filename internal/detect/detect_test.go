@@ -24,6 +24,7 @@ func TestChallengeFixtures(t *testing.T) {
 	}{
 		{"cloudflare-challenge.html", 403, "Cloudflare"},
 		{"akamai-denied.html", 403, "Akamai"},
+		{"akamai-interstitial.html", 200, "Akamai"},
 		{"datadome-block.html", 403, "DataDome"},
 		{"perimeterx-challenge.html", 403, "PerimeterX"},
 		{"imperva-incident.html", 200, "Imperva"},
