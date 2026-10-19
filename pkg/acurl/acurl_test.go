@@ -129,3 +129,47 @@ func TestSamplesMarkFlakyVerdicts(t *testing.T) {
 		t.Error("the stable browser baseline should not be flaky")
 	}
 }
+
+func TestPackageCheckAndAccessors(t *testing.T) {
+	srv := store()
+	defer srv.Close()
+	rep, err := acurl.Check(context.Background(), srv.URL+"/products/runner", acurl.Options{Profiles: profiles("Chrome", "ChatGPT-User")})
+	if err != nil || len(rep.Results) != 2 {
+		t.Fatalf("Check: %v", err)
+	}
+	c, err := acurl.New(acurl.Options{Profiles: profiles("Chrome")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(c.Profiles()) != 1 {
+		t.Error("Profiles() should return the configured profiles")
+	}
+	status, body, err := c.Get(context.Background(), srv.URL+"/robots.txt", 1024)
+	if err != nil || status != 200 || !strings.Contains(string(body), "GPTBot") {
+		t.Errorf("Get = %d %q %v", status, body, err)
+	}
+}
+
+func TestOptionValidation(t *testing.T) {
+	for _, o := range []acurl.Options{
+		{Profiles: profiles("Chrome"), Page: "landing"},
+		{Profiles: profiles("Chrome"), Samples: 11},
+		{Profiles: []types.Profile{}},
+	} {
+		if _, err := acurl.New(o); err == nil {
+			t.Errorf("New(%+v) should fail", o)
+		}
+	}
+}
+
+func TestRenderNeedsBaseline(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusForbidden) }))
+	defer srv.Close()
+	rep, err := acurl.Check(context.Background(), srv.URL, acurl.Options{Profiles: profiles("Chrome"), SkipRobots: true, Render: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.Render == nil || !strings.Contains(rep.Render.Error, "browser baseline") {
+		t.Errorf("render = %+v", rep.Render)
+	}
+}
