@@ -53,6 +53,16 @@ type Options struct {
 	Render     bool
 	RenderWait time.Duration // default 2s
 
+	// Samples checks the page this many times and reports each agent's most
+	// common verdict, marking agents whose verdict changed as flaky.
+	// Default 1. SampleDelay is the pause between samples, default 1s.
+	Samples     int
+	SampleDelay time.Duration
+
+	// Page says what the page is: "product", "other", or "" to decide from
+	// the URL and the page. Product pages are expected to have product data.
+	Page string
+
 	// UserAgent identifies acurl when it fetches robots.txt and llms.txt.
 	UserAgent string
 	// Trace, if set, is called after every page request.
@@ -93,6 +103,13 @@ func New(opts Options) (*Checker, error) {
 	if len(opts.Profiles) == 0 {
 		return nil, fmt.Errorf("acurl: no profiles")
 	}
+	switch opts.Page {
+	case "", "auto":
+		opts.Page = ""
+	case types.PageProduct, types.PageOther:
+	default:
+		return nil, fmt.Errorf("acurl: page must be auto, product or other, not %q", opts.Page)
+	}
 	if opts.Concurrency <= 0 {
 		opts.Concurrency = 5
 	}
@@ -101,6 +118,15 @@ func New(opts Options) (*Checker, error) {
 		opts.CloakThreshold = classifier.DefaultCloakThreshold
 	case opts.CloakThreshold < 0:
 		opts.CloakThreshold = 0
+	}
+	if opts.Samples < 1 {
+		opts.Samples = 1
+	}
+	if opts.Samples > 10 {
+		return nil, fmt.Errorf("acurl: samples must be between 1 and 10, not %d", opts.Samples)
+	}
+	if opts.SampleDelay <= 0 {
+		opts.SampleDelay = time.Second
 	}
 	if opts.RenderWait <= 0 {
 		opts.RenderWait = 2 * time.Second
@@ -155,18 +181,26 @@ func (c *Checker) Check(ctx context.Context, rawURL string) (*types.ComparisonRe
 		return nil, fmt.Errorf("acurl: invalid http(s) URL %q", rawURL)
 	}
 
-	results := c.fetcher.FetchAll(ctx, rawURL, c.opts.Profiles, c.opts.Concurrency)
-	if !c.opts.SkipRobots {
-		c.applyRobots(ctx, rawURL, results)
+	results := c.once(ctx, rawURL)
+	if c.opts.Samples > 1 {
+		all := [][]types.FetchResult{results}
+		for i := 1; i < c.opts.Samples; i++ {
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(c.opts.SampleDelay):
+			}
+			all = append(all, c.once(ctx, rawURL))
+		}
+		results = classifier.MergeSamples(all)
 	}
-	classifier.ClassifyAll(results, c.opts.CloakThreshold)
-	classifier.CompareProducts(results)
 
 	rep := &types.ComparisonResult{
 		URL:       rawURL,
 		Timestamp: time.Now().UTC(),
 		Results:   results,
 		Summary:   classifier.Summarize(results),
+		Page:      c.opts.Page,
 	}
 	if c.opts.Render {
 		rep.Render = c.render(ctx, rawURL, results)
@@ -175,10 +209,23 @@ func (c *Checker) Check(ctx context.Context, rawURL string) (*types.ComparisonRe
 	return rep, nil
 }
 
+// once fetches every profile one time and classifies the results.
+func (c *Checker) once(ctx context.Context, rawURL string) []types.FetchResult {
+	results := c.fetcher.FetchAll(ctx, rawURL, c.opts.Profiles, c.opts.Concurrency)
+	if !c.opts.SkipRobots {
+		c.applyRobots(ctx, rawURL, results)
+	}
+	classifier.ClassifyAll(results, c.opts.CloakThreshold)
+	classifier.CompareProducts(results)
+	return results
+}
+
 func (c *Checker) applyRobots(ctx context.Context, rawURL string, results []types.FetchResult) {
 	data := c.robots.Get(ctx, rawURL)
 	for i, p := range c.opts.Profiles {
-		if p.RobotsKey == "" {
+		// A failed request already explains itself; a robots verdict for a
+		// host that does not resolve would only add noise.
+		if p.RobotsKey == "" || results[i].Error != "" {
 			continue
 		}
 		if data.Unreachable() {

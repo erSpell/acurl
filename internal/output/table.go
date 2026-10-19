@@ -67,6 +67,9 @@ func WriteTable(w io.Writer, result types.ComparisonResult, color bool) error {
 	line("Cloaked", sm.Cloaked, warnStyle)
 	line("Robots disallowed", sm.RobotsDisallow, warnStyle)
 	line("Errors", sm.Errors, badStyle)
+	if sm.Flaky > 0 {
+		line("Flaky", sm.Flaky, warnStyle)
+	}
 
 	writeScoreText(&sb, result.Score, style)
 
@@ -142,6 +145,16 @@ func FormatSize(n int) string {
 
 func details(r types.FetchResult) string {
 	var parts []string
+	if r.Flaky {
+		parts = append(parts, "flaky: "+strings.Join(r.SampleVerdicts, ", "))
+	}
+	if r.StatusCode >= 400 && r.BotChallenge == "" && !r.RateLimited {
+		p := fmt.Sprintf("HTTP %d", r.StatusCode)
+		if r.Edge != "" {
+			p += " from " + r.Edge
+		}
+		parts = append(parts, p)
+	}
 	if r.Signed && r.Classification != "allowed" {
 		parts = append(parts, "signed")
 	}
@@ -176,7 +189,7 @@ func details(r types.FetchResult) string {
 		}
 		parts = append(parts, p)
 	}
-	if n := len(r.RedirectChain); n > 0 {
+	if n := len(r.RedirectChain); n > 0 && r.Error == "" {
 		parts = append(parts, fmt.Sprintf("%d redirect(s) -> %s", n, shortURL(r.FinalURL)))
 	}
 	if r.Error != "" {

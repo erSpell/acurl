@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>acurl: see your website the way AI agents see it</title>
-<meta name="description" content="acurl is a free, open-source CLI that fetches a page as Chrome, ChatGPT, Claude, Perplexity, Googlebot and 20 other agents and shows which were blocked, challenged, cloaked or shown a different price.">
+<meta name="description" content="acurl is a free, open-source CLI that fetches a page as Chrome and 21 AI agents and crawlers, including ChatGPT, Claude and Perplexity, and shows which were blocked, challenged, cloaked or shown a different price.">
 <meta name="theme-color" content="#fdfcff">
 <link rel="canonical" href="https://acurl.dev/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -12,9 +12,35 @@
 <meta property="og:description" content="Free, open-source CLI that checks how ChatGPT, Claude, Perplexity and other AI agents are treated by your site.">
 <meta property="og:url" content="https://acurl.dev/">
 <meta property="og:type" content="website">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<meta property="og:image" content="https://acurl.dev/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="acurl: see your site the way AI agents see it">
+<meta property="og:site_name" content="acurl">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://acurl.dev/assets/og.png">
+<meta name="twitter:title" content="acurl: see your website the way AI agents see it">
+<meta name="twitter:description" content="Free, open-source CLI that checks how ChatGPT, Claude, Perplexity and other AI agents are treated by your site.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "acurl",
+  "description": "acurl is a free, open-source CLI that fetches a page as Chrome and 21 AI agents and crawlers, including ChatGPT, Claude and Perplexity, and shows which were blocked, challenged, cloaked or shown a different price.",
+  "url": "https://acurl.dev/",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "macOS, Linux, Windows",
+  "license": "https://www.apache.org/licenses/LICENSE-2.0",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "softwareVersion": "1.1.0",
+  "downloadUrl": "https://github.com/tragent-io/acurl/releases",
+  "codeRepository": "https://github.com/tragent-io/acurl",
+  "author": { "@type": "Organization", "name": "tragent", "url": "https://tragent.io" }
+}
+</script>
+<link rel="preload" href="assets/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/fonts.css">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body class="home">
@@ -34,15 +60,25 @@
     <div class="right">
       <a class="by" href="https://tragent.io">by <b>tragent<span>.</span></b></a>
       <a class="btn btn-line" href="https://github.com/tragent-io/acurl">GitHub</a>
+      <button class="menu-btn" type="button" aria-expanded="false" aria-controls="mobile-nav">Menu</button>
     </div>
   </div>
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Main" hidden>
+      <a href="docs/">Docs</a>
+      <a href="docs/#reference">Commands</a>
+      <a href="docs/#ci">CI</a>
+      <a href="docs/#mcp">MCP</a>
+      <a href="https://github.com/tragent-io/acurl/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/tragent-io/acurl">GitHub</a>
+    <a href="https://tragent.io">tragent.io</a>
+  </nav>
 </header>
 
 <main id="main">
 <section class="hero">
   <div class="wrap">
     <h1>See your site the way AI agents see it.</h1>
-    <p class="sub">Check how ChatGPT, Claude, Perplexity and 19 other agents treat any URL.</p>
+    <p class="sub">Check how 21 AI agents and crawlers, from ChatGPT and Claude to Perplexity, treat any URL.</p>
 
     <div class="install" data-copy-scope>
       <div class="tabs" role="tablist" aria-label="Install acurl">
@@ -73,7 +109,7 @@
   <div class="wrap">
     <div class="window">
       <div class="bar" aria-hidden="true"><i></i><i></i><i></i><span>acurl shop.example/products/wool-runner</span></div>
-<pre class="term"><span class="row"><span class="p">$</span> acurl shop.example/products/wool-runner</span><span class="row d">Fetching https://shop.example/products/wool-runner with 22 profiles...</span><span class="row"> </span><span class="row h">PROFILE            STATUS  TIME    RESULT             DETAILS</span><span class="row">Chrome (Browser)   200     412ms   <span class="ok">allowed</span>            Wool Runner | Example Store</span><span class="row">ChatGPT-User       403     51ms    <span class="warn">challenged</span>         challenge: Cloudflare</span><span class="row">Claude-User        200     388ms   <span class="ok">allowed</span>            OK</span><span class="row">Perplexity-User    200     402ms   <span class="ok">allowed</span>            product: price 89.00 vs browser 98.00</span><span class="row">OAI-SearchBot      200     97ms    <span class="cl">cloaked</span>            31% similar to browser</span><span class="row">PerplexityBot      200     371ms   <span class="ok">allowed</span>            OK</span><span class="row">GPTBot             200     365ms   <span class="info">robots-disallowed</span>  robots.txt: disallowed</span><span class="row">Google-Extended    -       -       <span class="info">robots-disallowed</span>  robots.txt token (not fetched)</span><span class="row">Googlebot          200     390ms   <span class="ok">allowed</span>            OK</span><span class="row"> </span><span class="row h">AI readiness <span class="warn">71/100 (C)</span></span><span class="row">  <span class="bad">✗</span> AI assistants can fetch the page            16.7/25  <span class="d">ChatGPT-User (challenged)</span></span><span class="row">  <span class="bad">✗</span> AI search crawlers can fetch the page       10.0/20  <span class="d">OAI-SearchBot (cloaked)</span></span><span class="row">  <span class="ok">✓</span> Content is in the HTML without JavaScript   15.0/15</span><span class="row">  <span class="ok">✓</span> Product structured data is present          10.0/10</span><span class="row"> </span><span class="row h">How to improve</span><span class="row">  1. Allow ChatGPT-User, Claude-User and Perplexity-User in your WAF's verified-bot rules.</span><span class="row">  2. Serve OAI-SearchBot the same product content as browsers. <span class="d">Run with --diff OAI-SearchBot.</span></span></pre>
+<pre class="term"><span class="row"><span class="p">$</span> acurl shop.example/products/wool-runner</span><span class="row d">Fetching https://shop.example/products/wool-runner with 23 profiles...</span><span class="row"> </span><span class="row h">PROFILE            STATUS  TIME    RESULT             DETAILS</span><span class="row">Chrome (Browser)   200     412ms   <span class="ok">allowed</span>            Wool Runner | Example Store</span><span class="row">ChatGPT-User       403     51ms    <span class="warn">challenged</span>         challenge: Cloudflare</span><span class="row">Claude-User        200     388ms   <span class="ok">allowed</span>            OK</span><span class="row">Perplexity-User    200     402ms   <span class="ok">allowed</span>            product: price 89.00 vs browser 98.00</span><span class="row">OAI-SearchBot      200     97ms    <span class="cl">cloaked</span>            31% similar to browser</span><span class="row">PerplexityBot      200     371ms   <span class="ok">allowed</span>            OK</span><span class="row">GPTBot             200     365ms   <span class="info">robots-disallowed</span>  robots.txt: disallowed</span><span class="row">Google-Extended    -       -       <span class="info">robots-disallowed</span>  robots.txt token (not fetched)</span><span class="row">Googlebot          200     390ms   <span class="ok">allowed</span>            OK</span><span class="row"> </span><span class="row h">AI readiness <span class="warn">71/100 (C)</span></span><span class="row">  <span class="bad">✗</span> AI assistants can fetch the page            16.7/25  <span class="d">ChatGPT-User (challenged)</span></span><span class="row">  <span class="bad">✗</span> AI search crawlers can fetch the page       10.0/20  <span class="d">OAI-SearchBot (cloaked)</span></span><span class="row">  <span class="ok">✓</span> Content is in the HTML without JavaScript   15.0/15</span><span class="row">  <span class="ok">✓</span> Product structured data is present          10.0/10</span><span class="row"> </span><span class="row h">How to improve</span><span class="row">  1. Allow ChatGPT-User, Claude-User and Perplexity-User in your WAF's verified-bot rules.</span><span class="row">  2. Serve OAI-SearchBot the same product content as browsers. <span class="d">Run with --diff OAI-SearchBot.</span></span></pre>
     </div>
   </div>
 </section>

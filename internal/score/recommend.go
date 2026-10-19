@@ -19,6 +19,9 @@ var recommendations = map[string]string{
 	"structured-data": "Add a schema.org Product in JSON-LD with name, offers.price, " +
 		"offers.priceCurrency and offers.availability. Agents read it to answer \"how much is it\" and " +
 		"\"is it in stock\" without guessing from the page layout.",
+	"indexable": "The page tells search engines not to index it (noindex), so search and AI search " +
+		"indexes drop it and assistants cannot cite it. Remove noindex from the meta robots tag or " +
+		"X-Robots-Tag on pages you want found, including any tag aimed at a specific crawler.",
 	"product-parity": "Some AI agents see a different price or availability, or none at all. Make " +
 		"sure caching, geo-pricing and bot rules give agents the same structured data a browser gets.",
 }

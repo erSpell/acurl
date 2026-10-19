@@ -5,6 +5,8 @@ package score
 import (
 	"fmt"
 	"math"
+	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/tragent-io/acurl/internal/classifier"
@@ -26,20 +28,19 @@ var checks = []check{
 	{"no-challenges", "No bot challenges for AI agents", 10, noChallenges},
 	{"no-cloaking", "AI agents see the same content as browsers", 10, noCloaking},
 	{"server-rendered", "Content is in the HTML without JavaScript", 15, serverRendered},
-	{"structured-data", "Product structured data is present", 10, structuredData},
+	{"structured-data", "Product structured data is present", 15, structuredData},
 	{"product-parity", "AI agents see the same price and availability", 10, productParity},
+	{"indexable", "Search and AI search may index the page", 15, indexable},
 }
 
 // Compute scores rep. Checks that do not apply (for example product checks
 // on a page without products) are left out and the rest re-weighted.
 func Compute(rep *types.ComparisonResult) *types.Score {
-	s := &types.Score{}
-	// Without a working browser baseline the site is blocking acurl itself
-	// (often its IP address), so agent results say nothing about agents.
-	if b := classifier.BaselineIndex(rep.Results); b >= 0 && rep.Results[b].Classification != classifier.Allowed {
+	// Checks is never null in JSON, even when the page is not scored.
+	s := &types.Score{Checks: []types.ScoreCheck{}}
+	if note := unscorable(rep); note != "" {
 		s.Grade = "-"
-		s.Note = "the browser baseline was " + rep.Results[b].Classification +
-			", so the site is treating this network or IP as a bot; scores would not reflect AI agent access"
+		s.Note = note
 		return s
 	}
 	total, earned := 0.0, 0.0
@@ -180,9 +181,9 @@ func structuredData(rep *types.ComparisonResult) (float64, string, bool) {
 	}
 	p := b.Product
 	switch {
+	case p == nil && isProductPage(rep):
+		return 0, "no schema.org Product on what looks like a product page (pass --page other if it is not one)", true
 	case p == nil:
-		// Only product pages need product data; an og:type product or a
-		// price-looking page would have produced one.
 		return 0, "no schema.org Product found (fine for non-product pages)", false
 	case p.Source != "json-ld":
 		return 0.6, "product data only in " + p.Source + "; JSON-LD is the most widely read format", true
@@ -205,4 +206,114 @@ func productParity(rep *types.ComparisonResult) (float64, string, bool) {
 		return 1, "every allowed AI agent sees the same product data", true
 	}
 	return 1 - float64(len(hit))/float64(total), "different product data for: " + strings.Join(hit, ", "), true
+}
+
+// unscorable explains why a report cannot be scored, or returns "". Without
+// a working browser baseline there is nothing to compare agents with, and a
+// score for an image or a JSON document would mean nothing.
+func unscorable(rep *types.ComparisonResult) string {
+	b := classifier.BaselineIndex(rep.Results)
+	if b < 0 {
+		return ""
+	}
+	r := rep.Results[b]
+	switch r.Classification {
+	case classifier.Allowed:
+		if ct := r.ContentType; ct != "" && !strings.Contains(strings.ToLower(ct), "html") {
+			return "the page is " + mediaType(ct) + ", not HTML, so there is nothing for an agent to read; check an HTML page instead"
+		}
+		return ""
+	case classifier.Error:
+		return "the browser request failed (" + shortError(r.Error) + "), so the page could not be scored"
+	case classifier.Blocked:
+		return fmt.Sprintf("the browser got HTTP %d, so the page could not be scored; check the URL, or whether the site blocks this network", r.StatusCode)
+	case classifier.Challenged:
+		return "the browser baseline was challenged by " + r.BotChallenge +
+			", so the site is treating this network or IP as a bot; scores would not reflect AI agent access"
+	case classifier.RateLimited:
+		return "the browser baseline was rate limited (HTTP 429); wait and run again"
+	}
+	return "the browser baseline was " + r.Classification + ", so the page could not be scored"
+}
+
+func mediaType(ct string) string {
+	mt, _, _ := strings.Cut(ct, ";")
+	return strings.TrimSpace(mt)
+}
+
+// shortError turns a Go network error into a phrase a person recognises.
+func shortError(err string) string {
+	e := strings.ToLower(err)
+	switch {
+	case strings.Contains(e, "no such host"), strings.Contains(e, "server misbehaving"):
+		return "DNS lookup failed: the host does not resolve"
+	case strings.Contains(e, "private or internal address"):
+		return "the host resolved to a private or internal address"
+	case strings.Contains(e, "timeout"), strings.Contains(e, "deadline exceeded"):
+		return "timed out"
+	case strings.Contains(e, "connection refused"):
+		return "connection refused"
+	case strings.Contains(e, "certificate"), strings.Contains(e, "tls"):
+		return "TLS error: " + truncate(err, 80)
+	case strings.Contains(e, "redirects"):
+		return "too many redirects"
+	}
+	return truncate(err, 80)
+}
+
+func truncate(s string, n int) string {
+	if r := []rune(s); len(r) > n {
+		return string(r[:n]) + "..."
+	}
+	return s
+}
+
+// productPath matches URL paths storefront platforms use for product pages.
+var productPath = regexp.MustCompile(`(?i)(/products?/[^/?#]+|/p/[^/?#]+|/dp/[a-z0-9]{6,}|/gp/product/|/items?/[^/?#]+|-p-\d+|/sku/)`)
+
+// isProductPage reports whether the score should expect product data:
+// the caller said so, or the URL or page looks like a product page.
+func isProductPage(rep *types.ComparisonResult) bool {
+	switch rep.Page {
+	case types.PageProduct:
+		return true
+	case types.PageOther:
+		return false
+	}
+	if b := baseline(rep); b != nil && b.Product != nil {
+		return true
+	}
+	if u, err := url.Parse(rep.URL); err == nil {
+		return productPath.MatchString(u.Path)
+	}
+	return false
+}
+
+func indexable(rep *types.ComparisonResult) (float64, string, bool) {
+	b := baseline(rep)
+	if b == nil {
+		return 0, "", false
+	}
+	// The browser row carries the generic robots directives; agent rows add
+	// directives addressed to that agent by name.
+	if d := blocking(b.Directives); d != "" {
+		return 0, d + " in meta robots or X-Robots-Tag: search and AI search will drop the page", true
+	}
+	total, hit := countAI(rep, func(r types.FetchResult) bool { return blocking(r.Directives) != "" })
+	if total == 0 {
+		return 1, "no noindex directives", true
+	}
+	if len(hit) > 0 {
+		return 1 - float64(len(hit))/float64(total), "noindex for: " + strings.Join(hit, ", "), true
+	}
+	return 1, "no noindex directives", true
+}
+
+func blocking(ds []string) string {
+	for _, d := range ds {
+		if d == "noindex" || d == "none" {
+			return d
+		}
+	}
+	return ""
 }

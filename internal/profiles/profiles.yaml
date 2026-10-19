@@ -4,16 +4,20 @@
 # in `docs`) and https://github.com/ai-robots-txt/ai.robots.txt.
 # Categories: browser, ai-assistant, ai-search, ai-training, search, other.
 profiles:
+  # Keep this in step with stable Chrome: scripts/check-chrome-version.sh runs
+  # monthly in CI and opens an issue when it falls behind.
   - name: "Chrome (Browser)"
     browser: true
     category: browser
     operator: Google
-    user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
     robots_key: ""
     headers:
-      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+      Accept-Encoding: "gzip, deflate, br, zstd"
       Accept-Language: "en-US,en;q=0.9"
-      Sec-Ch-Ua: '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"'
+      Priority: "u=0, i"
+      Sec-Ch-Ua: '"Google Chrome";v="156", "Chromium";v="156", "Not_A Brand";v="24"'
       Sec-Ch-Ua-Mobile: "?0"
       Sec-Ch-Ua-Platform: '"Windows"'
       Sec-Fetch-Dest: "document"

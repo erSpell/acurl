@@ -6,6 +6,38 @@ All notable changes to acurl are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-19
+
+### Fixed
+- Vendor scripts that Cloudflare, AWS WAF, Imperva and Kasada inject into normal pages no
+  longer mark a 200 response as challenged
+- Akamai Bot Manager's interstitial challenge, served with a 200, is now detected
+- The Chrome baseline now matches Chrome 156, with its compression and priority headers;
+  responses in br, zstd and gzip are decoded
+- A redirect loop is counted once and reports the last URL it reached
+- robots.txt verdicts are skipped for requests that failed
+- Blocked rows say who blocked them, such as "HTTP 403 from CloudFront"
+- Unscored pages say why: DNS failure, private address, HTTP status, challenge vendor,
+  rate limit or a non-HTML response
+- Product pages without Product structured data, and pages marked `noindex`, now lose points
+- Invalid flag values (categories, concurrency, retries, timeout, max body, cloak threshold,
+  batch parallelism and limit) are rejected
+- `batch` skips invalid lines instead of aborting the run
+- `go install` builds report their module version
+- `acurl serve` refuses foreign Host and Origin headers and non-JSON posts
+- Web Bot Auth signing follows the current draft's `Signature-Agent` dictionary format
+- `install.sh --help` works when the script is piped to `sh`
+- The blocked private address error explains the resolved IP and `--allow-private`
+
+### Added
+- `--samples N` repeats each request and flags agents whose verdict changes between runs
+- `--page product|other|auto` overrides product page detection for scoring
+- An `indexable` score check
+- `serve --allowed-host` for running the web UI behind a hostname
+- A monthly check that opens an issue when the Chrome baseline falls behind stable Chrome
+- acurl.dev: robots.txt, sitemap, llms.txt, a social preview image, structured data, a 404
+  page, self-hosted fonts, and phone and tablet layouts
+
 ### Removed
 - The PyPI wrapper. Install with Homebrew, `install.sh`, npm, Go, Docker or the release archives.
 
@@ -110,7 +142,8 @@ First public preview.
 - CI-friendly exit codes: 0 allowed, 1 blocked or challenged, 2 errors
 - Custom profiles via `--profiles file.yaml`, extra headers via `-H`
 
-[Unreleased]: https://github.com/tragent-io/acurl/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/tragent-io/acurl/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/tragent-io/acurl/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/tragent-io/acurl/compare/v0.4.0...v1.0.0
 [0.4.0]: https://github.com/tragent-io/acurl/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/tragent-io/acurl/compare/v0.2.0...v0.3.0

@@ -58,7 +58,9 @@ func control(_, address string, _ syscall.RawConn) error {
 		return fmt.Errorf("netguard: %w", err)
 	}
 	if Blocked(ip) {
-		return fmt.Errorf("%w: %s", ErrBlocked, ip)
+		return fmt.Errorf("%w: the host resolved to %s. acurl serve and mcp refuse these "+
+			"to prevent SSRF; start them with --allow-private if you trust the caller "+
+			"or your network uses fake-IP DNS (198.18.0.0/15)", ErrBlocked, ip)
 	}
 	return nil
 }

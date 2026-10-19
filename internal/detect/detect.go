@@ -8,16 +8,23 @@ import (
 )
 
 // Signature describes how one vendor's challenge or block page looks.
-// A signature matches when its status filter (if any) passes and either
-// its header check or its body pattern matches.
+//
+// A response matches when the vendor's header check passes, when Body (a
+// marker only a challenge or block page contains) matches under the status
+// filter, or when Embedded matches on a response that is not a success.
 type Signature struct {
 	Vendor string
-	// Statuses restricts body matching to these status codes. Empty means any.
+	// Statuses restricts Body matching to these status codes. Empty means any.
 	Statuses []int
 	// Header reports whether response headers alone identify the vendor.
 	Header func(h http.Header) bool
-	// Body matches the response body.
+	// Body matches markers that only appear on the challenge or block page.
 	Body *regexp.Regexp
+	// Embedded matches scripts the vendor also injects into healthy pages
+	// (Cloudflare's challenge platform, AWS WAF's challenge.js). They only
+	// count when the response is not a success, or a healthy page that
+	// happens to load the script would be reported as challenged.
+	Embedded *regexp.Regexp
 }
 
 func (s Signature) statusOK(code int) bool {
@@ -36,15 +43,31 @@ func (s Signature) match(code int, h http.Header, body []byte) bool {
 	if s.Header != nil && s.Header(h) {
 		return true
 	}
-	return s.Body != nil && s.statusOK(code) && s.Body.Match(body)
+	if s.Body != nil && s.statusOK(code) && s.Body.Match(body) {
+		return true
+	}
+	return s.Embedded != nil && notSuccess(code) && s.Embedded.Match(body)
+}
+
+// notSuccess reports whether a status can carry a challenge page: any error,
+// or 202, which AWS WAF uses for its challenge.
+func notSuccess(code int) bool {
+	return code >= 400 || code == http.StatusAccepted
 }
 
 // Signatures is checked in order; the first match wins.
 var Signatures = []Signature{
 	{
-		Vendor: "Cloudflare",
-		Header: func(h http.Header) bool { return strings.EqualFold(h.Get("cf-mitigated"), "challenge") },
-		Body:   regexp.MustCompile(`(?i)(/cdn-cgi/challenge-platform/|__cf_chl_|cf-browser-verification|cf_chl_opt|<title>Just a moment\.\.\.</title>|Attention Required! \| Cloudflare)`),
+		Vendor:   "Cloudflare",
+		Header:   func(h http.Header) bool { return strings.EqualFold(h.Get("cf-mitigated"), "challenge") },
+		Body:     regexp.MustCompile(`(?i)(__cf_chl_|cf-browser-verification|cf_chl_opt|<title>Just a moment\.\.\.</title>|Attention Required! \| Cloudflare)`),
+		Embedded: regexp.MustCompile(`(?i)/cdn-cgi/challenge-platform/`),
+	},
+	{
+		// Akamai Bot Manager's interstitial challenge is served with a 200 and
+		// reloads the page after a JavaScript proof of work.
+		Vendor: "Akamai",
+		Body:   regexp.MustCompile(`(?i)(/_sec/verify\?provider=interstitial|triggerInterstitialChallenge|[?&]bm-verify=)`),
 	},
 	{
 		Vendor:   "Akamai",
@@ -64,20 +87,21 @@ var Signatures = []Signature{
 		Body:     regexp.MustCompile(`(?i)(/_px[a-z0-9]*/|px-captcha|_pxAppId|window\._pxUuid|Press &amp; Hold|Press & Hold)`),
 	},
 	{
-		Vendor: "Imperva",
-		Body:   regexp.MustCompile(`(?i)(_Incapsula_Resource|Incapsula incident ID|Request unsuccessful\. Incapsula)`),
+		Vendor:   "Imperva",
+		Body:     regexp.MustCompile(`(?i)(Incapsula incident ID|Request unsuccessful\. Incapsula)`),
+		Embedded: regexp.MustCompile(`(?i)_Incapsula_Resource`),
 	},
 	{
-		Vendor: "Kasada",
-		Header: func(h http.Header) bool { return h.Get("X-Kpsdk-Ct") != "" || h.Get("X-Kpsdk-C") != "" },
-		Body:   regexp.MustCompile(`(?i)(/149e9513-01fa-4fb0-aad4-566afd725d1b/|KPSDK\.configure)`),
+		Vendor:   "Kasada",
+		Header:   func(h http.Header) bool { return h.Get("X-Kpsdk-Ct") != "" || h.Get("X-Kpsdk-C") != "" },
+		Embedded: regexp.MustCompile(`(?i)(/149e9513-01fa-4fb0-aad4-566afd725d1b/|KPSDK\.configure)`),
 	},
 	{
 		Vendor: "AWS WAF",
 		Header: func(h http.Header) bool {
 			return strings.EqualFold(h.Get("X-Amzn-Waf-Action"), "challenge") || strings.EqualFold(h.Get("X-Amzn-Waf-Action"), "captcha")
 		},
-		Body: regexp.MustCompile(`(?i)(awswaf\.com/[^"']*challenge\.js|AwsWafIntegration)`),
+		Embedded: regexp.MustCompile(`(?i)(awswaf\.com/[^"']*challenge\.js|AwsWafIntegration)`),
 	},
 	{
 		Vendor:   "Sucuri",
@@ -103,6 +127,31 @@ func Challenge(status int, h http.Header, body []byte) string {
 		if s.match(status, h, body) {
 			return s.Vendor
 		}
+	}
+	return ""
+}
+
+// Edge names the CDN or edge network that answered an error response, from
+// its headers, so a blocked result can say who blocked it. It returns ""
+// for successful responses or when no edge is recognised.
+func Edge(status int, h http.Header) string {
+	if status < 400 || h == nil {
+		return ""
+	}
+	server := strings.ToLower(h.Get("Server"))
+	switch {
+	case h.Get("X-Amz-Cf-Id") != "" || strings.Contains(server, "cloudfront"):
+		return "CloudFront"
+	case h.Get("Cf-Ray") != "" || server == "cloudflare":
+		return "Cloudflare"
+	case strings.Contains(server, "akamaighost") || h.Get("X-Akamai-Transformed") != "":
+		return "Akamai"
+	case strings.HasPrefix(strings.ToLower(h.Get("X-Served-By")), "cache-") || h.Get("Fastly-Debug-Digest") != "":
+		return "Fastly"
+	case h.Get("X-Vercel-Id") != "" || server == "vercel":
+		return "Vercel"
+	case h.Get("X-Iinfo") != "":
+		return "Imperva"
 	}
 	return ""
 }

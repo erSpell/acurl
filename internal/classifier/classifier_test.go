@@ -144,3 +144,14 @@ func TestClassifyAllIgnoresRobotsOnlyTokensForCloaking(t *testing.T) {
 		t.Errorf("robots-only tokens: %q %q similarity=%v", rs[1].Classification, rs[2].Classification, rs[1].Similarity)
 	}
 }
+
+func TestMergeSamplesTieGoesToTheWorseVerdict(t *testing.T) {
+	s := [][]types.FetchResult{
+		{{Profile: "A", Classification: Allowed}},
+		{{Profile: "A", Classification: Challenged}},
+	}
+	got := MergeSamples(s)[0]
+	if got.Classification != Challenged || !got.Flaky {
+		t.Errorf("tie merged to %q flaky=%v", got.Classification, got.Flaky)
+	}
+}

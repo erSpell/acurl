@@ -141,3 +141,42 @@ func TestReportFormats(t *testing.T) {
 		t.Errorf("unknown format status = %d", resp.StatusCode)
 	}
 }
+
+func TestRejectsForeignHostOriginAndContentType(t *testing.T) {
+	srv := api(t, true)
+	do := func(method, path, host, origin, ctype string) int {
+		req, _ := http.NewRequest(method, srv.URL+path, strings.NewReader(`{"url":"example.com"}`))
+		if host != "" {
+			req.Host = host
+		}
+		if origin != "" {
+			req.Header.Set("Origin", origin)
+		}
+		if ctype != "" {
+			req.Header.Set("Content-Type", ctype)
+		}
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		return resp.StatusCode
+	}
+	tests := []struct {
+		name                       string
+		method, path, host, origin string
+		ctype                      string
+		want                       int
+	}{
+		{"rebinding host on UI", "GET", "/", "rebind.attacker.example", "", "", http.StatusMisdirectedRequest},
+		{"rebinding host on API", "POST", "/api/check", "attacker.example", "", "application/json", http.StatusMisdirectedRequest},
+		{"cross-site origin", "POST", "/api/check", "", "https://attacker.example", "application/json", http.StatusForbidden},
+		{"form post", "POST", "/api/check", "", "", "text/plain", http.StatusUnsupportedMediaType},
+		{"localhost name", "GET", "/api/version", "localhost:8080", "http://localhost:8080", "", http.StatusOK},
+	}
+	for _, tt := range tests {
+		if got := do(tt.method, tt.path, tt.host, tt.origin, tt.ctype); got != tt.want {
+			t.Errorf("%s: status %d, want %d", tt.name, got, tt.want)
+		}
+	}
+}

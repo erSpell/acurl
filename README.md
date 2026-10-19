@@ -17,8 +17,8 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-1f1534" alt="License"></a>
 </p>
 
-**acurl** fetches a page as a real Chrome browser and as ChatGPT, Claude, Perplexity, Googlebot
-and 18 other agents. It shows which ones were blocked, challenged, cloaked or shown a different
+**acurl** fetches a page as a real Chrome browser and as 21 AI agents and crawlers,
+including ChatGPT, Claude, Perplexity and Googlebot. It shows which ones were blocked, challenged, cloaked or shown a different
 price, scores how ready the page is for AI agents, and tells you how to fix what fails.
 
 It's a free, open-source tool by [tragent.io](https://tragent.io), built for online stores and
@@ -26,7 +26,7 @@ useful on any website.
 
 ```console
 $ acurl shop.example/products/wool-runner
-Fetching https://shop.example/products/wool-runner with 22 profiles...
+Fetching https://shop.example/products/wool-runner with 23 profiles...
 
 PROFILE            STATUS  TIME    RESULT             DETAILS
 Chrome (Browser)   200     412ms   allowed            Wool Runner | Example Store
@@ -61,7 +61,7 @@ How to improve
 
 ## What it checks
 
-- **22 agent profiles** in five categories: AI assistants (ChatGPT-User, Claude-User, Perplexity-User, ...),
+- **21 AI agents and crawlers** in four categories, plus the browser baseline and curl: AI assistants (ChatGPT-User, Claude-User, Perplexity-User, ...),
   AI search (OAI-SearchBot, Claude-SearchBot, PerplexityBot, ...), AI training (GPTBot, ClaudeBot, CCBot,
   Google-Extended, ...), search engines, and a curl baseline
 - **A real browser baseline** with Chrome's TLS and HTTP/2 fingerprint. Bot profiles send only their own

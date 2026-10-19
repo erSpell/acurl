@@ -24,6 +24,7 @@ func TestChallengeFixtures(t *testing.T) {
 	}{
 		{"cloudflare-challenge.html", 403, "Cloudflare"},
 		{"akamai-denied.html", 403, "Akamai"},
+		{"akamai-interstitial.html", 200, "Akamai"},
 		{"datadome-block.html", 403, "DataDome"},
 		{"perimeterx-challenge.html", 403, "PerimeterX"},
 		{"imperva-incident.html", 200, "Imperva"},
@@ -34,6 +35,14 @@ func TestChallengeFixtures(t *testing.T) {
 		{"login-with-recaptcha.html", 403, "CAPTCHA"},
 		// Akamai's page only counts as a block on 403.
 		{"akamai-denied.html", 200, ""},
+		// Healthy pages that load a vendor's script are not challenges (B1).
+		{"healthy-cloudflare-jsd.html", 200, ""},
+		{"healthy-awswaf-sdk.html", 200, ""},
+		{"healthy-imperva-script.html", 200, ""},
+		// The same scripts on an error or AWS's 202 challenge still count.
+		{"healthy-cloudflare-jsd.html", 403, "Cloudflare"},
+		{"healthy-awswaf-sdk.html", 202, "AWS WAF"},
+		{"healthy-imperva-script.html", 403, "Imperva"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.file, func(t *testing.T) {
@@ -63,5 +72,25 @@ func TestChallengeHeaders(t *testing.T) {
 				t.Errorf("got %q, want %q", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestEdge(t *testing.T) {
+	tests := []struct {
+		status int
+		h      http.Header
+		want   string
+	}{
+		{403, http.Header{"X-Amz-Cf-Id": {"abc"}, "Server": {"CloudFront"}}, "CloudFront"},
+		{503, http.Header{"Cf-Ray": {"8c1"}, "Server": {"cloudflare"}}, "Cloudflare"},
+		{403, http.Header{"Server": {"AkamaiGHost"}}, "Akamai"},
+		{500, http.Header{"X-Served-By": {"cache-lhr7351-LHR"}}, "Fastly"},
+		{404, http.Header{"Server": {"nginx"}}, ""},
+		{200, http.Header{"Server": {"CloudFront"}}, ""},
+	}
+	for _, tt := range tests {
+		if got := Edge(tt.status, tt.h); got != tt.want {
+			t.Errorf("Edge(%d, %v) = %q, want %q", tt.status, tt.h, got, tt.want)
+		}
 	}
 }

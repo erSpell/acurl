@@ -2,6 +2,7 @@
 package classifier
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/tragent-io/acurl/internal/textdiff"
@@ -110,6 +111,9 @@ func Summarize(results []types.FetchResult) types.Summary {
 		case Error:
 			s.Errors++
 		}
+		if r.Flaky {
+			s.Flaky++
+		}
 	}
 	return s
 }
@@ -151,4 +155,51 @@ func orNone(s string) string {
 		return "none"
 	}
 	return s
+}
+
+// severity orders verdicts so that ties between samples resolve to the
+// worse one, which is the safer answer for a CI gate.
+var severity = map[string]int{
+	Allowed: 0, RobotsDisallow: 1, Cloaked: 2, RateLimited: 3, Blocked: 4, Challenged: 5, Error: 6,
+}
+
+// MergeSamples combines several runs of the same profiles into one result
+// per profile: the most common verdict wins (ties go to the more severe
+// one), and profiles whose verdict changed between samples are flaky.
+func MergeSamples(samples [][]types.FetchResult) []types.FetchResult {
+	if len(samples) == 0 {
+		return nil
+	}
+	merged := make([]types.FetchResult, len(samples[0]))
+	for i := range samples[0] {
+		counts := map[string]int{}
+		var order []string
+		for _, run := range samples {
+			c := run[i].Classification
+			if counts[c] == 0 {
+				order = append(order, c)
+			}
+			counts[c]++
+		}
+		best := order[0]
+		for _, c := range order[1:] {
+			if counts[c] > counts[best] || (counts[c] == counts[best] && severity[c] > severity[best]) {
+				best = c
+			}
+		}
+		// Keep the most recent sample with the winning verdict.
+		for s := len(samples) - 1; s >= 0; s-- {
+			if samples[s][i].Classification == best {
+				merged[i] = samples[s][i]
+				break
+			}
+		}
+		if len(order) > 1 {
+			merged[i].Flaky = true
+			for _, c := range order {
+				merged[i].SampleVerdicts = append(merged[i].SampleVerdicts, fmt.Sprintf("%s %d/%d", c, counts[c], len(samples)))
+			}
+		}
+	}
+	return merged
 }

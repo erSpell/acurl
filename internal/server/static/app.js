@@ -32,7 +32,7 @@ function details(r) {
   if (r.rate_limited) parts.push("rate limited");
   if (r.redirect_chain && r.redirect_chain.length) parts.push(r.redirect_chain.length + " redirect(s)");
   if (r.error) parts.push(r.error);
-  if (!parts.length && r.classification === "blocked") parts.push("HTTP " + r.status_code + " error page");
+  if (r.classification === "blocked") parts.unshift("HTTP " + r.status_code + (r.edge ? " from " + r.edge : ""));
   if (parts.length) return parts.join("; ");
   return r.browser && r.title ? r.title : "Same page as the browser";
 }
@@ -117,7 +117,11 @@ document.querySelectorAll(".downloads button").forEach((b) => b.addEventListener
   if (format === "json") {
     blob = new Blob([JSON.stringify(lastReport, null, 2)], { type: "application/json" });
   } else {
-    const res = await fetch("api/report?format=" + format, { method: "POST", body: JSON.stringify(lastReport) });
+    const res = await fetch("api/report?format=" + format, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(lastReport),
+    });
     if (!res.ok) { setStatus("Could not build the " + format + " report.", true); return; }
     blob = await res.blob();
   }

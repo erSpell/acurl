@@ -2,14 +2,14 @@ package fetcher
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"net/http"
 )
 
 // maxRedirects matches the limit most browsers and crawlers use.
 const maxRedirects = 10
 
-var errTooManyRedirects = errors.New("stopped after 10 redirects")
+var errTooManyRedirects = fmt.Errorf("stopped after %d redirects", maxRedirects)
 
 type chainKey struct{}
 
@@ -23,6 +23,10 @@ func withRedirectChain(ctx context.Context, chain *[]string) context.Context {
 func recordRedirects(req *http.Request, via []*http.Request) error {
 	// Record the hop before enforcing the limit so loops show where they go.
 	if chain, ok := req.Context().Value(chainKey{}).(*[]string); ok {
+		if len(via) == 1 {
+			// First hop of an attempt: a retry starts a fresh chain.
+			*chain = (*chain)[:0]
+		}
 		*chain = append(*chain, req.URL.String())
 	}
 	if len(via) >= maxRedirects {

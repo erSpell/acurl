@@ -27,6 +27,8 @@ type checkFlags struct {
 	render         bool
 	renderWait     time.Duration
 	failOn         string
+	page           string
+	samples        int
 }
 
 func (fl *checkFlags) registerOutput(f *pflag.FlagSet, formats string) {
@@ -34,6 +36,8 @@ func (fl *checkFlags) registerOutput(f *pflag.FlagSet, formats string) {
 	f.StringVarP(&fl.format, "format", "f", "table", "output format: "+formats)
 	f.StringVarP(&fl.output, "output", "o", "", "write the report to a file instead of stdout")
 	f.Float64Var(&fl.cloakThreshold, "cloak-threshold", classifier.DefaultCloakThreshold, "visible-text similarity below which a response counts as cloaked (0 disables)")
+	f.IntVar(&fl.samples, "samples", 1, "check each page this many times (up to 10) and flag agents whose verdict changes")
+	f.StringVar(&fl.page, "page", "auto", `what the page is: "product" expects product data, "other" does not, "auto" decides from the URL and page`)
 	f.StringVar(&fl.failOn, "fail-on", output.DefaultFailOn, "exit 1 when any of these occur: blocked, challenged, rate-limited, cloaked, robots, error, score<N, or none")
 }
 
@@ -47,7 +51,7 @@ AI agents, search bots) and shows how each one is treated.`,
 		Example: `  acurl https://shop.example/products/1
   acurl --category ai-assistant,ai-search shop.example
   acurl --agents GPTBot,ClaudeBot --diff GPTBot shop.example
-  acurl -f json -o report.json --fail-on blocked,score<80 shop.example
+  acurl -f json -o report.json --fail-on 'blocked,score<80' shop.example
   acurl --render shop.example          # measure JavaScript-only content`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -65,6 +69,9 @@ AI agents, search bots) and shows how each one is treated.`,
 
 // checkOptions builds checker options from the check flags.
 func (a *app) checkOptions(fl *checkFlags) (acurl.Options, error) {
+	if fl.cloakThreshold < 0 || fl.cloakThreshold > 1 {
+		return acurl.Options{}, fmt.Errorf("--cloak-threshold must be between 0 and 1, not %g", fl.cloakThreshold)
+	}
 	opts, err := fl.http.options(a)
 	if err != nil {
 		return opts, err
@@ -76,6 +83,8 @@ func (a *app) checkOptions(fl *checkFlags) (acurl.Options, error) {
 	}
 	opts.Render = fl.render
 	opts.RenderWait = fl.renderWait
+	opts.Page = fl.page
+	opts.Samples = fl.samples
 	return opts, nil
 }
 

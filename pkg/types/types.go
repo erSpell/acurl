@@ -3,6 +3,12 @@ package types
 
 import "time"
 
+// Page kinds for ComparisonResult.Page.
+const (
+	PageProduct = "product"
+	PageOther   = "other"
+)
+
 // Profile categories.
 const (
 	CategoryBrowser     = "browser"
@@ -48,6 +54,7 @@ type FetchResult struct {
 	ContentType       string        `json:"content_type,omitempty"`
 	Title             string        `json:"title,omitempty"`
 	BotChallenge      string        `json:"bot_challenge,omitempty"`
+	Edge              string        `json:"edge,omitempty"` // CDN that answered an error, e.g. CloudFront
 	RateLimited       bool          `json:"rate_limited"`
 	RetryAfter        string        `json:"retry_after,omitempty"`
 	RetryAfterSeconds int           `json:"retry_after_seconds,omitempty"`
@@ -59,6 +66,8 @@ type FetchResult struct {
 	ProductIssue      string        `json:"product_issue,omitempty"` // how product data differs from the browser
 	Similarity        *float64      `json:"similarity,omitempty"`    // visible-text similarity to the browser baseline
 	Classification    string        `json:"classification"`
+	Flaky             bool          `json:"flaky,omitempty"`           // verdict changed between --samples
+	SampleVerdicts    []string      `json:"sample_verdicts,omitempty"` // e.g. "allowed 2/3"
 	Error             string        `json:"error,omitempty"`
 	ContentHash       string        `json:"content_hash,omitempty"`
 
@@ -79,8 +88,11 @@ type ComparisonResult struct {
 	Results   []FetchResult `json:"results"`
 	Summary   Summary       `json:"summary"`
 	Render    *RenderResult `json:"render,omitempty"`
-	Score     *Score        `json:"score,omitempty"`
-	Caveat    string        `json:"caveat"`
+	// Page is "product" or "other" when the caller said what the page is;
+	// empty lets the score decide from the URL and the page.
+	Page   string `json:"page,omitempty"`
+	Score  *Score `json:"score,omitempty"`
+	Caveat string `json:"caveat"`
 }
 
 // Summary holds aggregate counts per classification.
@@ -93,6 +105,7 @@ type Summary struct {
 	Cloaked        int `json:"cloaked"`
 	RobotsDisallow int `json:"robots_disallowed"`
 	Errors         int `json:"errors"`
+	Flaky          int `json:"flaky,omitempty"`
 }
 
 // RobotsAudit is the result of `acurl robots`.

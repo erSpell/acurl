@@ -3,6 +3,7 @@ package fetcher
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/imroc/req/v3"
+	utls "github.com/refraction-networking/utls"
 
 	"github.com/tragent-io/acurl/internal/detect"
 	"github.com/tragent-io/acurl/internal/extract"
@@ -96,7 +98,10 @@ func New(opts Options) (*Fetcher, error) {
 	if err != nil {
 		return nil, err
 	}
-	browser.ImpersonateChrome()
+	// ImpersonateChrome sets Chrome's HTTP/2 settings and header order; the
+	// TLS hello is then moved to the newest Chrome fingerprint uTLS ships,
+	// which has the post-quantum key share current Chrome sends.
+	browser.ImpersonateChrome().SetTLSFingerprint(utls.HelloChrome_133)
 
 	bot, err := newClient(opts)
 	if err != nil {
@@ -115,7 +120,10 @@ func New(opts Options) (*Fetcher, error) {
 func newClient(opts Options) (*req.Client, error) {
 	c := req.C().
 		SetTimeout(opts.Timeout).
-		SetRedirectPolicy(recordRedirects)
+		SetRedirectPolicy(recordRedirects).
+		// Profiles set Accept-Encoding themselves (Chrome sends br and zstd),
+		// which turns off Go's transparent gzip; decode every encoding here.
+		EnableAutoDecompress()
 	if opts.Retries > 0 {
 		c.SetCommonRetryCount(opts.Retries).
 			SetCommonRetryBackoffInterval(250*time.Millisecond, 4*time.Second).
@@ -143,6 +151,9 @@ func newClient(opts Options) (*req.Client, error) {
 }
 
 func shouldRetry(resp *req.Response, err error) bool {
+	if errors.Is(err, errTooManyRedirects) || errors.Is(err, netguard.ErrBlocked) {
+		return false // retrying cannot change the answer
+	}
 	if err != nil {
 		return true
 	}
@@ -193,6 +204,12 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 	if err != nil {
 		result.SetDuration(time.Since(start))
 		result.Error = err.Error()
+		if errors.Is(err, errTooManyRedirects) {
+			result.Error = errTooManyRedirects.Error()
+		}
+		if n := len(chain); n > 0 {
+			result.FinalURL = chain[n-1]
+		}
 		return result
 	}
 	defer resp.Body.Close()
@@ -228,6 +245,9 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 	result.ContentHash = contentHash(body)
 	result.ContentType = resp.Header.Get("Content-Type")
 	result.BotChallenge = detect.Challenge(resp.StatusCode, resp.Header, body)
+	if result.BotChallenge == "" {
+		result.Edge = detect.Edge(resp.StatusCode, resp.Header)
+	}
 	if !isHTML(result.ContentType, body) {
 		// PDFs, images and JSON have no title, meta tags or product markup;
 		// parsing them as HTML is wasted work and produces noise.
