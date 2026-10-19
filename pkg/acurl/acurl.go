@@ -178,7 +178,9 @@ func (c *Checker) Check(ctx context.Context, rawURL string) (*types.ComparisonRe
 func (c *Checker) applyRobots(ctx context.Context, rawURL string, results []types.FetchResult) {
 	data := c.robots.Get(ctx, rawURL)
 	for i, p := range c.opts.Profiles {
-		if p.RobotsKey == "" {
+		// A failed request already explains itself; a robots verdict for a
+		// host that does not resolve would only add noise.
+		if p.RobotsKey == "" || results[i].Error != "" {
 			continue
 		}
 		if data.Unreachable() {
