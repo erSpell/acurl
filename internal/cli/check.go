@@ -51,7 +51,7 @@ AI agents, search bots) and shows how each one is treated.`,
 		Example: `  acurl https://shop.example/products/1
   acurl --category ai-assistant,ai-search shop.example
   acurl --agents GPTBot,ClaudeBot --diff GPTBot shop.example
-  acurl -f json -o report.json --fail-on blocked,score<80 shop.example
+  acurl -f json -o report.json --fail-on 'blocked,score<80' shop.example
   acurl --render shop.example          # measure JavaScript-only content`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

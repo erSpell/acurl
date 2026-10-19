@@ -21,12 +21,12 @@ The default policy is `--fail-on blocked,challenged,error`. Combine any of:
 | `cloaked` | An agent saw substantially different content |
 | `robots` | robots.txt disallows an agent |
 | `error` | A request failed at the network level (exit 2) |
-| `score<N` | The AI readiness score is below N |
+| `score<N` | The AI readiness score is below N. Quote it in a shell (`'score<80'`), or `<` is read as a redirect. |
 | `none` | Never fail on results |
 
 ```bash
 # Fail the build if any AI assistant or search bot is blocked, or the score drops below 80
-acurl --category ai-assistant,ai-search --fail-on blocked,challenged,score<80 https://staging.shop.example
+acurl --category ai-assistant,ai-search --fail-on 'blocked,challenged,score<80' https://staging.shop.example
 ```
 
 ## GitHub Actions
