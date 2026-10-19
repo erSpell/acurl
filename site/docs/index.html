@@ -183,7 +183,7 @@ acurl -I shop.example               # HEAD requests: status and headers only</co
       X-Team: "growth"</code></pre>
 
 <h2 id="score">AI readiness score</h2>
-<p>A 0-100 score from weighted checks that only use what was observed in the run. Checks that don't apply (no product on the page, no agents of that category) are skipped and the rest re-weighted. Blocking training crawlers costs nothing: that is a business decision.</p>
+<p>A 0-100 score from weighted checks that only use what was observed in the run. Checks that don't apply (not a product page, no agents of that category) are skipped and the rest re-weighted. A URL that looks like a product page is expected to have Product data; override with <code>--page product</code> or <code>--page other</code>. Blocking training crawlers costs nothing: that is a business decision.</p>
 <table>
   <tr><th>Check</th><th>Weight</th></tr>
   <tr><td>AI assistants can fetch the page</td><td>25</td></tr>
@@ -191,10 +191,11 @@ acurl -I shop.example               # HEAD requests: status and headers only</co
   <tr><td>Content is in the HTML without JavaScript</td><td>15</td></tr>
   <tr><td>No bot challenges for AI agents</td><td>10</td></tr>
   <tr><td>AI agents see the same content as browsers</td><td>10</td></tr>
-  <tr><td>Product structured data is present</td><td>10</td></tr>
+  <tr><td>Product structured data is present (product pages)</td><td>15</td></tr>
+  <tr><td>Search and AI search may index the page (no <code>noindex</code>)</td><td>15</td></tr>
   <tr><td>AI agents see the same price and availability</td><td>10</td></tr>
 </table>
-<p>Grades: A 90+, B 80+, C 65+, D 50+, F below. If the browser baseline itself is blocked, the page is not scored: the site is blocking your network, not the agents.</p>
+<p>Grades: A 90+, B 80+, C 65+, D 50+, F below. Pages are not scored when the browser request fails, gets an HTTP error or a challenge, or the URL is not HTML; acurl says which.</p>
 
 <h2 id="exit-codes">Exit codes and --fail-on</h2>
 <table>

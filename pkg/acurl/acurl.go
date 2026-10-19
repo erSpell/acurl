@@ -53,6 +53,10 @@ type Options struct {
 	Render     bool
 	RenderWait time.Duration // default 2s
 
+	// Page says what the page is: "product", "other", or "" to decide from
+	// the URL and the page. Product pages are expected to have product data.
+	Page string
+
 	// UserAgent identifies acurl when it fetches robots.txt and llms.txt.
 	UserAgent string
 	// Trace, if set, is called after every page request.
@@ -92,6 +96,13 @@ func New(opts Options) (*Checker, error) {
 	}
 	if len(opts.Profiles) == 0 {
 		return nil, fmt.Errorf("acurl: no profiles")
+	}
+	switch opts.Page {
+	case "", "auto":
+		opts.Page = ""
+	case types.PageProduct, types.PageOther:
+	default:
+		return nil, fmt.Errorf("acurl: page must be auto, product or other, not %q", opts.Page)
 	}
 	if opts.Concurrency <= 0 {
 		opts.Concurrency = 5
@@ -167,6 +178,7 @@ func (c *Checker) Check(ctx context.Context, rawURL string) (*types.ComparisonRe
 		Timestamp: time.Now().UTC(),
 		Results:   results,
 		Summary:   classifier.Summarize(results),
+		Page:      c.opts.Page,
 	}
 	if c.opts.Render {
 		rep.Render = c.render(ctx, rawURL, results)

@@ -5,6 +5,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/tragent-io/acurl/pkg/types"
@@ -99,5 +100,83 @@ func TestComputeSkipsWhenBaselineBlocked(t *testing.T) {
 	s := Compute(&rep)
 	if s.Grade != "-" || s.Value != 0 || s.Note == "" || len(s.Checks) != 0 {
 		t.Errorf("Compute = %+v", s)
+	}
+}
+
+func findCheck(t *testing.T, s *types.Score, id string) types.ScoreCheck {
+	t.Helper()
+	for _, c := range s.Checks {
+		if c.ID == id {
+			return c
+		}
+	}
+	t.Fatalf("no check %s", id)
+	return types.ScoreCheck{}
+}
+
+func plainPage(url string, product *types.Product, directives ...string) *types.ComparisonResult {
+	js := &types.JSInfo{TextLength: 900}
+	return &types.ComparisonResult{URL: url, Results: []types.FetchResult{
+		{Profile: "Chrome", Browser: true, Category: types.CategoryBrowser, Classification: "allowed", JS: js, Product: product, Directives: directives, ContentType: "text/html; charset=utf-8"},
+		{Profile: "ChatGPT-User", Category: types.CategoryAIAssistant, Classification: "allowed", JS: js, Product: product, Directives: directives},
+	}}
+}
+
+func TestProductPageWithoutSchemaLosesPoints(t *testing.T) {
+	// B3: a product URL with no Product schema must not score 100.
+	s := Compute(plainPage("https://www.suunto.com/Products/sports-watches/suunto-race-3s/", nil))
+	if c := findCheck(t, s, "structured-data"); !c.Applies || c.Passed || s.Value == 100 {
+		t.Errorf("structured-data = %+v, score %d", c, s.Value)
+	}
+	// Not a product page: the check is skipped.
+	s = Compute(plainPage("https://shop.example/about-us", nil))
+	if c := findCheck(t, s, "structured-data"); c.Applies || s.Value != 100 {
+		t.Errorf("about page: %+v, score %d", c, s.Value)
+	}
+	// --page overrides the URL heuristic both ways.
+	rep := plainPage("https://shop.example/about-us", nil)
+	rep.Page = types.PageProduct
+	if c := findCheck(t, Compute(rep), "structured-data"); !c.Applies {
+		t.Error("--page product should expect product data")
+	}
+	rep = plainPage("https://shop.example/products/gift-card-info", nil)
+	rep.Page = types.PageOther
+	if c := findCheck(t, Compute(rep), "structured-data"); c.Applies {
+		t.Error("--page other should not expect product data")
+	}
+}
+
+func TestNoindexLosesPoints(t *testing.T) {
+	// B4: noindex,nofollow must cost points.
+	s := Compute(plainPage("https://shop.example/", nil, "noindex", "nofollow"))
+	if c := findCheck(t, s, "indexable"); c.Passed || c.Recommendation == "" || s.Value == 100 {
+		t.Errorf("indexable = %+v, score %d", c, s.Value)
+	}
+}
+
+func TestUnscorableReasons(t *testing.T) {
+	base := func(r types.FetchResult) *types.ComparisonResult {
+		r.Profile, r.Browser, r.Category = "Chrome", true, types.CategoryBrowser
+		return &types.ComparisonResult{Results: []types.FetchResult{r}}
+	}
+	tests := []struct {
+		name string
+		rep  *types.ComparisonResult
+		want string
+	}{
+		{"image", base(types.FetchResult{Classification: "allowed", StatusCode: 200, ContentType: "image/png"}), "image/png, not HTML"},
+		{"dns", base(types.FetchResult{Classification: "error", Error: `Get "https://x.invalid": dial tcp: lookup x.invalid: no such host`}), "DNS lookup failed"},
+		{"private", base(types.FetchResult{Classification: "error", Error: "connection to a private or internal address blocked: the host resolved to 198.18.0.1"}), "private or internal address"},
+		{"500", base(types.FetchResult{Classification: "blocked", StatusCode: 500}), "HTTP 500"},
+		{"challenge", base(types.FetchResult{Classification: "challenged", StatusCode: 403, BotChallenge: "Akamai"}), "challenged by Akamai"},
+	}
+	for _, tt := range tests {
+		s := Compute(tt.rep)
+		if s.Grade != "-" || !strings.Contains(s.Note, tt.want) {
+			t.Errorf("%s: grade %q note %q, want it to mention %q", tt.name, s.Grade, s.Note, tt.want)
+		}
+		if strings.Contains(s.Note, "was error") {
+			t.Errorf("%s: ungrammatical note %q", tt.name, s.Note)
+		}
 	}
 }

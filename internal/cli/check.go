@@ -27,6 +27,7 @@ type checkFlags struct {
 	render         bool
 	renderWait     time.Duration
 	failOn         string
+	page           string
 }
 
 func (fl *checkFlags) registerOutput(f *pflag.FlagSet, formats string) {
@@ -34,6 +35,7 @@ func (fl *checkFlags) registerOutput(f *pflag.FlagSet, formats string) {
 	f.StringVarP(&fl.format, "format", "f", "table", "output format: "+formats)
 	f.StringVarP(&fl.output, "output", "o", "", "write the report to a file instead of stdout")
 	f.Float64Var(&fl.cloakThreshold, "cloak-threshold", classifier.DefaultCloakThreshold, "visible-text similarity below which a response counts as cloaked (0 disables)")
+	f.StringVar(&fl.page, "page", "auto", `what the page is: "product" expects product data, "other" does not, "auto" decides from the URL and page`)
 	f.StringVar(&fl.failOn, "fail-on", output.DefaultFailOn, "exit 1 when any of these occur: blocked, challenged, rate-limited, cloaked, robots, error, score<N, or none")
 }
 
@@ -76,6 +78,7 @@ func (a *app) checkOptions(fl *checkFlags) (acurl.Options, error) {
 	}
 	opts.Render = fl.render
 	opts.RenderWait = fl.renderWait
+	opts.Page = fl.page
 	return opts, nil
 }
 

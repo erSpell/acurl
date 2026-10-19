@@ -1,5 +1,5 @@
 {
-  "value": 17,
+  "value": 33,
   "grade": "F",
   "checks": [
     {
@@ -53,7 +53,7 @@
     {
       "id": "structured-data",
       "title": "Product structured data is present",
-      "weight": 10,
+      "weight": 15,
       "applies": false,
       "passed": false,
       "points": 0,
@@ -66,6 +66,15 @@
       "applies": false,
       "passed": false,
       "points": 0
+    },
+    {
+      "id": "indexable",
+      "title": "Search and AI search may index the page",
+      "weight": 15,
+      "applies": true,
+      "passed": true,
+      "points": 15,
+      "detail": "no noindex directives"
     }
   ]
 }

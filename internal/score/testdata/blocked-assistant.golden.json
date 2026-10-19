@@ -1,6 +1,6 @@
 {
-  "value": 64,
-  "grade": "D",
+  "value": 70,
+  "grade": "C",
   "checks": [
     {
       "id": "assistants-allowed",
@@ -53,10 +53,10 @@
     {
       "id": "structured-data",
       "title": "Product structured data is present",
-      "weight": 10,
+      "weight": 15,
       "applies": true,
       "passed": true,
-      "points": 10,
+      "points": 15,
       "detail": "JSON-LD Product with price and availability"
     },
     {
@@ -67,6 +67,15 @@
       "passed": true,
       "points": 10,
       "detail": "every allowed AI agent sees the same product data"
+    },
+    {
+      "id": "indexable",
+      "title": "Search and AI search may index the page",
+      "weight": 15,
+      "applies": true,
+      "passed": true,
+      "points": 15,
+      "detail": "no noindex directives"
     }
   ]
 }
