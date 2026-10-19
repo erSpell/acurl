@@ -6,6 +6,9 @@ All notable changes to acurl are documented here. The format follows
 
 ## [Unreleased]
 
+### Removed
+- The PyPI wrapper. Install with Homebrew, `install.sh`, npm, Go, Docker or the release archives.
+
 ## [1.0.0] - 2026-10-19
 
 The first stable release. The CLI flags, JSON report format, exit codes and the

@@ -56,7 +56,6 @@ How to improve
 | Shell | `curl -fsSL https://acurl.dev/install.sh \| sh` |
 | Go | `go install github.com/tragent-io/acurl/cmd/acurl@latest` |
 | npm | `npx @tragent/acurl <url>` |
-| pip | `pipx install acurl` |
 | Docker | `docker run --rm ghcr.io/tragent-io/acurl <url>` |
 | Binaries | [GitHub Releases](https://github.com/tragent-io/acurl/releases), with checksums, SBOMs and cosign signatures |
 
