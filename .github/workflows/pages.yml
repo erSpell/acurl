@@ -7,6 +7,7 @@ on:
       - "site/**"
       - "internal/cli/**"
       - "scripts/build-site.sh"
+      - "scripts/stamp-assets.sh"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -33,6 +34,8 @@ jobs:
           go-version: "1.26.x"
       - name: Regenerate the command reference
         run: scripts/build-site.sh
+      - name: Version the stylesheet and script links
+        run: scripts/stamp-assets.sh
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
