@@ -100,6 +100,9 @@ jobs:
           version: v2.6.1
           # Build the linter with the job's Go so it understands go 1.26 modules.
           install-mode: goinstall
+          # The config is checked locally with "golangci-lint config verify";
+          # skip it here so CI does not depend on fetching the remote schema.
+          verify: false
 
   build:
     name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
