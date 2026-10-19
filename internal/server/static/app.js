@@ -32,7 +32,7 @@ function details(r) {
   if (r.rate_limited) parts.push("rate limited");
   if (r.redirect_chain && r.redirect_chain.length) parts.push(r.redirect_chain.length + " redirect(s)");
   if (r.error) parts.push(r.error);
-  if (!parts.length && r.classification === "blocked") parts.push("HTTP " + r.status_code + " error page");
+  if (r.classification === "blocked") parts.unshift("HTTP " + r.status_code + (r.edge ? " from " + r.edge : ""));
   if (parts.length) return parts.join("; ");
   return r.browser && r.title ? r.title : "Same page as the browser";
 }

@@ -130,3 +130,28 @@ func Challenge(status int, h http.Header, body []byte) string {
 	}
 	return ""
 }
+
+// Edge names the CDN or edge network that answered an error response, from
+// its headers, so a blocked result can say who blocked it. It returns ""
+// for successful responses or when no edge is recognised.
+func Edge(status int, h http.Header) string {
+	if status < 400 || h == nil {
+		return ""
+	}
+	server := strings.ToLower(h.Get("Server"))
+	switch {
+	case h.Get("X-Amz-Cf-Id") != "" || strings.Contains(server, "cloudfront"):
+		return "CloudFront"
+	case h.Get("Cf-Ray") != "" || server == "cloudflare":
+		return "Cloudflare"
+	case strings.Contains(server, "akamaighost") || h.Get("X-Akamai-Transformed") != "":
+		return "Akamai"
+	case strings.HasPrefix(strings.ToLower(h.Get("X-Served-By")), "cache-") || h.Get("Fastly-Debug-Digest") != "":
+		return "Fastly"
+	case h.Get("X-Vercel-Id") != "" || server == "vercel":
+		return "Vercel"
+	case h.Get("X-Iinfo") != "":
+		return "Imperva"
+	}
+	return ""
+}

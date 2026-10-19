@@ -142,6 +142,13 @@ func FormatSize(n int) string {
 
 func details(r types.FetchResult) string {
 	var parts []string
+	if r.StatusCode >= 400 && r.BotChallenge == "" && !r.RateLimited {
+		p := fmt.Sprintf("HTTP %d", r.StatusCode)
+		if r.Edge != "" {
+			p += " from " + r.Edge
+		}
+		parts = append(parts, p)
+	}
 	if r.Signed && r.Classification != "allowed" {
 		parts = append(parts, "signed")
 	}

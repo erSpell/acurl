@@ -74,3 +74,23 @@ func TestChallengeHeaders(t *testing.T) {
 		})
 	}
 }
+
+func TestEdge(t *testing.T) {
+	tests := []struct {
+		status int
+		h      http.Header
+		want   string
+	}{
+		{403, http.Header{"X-Amz-Cf-Id": {"abc"}, "Server": {"CloudFront"}}, "CloudFront"},
+		{503, http.Header{"Cf-Ray": {"8c1"}, "Server": {"cloudflare"}}, "Cloudflare"},
+		{403, http.Header{"Server": {"AkamaiGHost"}}, "Akamai"},
+		{500, http.Header{"X-Served-By": {"cache-lhr7351-LHR"}}, "Fastly"},
+		{404, http.Header{"Server": {"nginx"}}, ""},
+		{200, http.Header{"Server": {"CloudFront"}}, ""},
+	}
+	for _, tt := range tests {
+		if got := Edge(tt.status, tt.h); got != tt.want {
+			t.Errorf("Edge(%d, %v) = %q, want %q", tt.status, tt.h, got, tt.want)
+		}
+	}
+}

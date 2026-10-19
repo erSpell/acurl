@@ -245,6 +245,9 @@ func (f *Fetcher) Fetch(ctx context.Context, url string, profile types.Profile) 
 	result.ContentHash = contentHash(body)
 	result.ContentType = resp.Header.Get("Content-Type")
 	result.BotChallenge = detect.Challenge(resp.StatusCode, resp.Header, body)
+	if result.BotChallenge == "" {
+		result.Edge = detect.Edge(resp.StatusCode, resp.Header)
+	}
 	if !isHTML(result.ContentType, body) {
 		// PDFs, images and JSON have no title, meta tags or product markup;
 		// parsing them as HTML is wasted work and produces noise.
