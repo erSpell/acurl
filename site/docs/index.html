@@ -7,10 +7,32 @@
 <meta name="description" content="acurl documentation: installation, usage patterns, verdicts, scoring, CI, MCP, Web Bot Auth and the full command reference.">
 <meta name="theme-color" content="#fdfcff">
 <link rel="canonical" href="https://acurl.dev/docs/">
+<meta property="og:title" content="acurl documentation">
+<meta property="og:description" content="Installation, usage patterns, verdicts, scoring, CI, MCP, Web Bot Auth and the full acurl command reference.">
+<meta property="og:url" content="https://acurl.dev/docs/">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://acurl.dev/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="acurl: see your site the way AI agents see it">
+<meta property="og:site_name" content="acurl">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://acurl.dev/assets/og.png">
+<meta name="twitter:title" content="acurl documentation">
+<meta name="twitter:description" content="Installation, usage patterns, verdicts, scoring, CI, MCP and the full command reference.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "acurl documentation",
+  "url": "https://acurl.dev/docs/",
+  "about": { "@type": "SoftwareApplication", "name": "acurl", "url": "https://acurl.dev/" },
+  "publisher": { "@type": "Organization", "name": "tragent", "url": "https://tragent.io" }
+}
+</script>
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="preload" href="../assets/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../assets/fonts.css">
 <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
@@ -28,12 +50,24 @@
     <div class="right">
       <a class="by" href="https://tragent.io">by <b>tragent<span>.</span></b></a>
       <a class="btn btn-line" href="https://github.com/tragent-io/acurl">GitHub</a>
+      <button class="menu-btn" type="button" aria-expanded="false" aria-controls="mobile-nav">Menu</button>
     </div>
   </div>
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Main" hidden>
+      <a href="./" aria-current="page">Docs</a>
+      <a href="#reference">Commands</a>
+      <a href="#ci">CI</a>
+      <a href="#mcp">MCP</a>
+      <a href="https://github.com/tragent-io/acurl/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/tragent-io/acurl">GitHub</a>
+    <a href="https://tragent.io">tragent.io</a>
+  </nav>
 </header>
 
 <div class="wrap docs">
 <aside class="side" aria-label="Documentation">
+<details class="side-panel" open>
+  <summary>Browse the docs</summary>
   <h4>Getting started</h4>
   <a href="#install">Installation</a>
   <a href="#quick-start">Quick start</a>
@@ -69,6 +103,7 @@
   <a href="#acurl-init"><code>init</code></a>
   <a href="#acurl-completion-bash"><code>completion</code></a>
   <a href="#global-flags">Global flags</a>
+</details>
 </aside>
 
 <main id="main" class="content">
@@ -77,7 +112,7 @@
 
 <h2 id="install">Installation</h2>
 <p>acurl is a single static binary for macOS, Linux and Windows (amd64 and arm64).</p>
-<table>
+<table class="stack">
   <tr><th>Method</th><th>Command</th></tr>
   <tr><td>Homebrew</td><td><code>brew install tragent-io/tap/acurl</code></td></tr>
   <tr><td>Shell script</td><td><code>curl -fsSL https://acurl.dev/install.sh | sh</code></td></tr>
@@ -91,7 +126,7 @@
 <h2 id="quick-start">Quick start</h2>
 <p>Point acurl at any page. A scheme is optional: <code>https://</code> is assumed.</p>
 <pre><code>$ acurl shop.example/products/wool-runner
-Fetching https://shop.example/products/wool-runner with 22 profiles...
+Fetching https://shop.example/products/wool-runner with 23 profiles...
 
 PROFILE            STATUS  TIME    RESULT             DETAILS
 Chrome (Browser)   200     412ms   allowed            Wool Runner | Example Store
@@ -111,7 +146,7 @@ How to improve
 <p>The exit code is <code>1</code> because an agent was challenged. <a href="#exit-codes">Change that with <code>--fail-on</code></a>.</p>
 
 <h2 id="reading-output">Reading the output</h2>
-<table>
+<table class="stack">
   <tr><th>Column</th><th>Meaning</th></tr>
   <tr><td>PROFILE</td><td>The agent acurl pretended to be. <code>Chrome (Browser)</code> is the baseline everything is compared with.</td></tr>
   <tr><td>STATUS</td><td>Final HTTP status after redirects. <code>-</code> for robots.txt-only tokens, <code>ERR</code> for network failures.</td></tr>
@@ -150,7 +185,7 @@ acurl -I shop.example               # HEAD requests: status and headers only</co
 
 <h2 id="verdicts">Verdicts</h2>
 <p>Each result gets exactly one verdict, checked in this order:</p>
-<table>
+<table class="stack">
   <tr><th>Verdict</th><th>When</th><th>Fails by default</th></tr>
   <tr><td><span class="pill error">error</span></td><td>The request failed (DNS, TLS, timeout, reset)</td><td>yes, exit 2</td></tr>
   <tr><td><span class="pill challenged">challenged</span></td><td>A known WAF challenge or block page: Cloudflare, Akamai, DataDome, PerimeterX, Imperva, Kasada, AWS WAF, Sucuri or a CAPTCHA on an error page</td><td>yes</td></tr>
@@ -162,8 +197,8 @@ acurl -I shop.example               # HEAD requests: status and headers only</co
 </table>
 
 <h2 id="profiles">Agent profiles</h2>
-<p>A profile is a user agent string, optional headers and the robots.txt token the agent obeys. The catalog has 22 profiles in six categories:</p>
-<table>
+<p>A profile is a user agent string, optional headers and the robots.txt token the agent obeys. The catalog has 23 profiles in six categories:</p>
+<table class="stack">
   <tr><th>Category</th><th>Profiles</th></tr>
   <tr><td><code>browser</code></td><td>Chrome (Browser), the baseline</td></tr>
   <tr><td><code>ai-assistant</code></td><td>ChatGPT-User, Claude-User, Perplexity-User, MistralAI-User, DuckAssistBot</td></tr>
@@ -184,7 +219,7 @@ acurl -I shop.example               # HEAD requests: status and headers only</co
 
 <h2 id="score">AI readiness score</h2>
 <p>A 0-100 score from weighted checks that only use what was observed in the run. Checks that don't apply (not a product page, no agents of that category) are skipped and the rest re-weighted. A URL that looks like a product page is expected to have Product data; override with <code>--page product</code> or <code>--page other</code>. Blocking training crawlers costs nothing: that is a business decision.</p>
-<table>
+<table class="stack">
   <tr><th>Check</th><th>Weight</th></tr>
   <tr><td>AI assistants can fetch the page</td><td>25</td></tr>
   <tr><td>AI search crawlers can fetch the page</td><td>20</td></tr>
@@ -198,17 +233,18 @@ acurl -I shop.example               # HEAD requests: status and headers only</co
 <p>Grades: A 90+, B 80+, C 65+, D 50+, F below. Pages are not scored when the browser request fails, gets an HTTP error or a challenge, or the URL is not HTML; acurl says which.</p>
 
 <h2 id="exit-codes">Exit codes and --fail-on</h2>
-<table>
+<table class="stack">
   <tr><th>Code</th><th>Meaning</th></tr>
   <tr><td><code>0</code></td><td>Nothing matched the <code>--fail-on</code> policy</td></tr>
   <tr><td><code>1</code></td><td>Something matched (for example an assistant was blocked)</td></tr>
   <tr><td><code>2</code></td><td>A request failed, or acurl was used incorrectly</td></tr>
 </table>
 <p>The default is <code>--fail-on blocked,challenged,error</code>. Combine <code>blocked</code>, <code>challenged</code>, <code>rate-limited</code>, <code>cloaked</code>, <code>robots</code>, <code>error</code> and <code>score&lt;N</code>, or use <code>none</code>.</p>
-<pre><code>acurl --fail-on blocked,challenged,cloaked,score&lt;80 shop.example</code></pre>
+<pre><code>acurl --fail-on 'blocked,challenged,cloaked,score&lt;80' shop.example</code></pre>
+<p>Quote the value in a shell when it contains <code>score&lt;N</code>, or the shell reads <code>&lt;</code> as an input redirect.</p>
 
 <h2 id="formats">Output formats</h2>
-<table>
+<table class="stack">
   <tr><th><code>-f</code></th><th>Use it for</th></tr>
   <tr><td><code>table</code></td><td>Terminals (default). <code>--no-color</code> for plain text.</td></tr>
   <tr><td><code>json</code></td><td>Scripts. Every field, including score checks, directives and product data.</td></tr>
@@ -273,7 +309,7 @@ acurl --sign mybot.key --signature-agent https://bot.example shop.example</code>
 <h2 id="serve">Web UI and API</h2>
 <pre><code>acurl serve                   # http://127.0.0.1:8080
 curl -s -X POST localhost:8080/api/check -d '{"url":"shop.example","categories":["ai-assistant"]}'</code></pre>
-<table>
+<table class="stack">
   <tr><th>Endpoint</th><th>Description</th></tr>
   <tr><td><code>POST /api/check</code></td><td>Run a check, returns the JSON report</td></tr>
   <tr><td><code>GET /api/check/stream</code></td><td>Server-sent events: <code>start</code>, <code>progress</code>, <code>report</code></td></tr>
@@ -329,12 +365,14 @@ AI agents, search bots) and shows how each one is treated.</p>
       <tr><td><code>--no-color</code></td><td></td><td>disable colored output</td></tr>
       <tr><td><code>--no-robots</code></td><td></td><td>skip robots.txt checks</td></tr>
       <tr><td><code>-o, --output <i>string</i></code></td><td></td><td>write the report to a file instead of stdout</td></tr>
+      <tr><td><code>--page <i>string</i></code></td><td><code>auto</code></td><td>what the page is: &#34;product&#34; expects product data, &#34;other&#34; does not, &#34;auto&#34; decides from the URL and page</td></tr>
       <tr><td><code>--profiles <i>string</i></code></td><td></td><td>custom profiles YAML file</td></tr>
       <tr><td><code>--proxy <i>string</i></code></td><td></td><td>proxy URL (http://, https:// or socks5://)</td></tr>
       <tr><td><code>--render</code></td><td></td><td>also render the page in headless Chrome to measure how much text needs JavaScript</td></tr>
       <tr><td><code>--render-wait <i>duration</i></code></td><td><code>2s</code></td><td>how long scripts may run before the rendered page is captured</td></tr>
       <tr><td><code>-X, --request <i>string</i></code></td><td><code>GET</code></td><td>HTTP method to use</td></tr>
       <tr><td><code>--retries <i>int</i></code></td><td><code>1</code></td><td>retries after network or gateway errors (exponential backoff with jitter)</td></tr>
+      <tr><td><code>--samples <i>int</i></code></td><td><code>1</code></td><td>check each page this many times (up to 10) and flag agents whose verdict changes</td></tr>
       <tr><td><code>--sign <i>string</i></code></td><td></td><td>sign bot-profile requests with this Ed25519 key (Web Bot Auth, see acurl keygen)</td></tr>
       <tr><td><code>--signature-agent <i>string</i></code></td><td></td><td>Signature-Agent URL where your key directory is published</td></tr>
       <tr><td><code>-t, --timeout <i>duration</i></code></td><td><code>30s</code></td><td>per-request timeout</td></tr>
@@ -343,7 +381,7 @@ AI agents, search bots) and shows how each one is treated.</p>
   <p class="label">Examples</p><pre class="example"><code>  acurl https://shop.example/products/1
   acurl --category ai-assistant,ai-search shop.example
   acurl --agents GPTBot,ClaudeBot --diff GPTBot shop.example
-  acurl -f json -o report.json --fail-on blocked,score&lt;80 shop.example
+  acurl -f json -o report.json --fail-on &#39;blocked,score&lt;80&#39; shop.example
   acurl --render shop.example          # measure JavaScript-only content</code></pre>
 </section>
 <section class="cmd" id="acurl-batch">
@@ -372,11 +410,13 @@ file (the &#34;url&#34; column, or the first column), or stdin when the file is 
       <tr><td><code>--no-color</code></td><td></td><td>disable colored output</td></tr>
       <tr><td><code>--no-robots</code></td><td></td><td>skip robots.txt checks</td></tr>
       <tr><td><code>-o, --output <i>string</i></code></td><td></td><td>write the report to a file instead of stdout</td></tr>
+      <tr><td><code>--page <i>string</i></code></td><td><code>auto</code></td><td>what the page is: &#34;product&#34; expects product data, &#34;other&#34; does not, &#34;auto&#34; decides from the URL and page</td></tr>
       <tr><td><code>-p, --parallel <i>int</i></code></td><td><code>2</code></td><td>URLs to check at the same time</td></tr>
       <tr><td><code>--profiles <i>string</i></code></td><td></td><td>custom profiles YAML file</td></tr>
       <tr><td><code>--proxy <i>string</i></code></td><td></td><td>proxy URL (http://, https:// or socks5://)</td></tr>
       <tr><td><code>-X, --request <i>string</i></code></td><td><code>GET</code></td><td>HTTP method to use</td></tr>
       <tr><td><code>--retries <i>int</i></code></td><td><code>1</code></td><td>retries after network or gateway errors (exponential backoff with jitter)</td></tr>
+      <tr><td><code>--samples <i>int</i></code></td><td><code>1</code></td><td>check each page this many times (up to 10) and flag agents whose verdict changes</td></tr>
       <tr><td><code>--sign <i>string</i></code></td><td></td><td>sign bot-profile requests with this Ed25519 key (Web Bot Auth, see acurl keygen)</td></tr>
       <tr><td><code>--signature-agent <i>string</i></code></td><td></td><td>Signature-Agent URL where your key directory is published</td></tr>
       <tr><td><code>--sitemap <i>string</i></code></td><td></td><td>read URLs from a sitemap URL, or &#34;auto:&lt;site&gt;&#34; to use the sitemaps listed in robots.txt</td></tr>
@@ -640,13 +680,16 @@ fetched.</p>
 API it uses (POST /api/check, GET /api/robots, GET /api/profiles).
 
 Requests to private and internal addresses are blocked unless --allow-private is
-set, because anyone who can reach the server can make it fetch URLs.</p>
+set, because anyone who can reach the server can make it fetch URLs. The server
+only answers to localhost and --allowed-host names, refuses cross-origin API
+calls and requires JSON bodies, which stops DNS rebinding and CSRF.</p>
   <div class="table-wrap"><table class="flags">
     <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
     <tbody>
       <tr><td><code>--addr <i>string</i></code></td><td><code>127.0.0.1:8080</code></td><td>address to listen on</td></tr>
       <tr><td><code>-a, --agents <i>list</i></code></td><td></td><td>only use these profiles (comma-separated)</td></tr>
       <tr><td><code>--allow-private</code></td><td></td><td>allow checking private and internal addresses</td></tr>
+      <tr><td><code>--allowed-host <i>string, repeatable</i></code></td><td></td><td>extra host name the UI may be reached at, e.g. a LAN name (repeatable)</td></tr>
       <tr><td><code>--category <i>list</i></code></td><td></td><td>only use profiles in these categories: ai-assistant, ai-search, ai-training, search, other (the browser baseline is always kept)</td></tr>
       <tr><td><code>-c, --concurrency <i>int</i></code></td><td><code>5</code></td><td>maximum concurrent requests</td></tr>
       <tr><td><code>-I, --head</code></td><td></td><td>send HEAD requests (status and headers only)</td></tr>

@@ -60,3 +60,28 @@ if (links.length) {
   }, { rootMargin: "-80px 0px -70% 0px" });
   byId.forEach((_, id) => { const el = document.getElementById(id); if (el) spy.observe(el); });
 }
+
+// Mobile menu: one button opens the main navigation.
+const menuBtn = document.querySelector(".menu-btn");
+const mobileNav = document.getElementById("mobile-nav");
+if (menuBtn && mobileNav) {
+  menuBtn.addEventListener("click", () => {
+    const open = mobileNav.hidden;
+    mobileNav.hidden = !open;
+    menuBtn.setAttribute("aria-expanded", String(open));
+    menuBtn.textContent = open ? "Close" : "Menu";
+  });
+  mobileNav.addEventListener("click", (e) => {
+    if (e.target.closest("a")) { mobileNav.hidden = true; menuBtn.setAttribute("aria-expanded", "false"); menuBtn.textContent = "Menu"; }
+  });
+}
+
+// Docs: the sidebar starts collapsed on small screens and closes after a pick.
+const sidePanel = document.querySelector(".side-panel");
+if (sidePanel) {
+  const small = window.matchMedia("(max-width: 920px)");
+  const sync = () => { sidePanel.open = !small.matches; };
+  sync();
+  small.addEventListener("change", sync);
+  sidePanel.addEventListener("click", (e) => { if (small.matches && e.target.closest("a")) sidePanel.open = false; });
+}
