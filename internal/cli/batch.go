@@ -14,6 +14,7 @@ import (
 	"github.com/tragent-io/acurl/internal/output"
 	"github.com/tragent-io/acurl/internal/robots"
 	"github.com/tragent-io/acurl/pkg/acurl"
+	"github.com/tragent-io/acurl/pkg/types"
 )
 
 type batchFlags struct {
@@ -67,14 +68,23 @@ func (a *app) runBatch(ctx context.Context, fl *batchFlags, args []string) error
 	if err != nil {
 		return err
 	}
-	var urls []string
+	if fl.parallel < 1 || fl.parallel > 20 {
+		return fmt.Errorf("--parallel must be between 1 and 20, not %d", fl.parallel)
+	}
+	if fl.limit < 0 {
+		return fmt.Errorf("--limit cannot be negative")
+	}
+	var (
+		urls    []string
+		invalid []types.BatchItem
+	)
 	if fl.sitemap != "" {
 		if len(args) > 0 {
 			return fmt.Errorf("use either a file or --sitemap, not both")
 		}
 		urls, err = a.sitemapURLs(ctx, c, fl.sitemap, fl.limit)
 	} else {
-		urls, err = a.batchURLs(fl, args)
+		urls, invalid, err = a.batchURLs(fl, args)
 	}
 	if err != nil {
 		return err
@@ -82,8 +92,11 @@ func (a *app) runBatch(ctx context.Context, fl *batchFlags, args []string) error
 	if fl.limit > 0 && len(urls) > fl.limit {
 		urls = urls[:fl.limit]
 	}
+	for _, it := range invalid {
+		a.logf("  skipping %q: %s\n", it.URL, it.Error)
+	}
 	if len(urls) == 0 {
-		return fmt.Errorf("no URLs to check")
+		return fmt.Errorf("no valid URLs to check")
 	}
 
 	a.logf("Checking %d URLs with %d profiles each...\n", len(urls), len(c.Profiles()))
@@ -94,6 +107,10 @@ func (a *app) runBatch(ctx context.Context, fl *batchFlags, args []string) error
 			a.logf("  [%d/%d] %s\n", done, total, u)
 		},
 	})
+	if len(invalid) > 0 {
+		// Bad lines are reported as failed items rather than aborting the run.
+		rep = batch.Summarize(append(rep.Items, invalid...))
+	}
 	rep.Timestamp = time.Now().UTC()
 
 	w, closeOut, err := a.outputWriter(fl.check.output)
@@ -112,7 +129,9 @@ func (a *app) runBatch(ctx context.Context, fl *batchFlags, args []string) error
 	return nil
 }
 
-func (a *app) batchURLs(fl *batchFlags, args []string) ([]string, error) {
+// batchURLs reads the URL list. Lines that are not valid http(s) URLs are
+// returned as failed items so one typo does not stop the whole batch.
+func (a *app) batchURLs(fl *batchFlags, args []string) ([]string, []types.BatchItem, error) {
 	var (
 		in   io.Reader = os.Stdin
 		name           = "-"
@@ -120,24 +139,26 @@ func (a *app) batchURLs(fl *batchFlags, args []string) ([]string, error) {
 	if len(args) == 1 && args[0] != "-" {
 		f, err := os.Open(args[0])
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		defer f.Close()
 		in, name = f, args[0]
 	}
 	raw, err := batch.ReadURLs(in, fl.csv || strings.HasSuffix(strings.ToLower(name), ".csv"))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	urls := make([]string, 0, len(raw))
+	var invalid []types.BatchItem
 	for _, u := range raw {
 		n, err := normalizeURL(u)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", name, err)
+			invalid = append(invalid, types.BatchItem{URL: u, Error: err.Error()})
+			continue
 		}
 		urls = append(urls, n)
 	}
-	return batch.Dedupe(urls), nil
+	return batch.Dedupe(urls), invalid, nil
 }
 
 // outputWriter returns stdout, or a created file when path is set.

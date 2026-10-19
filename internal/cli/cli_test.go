@@ -348,3 +348,39 @@ func TestWatchWithStateFile(t *testing.T) {
 		t.Error("intervals under a minute should be rejected")
 	}
 }
+
+func TestBatchSkipsInvalidLines(t *testing.T) {
+	srv := shop(t)
+	f := t.TempDir() + "/urls.txt"
+	if err := os.WriteFile(f, []byte(srv.URL+"\nnot a url\nftp://x.example\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, stdout, stderr := run(t, "batch", f, "-f", "json", "-a", "Googlebot", "--no-robots", "--delay", "0", "--fail-on", "blocked,challenged")
+	var rep types.BatchReport
+	if err := json.Unmarshal([]byte(stdout), &rep); err != nil {
+		t.Fatalf("invalid JSON (code %d, stderr %s): %v", code, stderr, err)
+	}
+	if rep.Summary.URLs != 3 || rep.Summary.Failed != 2 || rep.Items[0].Report == nil {
+		t.Errorf("summary = %+v", rep.Summary)
+	}
+	if !strings.Contains(stderr, `skipping "not a url"`) {
+		t.Errorf("stderr should name the skipped line: %s", stderr)
+	}
+	if code != output.ExitError {
+		t.Errorf("invalid lines should still make the run exit 2, got %d", code)
+	}
+}
+
+func TestInvalidFlagValues(t *testing.T) {
+	for _, args := range [][]string{
+		{"--category", "bogus", "https://example.com"},
+		{"--cloak-threshold", "2", "https://example.com"},
+		{"-c", "0", "https://example.com"},
+		{"--page", "landing", "https://example.com"},
+		{"batch", "--parallel", "0", "-"},
+	} {
+		if code, _, stderr := run(t, args...); code != output.ExitError || stderr == "" {
+			t.Errorf("%v: code %d stderr %q, want a usage error", args, code, stderr)
+		}
+	}
+}
