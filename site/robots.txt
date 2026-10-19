@@ -1,0 +1,5 @@
+# acurl.dev: every crawler and AI agent is welcome.
+User-agent: *
+Allow: /
+
+Sitemap: https://acurl.dev/sitemap.xml

@@ -1,0 +1,21 @@
+# acurl
+
+> acurl is a free, open-source command-line tool by tragent.io that fetches a web page as a real Chrome browser and as 21 AI agents and crawlers (ChatGPT-User, Claude-User, Perplexity-User, GPTBot, OAI-SearchBot and others), then reports which were blocked, challenged by a bot manager, cloaked, rate limited or disallowed by robots.txt, and scores how ready the page is for AI agents.
+
+acurl runs on macOS, Linux and Windows and is licensed under Apache 2.0. Install it with `brew install tragent-io/tap/acurl`, `npx @tragent/acurl`, `go install github.com/tragent-io/acurl/cmd/acurl@latest` or the script at https://acurl.dev/install.sh.
+
+## Docs
+
+- [Documentation](https://acurl.dev/docs/): installation, quick start, usage patterns, verdicts, profiles, scoring, exit codes and output formats
+- [Command reference](https://acurl.dev/docs/#reference): every command and flag, generated from the CLI
+- [CI and GitHub Actions](https://acurl.dev/docs/#ci): failing builds with --fail-on, SARIF and JUnit output
+- [AI assistants (MCP)](https://acurl.dev/docs/#mcp): running acurl as a Model Context Protocol server
+
+## Source
+
+- [GitHub repository](https://github.com/tragent-io/acurl): source code, issues and releases
+- [Changelog](https://github.com/tragent-io/acurl/blob/main/CHANGELOG.md)
+
+## Optional
+
+- [tragent.io](https://tragent.io): tests whether AI shopping agents can complete a purchase on a store
