@@ -90,12 +90,16 @@ homebrew_casks:
       bash: completions/acurl.bash
       zsh: completions/acurl.zsh
       fish: completions/acurl.fish
-    hooks:
-      post:
-        install: |
-          if OS.mac?
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/acurl"]
-          end
+    # Release binaries are not notarized, so clear the download quarantine on
+    # macOS. Homebrew deprecated `postflight`; this is the declarative form.
+    custom_block: |
+      postflight_steps do
+        on_macos do
+          run "/usr/bin/xattr",
+              args:         ["-dr", "com.apple.quarantine", "{{ "{{" }}staged_path{{ "}}" }}/acurl"],
+              must_succeed: false
+        end
+      end
 
 scoops:
   - name: acurl
