@@ -67,6 +67,9 @@ AI agents, search bots) and shows how each one is treated.`,
 
 // checkOptions builds checker options from the check flags.
 func (a *app) checkOptions(fl *checkFlags) (acurl.Options, error) {
+	if fl.cloakThreshold < 0 || fl.cloakThreshold > 1 {
+		return acurl.Options{}, fmt.Errorf("--cloak-threshold must be between 0 and 1, not %g", fl.cloakThreshold)
+	}
 	opts, err := fl.http.options(a)
 	if err != nil {
 		return opts, err

@@ -75,7 +75,7 @@ func newProfilesCmd(a *app) *cobra.Command {
 
 func writeProfileTable(a *app, ps []types.Profile) error {
 	t := tablewriter.NewTable(a.stdout)
-	t.Header("Name", "Category", "Operator", "robots.txt token", "Notes")
+	t.Header("Name", "Category", "Operator", "Robots token", "Notes")
 	for _, p := range ps {
 		var notes []string
 		if p.Browser {

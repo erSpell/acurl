@@ -3,7 +3,10 @@ package cli
 import (
 	"crypto/ed25519"
 	"errors"
+	"fmt"
 	"net/http"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/spf13/pflag"
@@ -59,6 +62,9 @@ func (h *httpFlags) register(f *pflag.FlagSet) {
 // options builds checker options from the flags. Profile selection is
 // included so every command filters the same way.
 func (h *httpFlags) options(a *app) (acurl.Options, error) {
+	if err := h.validate(); err != nil {
+		return acurl.Options{}, err
+	}
 	headers, err := parseHeaders(h.headers)
 	if err != nil {
 		return acurl.Options{}, err
@@ -96,6 +102,34 @@ func (h *httpFlags) options(a *app) (acurl.Options, error) {
 		UserAgent:      a.userAgent(),
 		Trace:          a.trace(),
 	}, nil
+}
+
+// categories lists the values --category accepts.
+var categories = []string{
+	types.CategoryBrowser, types.CategoryAIAssistant, types.CategoryAISearch,
+	types.CategoryAITraining, types.CategorySearch, types.CategoryOther,
+}
+
+// validate rejects flag values that would otherwise be silently accepted.
+func (h *httpFlags) validate() error {
+	for _, c := range h.categories {
+		if !slices.Contains(categories, strings.ToLower(strings.TrimSpace(c))) {
+			return fmt.Errorf("unknown category %q (use %s)", c, strings.Join(categories, ", "))
+		}
+	}
+	if h.concurrency < 1 || h.concurrency > 50 {
+		return fmt.Errorf("--concurrency must be between 1 and 50, not %d", h.concurrency)
+	}
+	if h.retries < 0 || h.retries > 10 {
+		return fmt.Errorf("--retries must be between 0 and 10, not %d", h.retries)
+	}
+	if h.timeout <= 0 {
+		return fmt.Errorf("--timeout must be positive, not %s", h.timeout)
+	}
+	if h.maxBody < 1024 {
+		return fmt.Errorf("--max-body must be at least 1024 bytes, not %d", h.maxBody)
+	}
+	return nil
 }
 
 func (h *httpFlags) loadProfiles() ([]types.Profile, error) {
