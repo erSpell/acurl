@@ -12,6 +12,10 @@ import (
 // WebBotAuthTag is the signature tag Web Bot Auth verifiers look for.
 const WebBotAuthTag = "web-bot-auth"
 
+// label names the signature in Signature, Signature-Input and the
+// Signature-Agent dictionary.
+const label = "sig1"
+
 // Signer signs requests the way Web Bot Auth agents do: an Ed25519
 // signature over @authority and Signature-Agent, with a short validity
 // window, a nonce and the web-bot-auth tag.
@@ -39,10 +43,12 @@ func (s *Signer) Headers(method, rawURL string) (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Current Web Bot Auth drafts make Signature-Agent a dictionary keyed by
+	// the signature label, and cover that member: "signature-agent";key="sig1".
 	components := []string{"@authority"}
 	if s.Agent != "" {
-		req.Header.Set("Signature-Agent", strconv.Quote(s.Agent))
-		components = append(components, "signature-agent")
+		req.Header.Set("Signature-Agent", label+"="+strconv.Quote(s.Agent))
+		components = append(components, `signature-agent;key="`+label+`"`)
 	}
 	now := time.Now
 	if s.now != nil {
@@ -61,11 +67,10 @@ func (s *Signer) Headers(method, rawURL string) (map[string]string, error) {
 		Created: created,
 		Expires: created.Add(validity),
 		KeyID:   s.KeyID(),
-		Alg:     "ed25519",
 		Nonce:   nonce(),
 		Tag:     WebBotAuthTag,
 	}
-	if err := Sign(req, s.Key, "sig1", components, p); err != nil {
+	if err := Sign(req, s.Key, label, components, p); err != nil {
 		return nil, err
 	}
 	out := map[string]string{

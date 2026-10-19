@@ -264,7 +264,7 @@ acurl watch shop.example --interval 0 --state /var/lib/acurl/state.json --webhoo
 <p>Sign bot-profile requests with HTTP Message Signatures (RFC 9421, Ed25519), as proposed by Web Bot Auth. Use it to test your verifier or your own agent:</p>
 <pre><code>acurl keygen -o mybot.key           # prints the key directory JSON to publish
 acurl --sign mybot.key --signature-agent https://bot.example shop.example</code></pre>
-<p>Requests carry <code>Signature-Agent</code>, <code>Signature-Input</code> (covering <code>@authority</code> and <code>signature-agent</code>, with created, expires, nonce and <code>tag="web-bot-auth"</code>) and <code>Signature</code>. Signing is verified against the RFC 9421 Ed25519 test vector.</p>
+<p>Requests carry <code>Signature-Agent: sig1="https://bot.example"</code>, <code>Signature-Input</code> (covering <code>@authority</code> and <code>"signature-agent";key="sig1"</code>, with created, expires, nonce and <code>tag="web-bot-auth"</code>) and <code>Signature</code>, following the current Web Bot Auth draft. Signing is verified against the RFC 9421 Ed25519 test vector.</p>
 
 <h2 id="mcp">AI assistants (MCP)</h2>
 <pre><code>claude mcp add acurl -- acurl mcp</code></pre>

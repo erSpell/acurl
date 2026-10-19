@@ -30,7 +30,7 @@ func serialize(components []string, p Params) string {
 		if i > 0 {
 			sb.WriteByte(' ')
 		}
-		sb.WriteString(strconv.Quote(c))
+		sb.WriteString(identifier(c))
 	}
 	sb.WriteByte(')')
 	if !p.Created.IsZero() {
@@ -54,9 +54,50 @@ func serialize(components []string, p Params) string {
 	return sb.String()
 }
 
+// A component may carry parameters after a semicolon, as in
+// `signature-agent;key="sig1"`, which names one member of a dictionary
+// header (RFC 9421 §2.1.2).
+
+// splitComponent separates a component name from its parameters.
+func splitComponent(c string) (name, params string) {
+	name, params, _ = strings.Cut(c, ";")
+	return name, params
+}
+
+// identifier serialises a component as it appears in the signature base
+// and Signature-Input: the quoted name followed by its parameters.
+func identifier(c string) string {
+	name, params := splitComponent(c)
+	if params == "" {
+		return strconv.Quote(name)
+	}
+	return strconv.Quote(name) + ";" + params
+}
+
+// dictionaryMember returns the serialised value of member key in a
+// structured-field dictionary header such as `sig1="https://a.example"`.
+func dictionaryMember(header, key string) (string, bool) {
+	for _, member := range strings.Split(header, ",") {
+		k, v, ok := strings.Cut(strings.TrimSpace(member), "=")
+		if ok && k == key {
+			return strings.TrimSpace(v), true
+		}
+	}
+	return "", false
+}
+
 // componentValue returns the value of a covered component for req
 // (RFC 9421 §2.1 and §2.2).
-func componentValue(req *http.Request, name string) (string, error) {
+func componentValue(req *http.Request, component string) (string, error) {
+	name, params := splitComponent(component)
+	if key, ok := strings.CutPrefix(params, "key="); ok {
+		key = strings.Trim(key, `"`)
+		v, found := dictionaryMember(req.Header.Get(name), key)
+		if !found {
+			return "", fmt.Errorf("sign: header %q has no member %q", name, key)
+		}
+		return v, nil
+	}
 	u := req.URL
 	switch name {
 	case "@method":
@@ -112,7 +153,7 @@ func Base(req *http.Request, components []string, p Params) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		fmt.Fprintf(&sb, "%q: %s\n", c, v)
+		fmt.Fprintf(&sb, "%s: %s\n", identifier(c), v)
 	}
 	fmt.Fprintf(&sb, "%q: %s", "@signature-params", serialize(components, p))
 	return sb.String(), nil

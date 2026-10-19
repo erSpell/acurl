@@ -42,22 +42,25 @@ acurl --sign mybot.key --signature-agent https://bot.example https://shop.exampl
 Every bot-profile request then carries:
 
 ```
-Signature-Agent: "https://bot.example"
-Signature-Input: sig1=("@authority" "signature-agent");created=1759400000;expires=1759400060;
-                 keyid="poqkLGiy...";alg="ed25519";nonce="...";tag="web-bot-auth"
+Signature-Agent: sig1="https://bot.example"
+Signature-Input: sig1=("@authority" "signature-agent";key="sig1");created=1759400000;expires=1759400060;
+                 keyid="poqkLGiy...";nonce="...";tag="web-bot-auth"
 Signature: sig1=:...base64...:
 ```
 
-- The signature covers `@authority` and `Signature-Agent`, and is valid for one minute.
+- The headers follow the current Web Bot Auth draft: `Signature-Agent` is a dictionary keyed
+  by the signature label, and the signature covers `@authority` and that dictionary member.
+  It is valid for one minute.
 - A random nonce is added to every request so verifiers can reject replays.
 - The browser baseline is never signed. Signed rows show `signed` in the details column, and
   `"signed": true` appears in JSON output.
 
 ## Compatibility
 
-The signing code is checked against the Ed25519 test vector in RFC 9421 Appendix B.2.6.
-Web Bot Auth is still an IETF draft, so header details may change. Open an issue if a verifier
-rejects acurl's signatures.
+The signing code is checked against the Ed25519 test vector in RFC 9421 Appendix B.2.6, and
+the signature base against the layout in the Web Bot Auth draft. acurl 1.0 used the draft's
+earlier string form of `Signature-Agent`; 1.1 and later use the dictionary form. Web Bot Auth is
+still an IETF draft, so details may change. Open an issue if a verifier rejects acurl's signatures.
 
 ---
 

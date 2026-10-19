@@ -290,7 +290,7 @@ func TestSignedRequests(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("code=%d stderr=%s", code, stderr)
 	}
-	if !strings.Contains(gotSig, `tag="web-bot-auth"`) || gotAgent != `"https://bot.example"` {
+	if !strings.Contains(gotSig, `tag="web-bot-auth"`) || gotAgent != `sig1="https://bot.example"` {
 		t.Errorf("bot request not signed: input=%q agent=%q", gotSig, gotAgent)
 	}
 	if chromeSig != "" {
