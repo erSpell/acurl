@@ -41,6 +41,10 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: "1.26.x"
+      - name: Allow Chrome's sandbox
+        # Ubuntu 24.04 blocks the unprivileged user namespaces Chrome's
+        # sandbox needs; re-enable them rather than disabling the sandbox.
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - name: Test with Chrome
         env:
           ACURL_TEST_RENDER: "1"

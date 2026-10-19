@@ -248,6 +248,9 @@ acurl batch urls.txt -f sarif -o acurl.sarif --fail-on blocked,challenged</code>
 JavaScript rendering
   64% of the visible text only appears after JavaScript runs (812 -> 2254 chars).
   Agents that do not run JavaScript miss it.</code></pre>
+<p>Rendering needs Chrome or Chromium installed. On Ubuntu 23.10+, Chrome's sandbox needs
+<code>sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0</code>. Inside a container,
+set <code>ACURL_CHROME_NO_SANDBOX=1</code> instead.</p>
 
 <h2 id="watch">Watching for changes</h2>
 <pre><code>acurl watch shop.example --interval 1h \
