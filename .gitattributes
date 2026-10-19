@@ -1,0 +1,7 @@
+# Keep text files LF on every platform so golden files and fixtures compare
+# byte for byte on Windows.
+* text=auto eol=lf
+*.golden text eol=lf
+testdata/** text eol=lf
+*.png binary
+*.ico binary
