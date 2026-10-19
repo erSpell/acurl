@@ -117,7 +117,11 @@ document.querySelectorAll(".downloads button").forEach((b) => b.addEventListener
   if (format === "json") {
     blob = new Blob([JSON.stringify(lastReport, null, 2)], { type: "application/json" });
   } else {
-    const res = await fetch("api/report?format=" + format, { method: "POST", body: JSON.stringify(lastReport) });
+    const res = await fetch("api/report?format=" + format, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(lastReport),
+    });
     if (!res.ok) { setStatus("Could not build the " + format + " report.", true); return; }
     blob = await res.blob();
   }

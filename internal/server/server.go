@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -31,13 +32,18 @@ type Options struct {
 	// MaxConcurrent limits simultaneous checks. Default 4.
 	MaxConcurrent int
 	Version       string
+	// AllowedHosts are the host names (without port) the server answers to,
+	// besides localhost. Requests for any other Host are refused, which stops
+	// DNS rebinding.
+	AllowedHosts []string
 }
 
 // Server serves the UI and API.
 type Server struct {
-	opts Options
-	sem  chan struct{}
-	mux  *http.ServeMux
+	opts  Options
+	sem   chan struct{}
+	mux   *http.ServeMux
+	hosts map[string]bool
 }
 
 // New returns a Server. Callers should set Check.BlockPrivate unless the
@@ -53,7 +59,14 @@ func New(opts Options) (*Server, error) {
 	if opts.MaxConcurrent <= 0 {
 		opts.MaxConcurrent = 4
 	}
-	s := &Server{opts: opts, sem: make(chan struct{}, opts.MaxConcurrent), mux: http.NewServeMux()}
+	s := &Server{opts: opts, sem: make(chan struct{}, opts.MaxConcurrent), mux: http.NewServeMux(), hosts: map[string]bool{
+		"localhost": true, "127.0.0.1": true, "::1": true,
+	}}
+	for _, h := range opts.AllowedHosts {
+		if h = strings.ToLower(strings.TrimSpace(h)); h != "" {
+			s.hosts[h] = true
+		}
+	}
 	ui, err := fs.Sub(static, "static")
 	if err != nil {
 		return nil, err
@@ -70,8 +83,31 @@ func New(opts Options) (*Server, error) {
 	return s, nil
 }
 
-// ServeHTTP implements http.Handler with basic security headers.
+// ServeHTTP implements http.Handler with Host, Origin and content-type
+// checks in front of the routes, and basic security headers.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// DNS rebinding: a hostile page can point its own name at 127.0.0.1, but
+	// the browser still sends that name as the Host header.
+	if !s.hosts[hostOnly(r.Host)] {
+		writeJSON(w, http.StatusMisdirectedRequest, apiError{fmt.Sprintf(
+			"host %q is not allowed; start acurl serve with --allowed-host %s to permit it", hostOnly(r.Host), hostOnly(r.Host))})
+		return
+	}
+	// CSRF: browsers send Origin on cross-site requests; only same-host
+	// origins may call the API.
+	if strings.HasPrefix(r.URL.Path, "/api/") {
+		if o := r.Header.Get("Origin"); o != "" {
+			u, err := url.Parse(o)
+			if err != nil || !s.hosts[hostOnly(u.Host)] {
+				writeJSON(w, http.StatusForbidden, apiError{"cross-origin requests are not allowed"})
+				return
+			}
+		}
+		if r.Method == http.MethodPost && !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
+			writeJSON(w, http.StatusUnsupportedMediaType, apiError{"send the request body as application/json"})
+			return
+		}
+	}
 	h := w.Header()
 	h.Set("X-Content-Type-Options", "nosniff")
 	h.Set("Referrer-Policy", "no-referrer")
@@ -212,4 +248,13 @@ func (s *Server) handleReport(w http.ResponseWriter, r *http.Request) {
 	if err := output.Write(w, format, rep, false); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+// hostOnly strips the port from a Host header or URL host, lower-cased.
+func hostOnly(hostport string) string {
+	h := hostport
+	if host, _, err := net.SplitHostPort(hostport); err == nil {
+		h = host
+	}
+	return strings.ToLower(strings.Trim(h, "[]"))
 }
