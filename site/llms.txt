@@ -10,6 +10,7 @@ acurl runs on macOS, Linux and Windows and is licensed under Apache 2.0. Install
 - [Command reference](https://acurl.dev/docs/#reference): every command and flag, generated from the CLI
 - [CI and GitHub Actions](https://acurl.dev/docs/#ci): failing builds with --fail-on, SARIF and JUnit output
 - [AI assistants (MCP)](https://acurl.dev/docs/#mcp): running acurl as a Model Context Protocol server
+- [Watching AI CLI traffic](https://acurl.dev/docs/#tap): acurl tap shows the requests Claude Code, Codex, Gemini CLI and Grok send to their model providers
 
 ## Source
 

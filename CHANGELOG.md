@@ -14,6 +14,7 @@ All notable changes to acurl are documented here. The format follows
   running and leave it alone when it is not
 - The `acurl tap` proxy runs in the background, so quitting the viewer never breaks a CLI;
   `acurl tap status`, `acurl tap stop` and `acurl tap serve` manage it
+- acurl.dev documents `acurl tap`, and CONTRIBUTING.md explains how to add a CLI to it
 
 ## [1.1.1] - 2026-10-19
 
