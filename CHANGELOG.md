@@ -6,6 +6,10 @@ All notable changes to acurl are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- The `indexable` score ignores `noindex` directives from challenged and blocked
+  agent responses, where the directive belongs to an intermediary error page
+
 ## [1.1.1] - 2026-10-19
 
 ### Fixed
