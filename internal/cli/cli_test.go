@@ -458,3 +458,30 @@ func TestExitErrorMessage(t *testing.T) {
 		t.Errorf("Error() = %q", got)
 	}
 }
+
+func TestTapEnv(t *testing.T) {
+	code, stdout, stderr := run(t, "tap", "env", "claude", "--shell", "zsh", "--listen", "127.0.0.1:9000")
+	if code != 0 {
+		t.Fatalf("exit code = %d (stderr: %s)", code, stderr)
+	}
+	if !strings.Contains(stdout, "ANTHROPIC_BASE_URL='http://127.0.0.1:9000/anthropic' command claude") || strings.Contains(stdout, "codex") {
+		t.Errorf("unexpected wrappers:\n%s", stdout)
+	}
+
+	if code, stdout, _ := run(t, "tap", "env", "--list"); code != 0 || !strings.Contains(stdout, "GROK_CLI_CHAT_PROXY_BASE_URL") {
+		t.Errorf("--list: code %d, output:\n%s", code, stdout)
+	}
+}
+
+func TestTapRejectsBadInput(t *testing.T) {
+	for _, args := range [][]string{
+		{"tap", "--listen", "0.0.0.0:8899"},
+		{"tap", "--max-body", "0"},
+		{"tap", "env", "cursor"},
+		{"tap", "env", "--shell", "tcsh"},
+	} {
+		if code, _, stderr := run(t, args...); code != output.ExitError {
+			t.Errorf("%v: exit code = %d, want %d (stderr: %s)", args, code, output.ExitError, stderr)
+		}
+	}
+}

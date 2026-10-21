@@ -84,6 +84,7 @@ How to improve
 | `acurl report <file>` | Render saved JSON as HTML, Markdown, SARIF, JUnit or CSV |
 | `acurl serve` | Local web UI and JSON API |
 | `acurl mcp` | MCP server so Claude, Cursor and other assistants can run checks |
+| `acurl tap` | [Watch the API traffic](docs/tap.md) of Claude Code, Codex, Gemini CLI or Grok, like tcpdump |
 | `acurl keygen` | Ed25519 key for [Web Bot Auth](docs/signing.md) request signing |
 | `acurl profiles list` | The agent catalog |
 | `acurl init` | Create a `.acurl.yaml` config file |
