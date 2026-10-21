@@ -6,6 +6,16 @@ All notable changes to acurl are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- `acurl tap` shows the requests Claude Code, Codex, Gemini CLI and Grok send to their model
+  providers and the responses they get, one line per exchange, with `--bodies` and JSON lines
+  output (`-w`). API keys, tokens and cookies are redacted. See [docs/tap.md](docs/tap.md)
+- `acurl tap env` prints shell wrappers that route each CLI through `acurl tap` while it is
+  running and leave it alone when it is not
+- The `acurl tap` proxy runs in the background, so quitting the viewer never breaks a CLI;
+  `acurl tap status`, `acurl tap stop` and `acurl tap serve` manage it
+- acurl.dev documents `acurl tap`, and CONTRIBUTING.md explains how to add a CLI to it
+
 ## [1.1.1] - 2026-10-19
 
 ### Fixed

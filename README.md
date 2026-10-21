@@ -84,6 +84,7 @@ How to improve
 | `acurl report <file>` | Render saved JSON as HTML, Markdown, SARIF, JUnit or CSV |
 | `acurl serve` | Local web UI and JSON API |
 | `acurl mcp` | MCP server so Claude, Cursor and other assistants can run checks |
+| `acurl tap` | [Watch the API traffic](docs/tap.md) of Claude Code, Codex, Gemini CLI or Grok, like tcpdump |
 | `acurl keygen` | Ed25519 key for [Web Bot Auth](docs/signing.md) request signing |
 | `acurl profiles list` | The agent catalog |
 | `acurl init` | Create a `.acurl.yaml` config file |
@@ -112,6 +113,16 @@ claude mcp add acurl -- acurl mcp
 
 Then ask *"Can ChatGPT read our new product page?"* See [MCP setup](docs/mcp.md) for Claude Desktop and Cursor.
 
+## Watch your AI CLI's traffic
+
+```bash
+acurl tap                    # terminal 1
+eval "$(acurl tap env)"      # terminal 2, then run claude, codex, gemini or grok
+```
+
+Every request the CLI sends to its model provider, and the response, shows up as a line, like
+tcpdump. No CA certificate, and API keys are redacted. See [Watching AI CLI traffic](docs/tap.md).
+
 ## As a Go library
 
 ```go
@@ -128,7 +139,7 @@ guaranteed agent access. It's the fastest first check, and it catches most real-
 
 ## Contributing
 
-Bug reports, new agent profiles and detection signatures are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Bug reports, new agent profiles, detection signatures and new CLIs for `acurl tap` are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 Security issues: [SECURITY.md](SECURITY.md).
 
 ## License
