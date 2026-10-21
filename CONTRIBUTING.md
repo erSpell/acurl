@@ -32,6 +32,8 @@ make lint       # golangci-lint v2
 | `internal/classifier` | allowed / blocked / challenged classification |
 | `internal/output` | table, JSON and Markdown renderers |
 | `internal/profiles` | embedded agent profile catalog |
+| `internal/tap` | `acurl tap` proxy, redaction and shell wrappers |
+| `internal/cli` | cobra commands |
 | `testdata/fixtures` | captured challenge pages and robots files |
 
 ## Adding an agent profile
@@ -50,6 +52,34 @@ Then check it against a real site:
 ```bash
 make build && ./acurl --agents ExampleBot https://example.com
 ```
+
+## Adding a CLI to acurl tap
+
+`acurl tap` supports a CLI when the CLI reads its provider's base URL from an environment
+variable. Add the provider to `DefaultRoutes` and the CLI to `CLIs` in
+`internal/tap/providers.go`:
+
+```go
+{Name: "example", Prefix: "/example", Upstream: "https://api.example.com"},
+```
+```go
+{
+    Name:     "example",
+    Bindings: []Binding{{Env: "EXAMPLE_BASE_URL", Route: "example", Suffix: "/v1"}},
+    Note:     "API key login only",
+},
+```
+
+Link the CLI's documentation for the variable in your PR, and say which login modes you
+checked. Then run it for real and paste the redacted output:
+
+```bash
+make build
+./acurl tap                                # terminal 1
+eval "$(./acurl tap env example)"; example # terminal 2
+```
+
+Never commit captured sessions: they contain prompts and, with `--keep-credentials`, keys.
 
 ## Adding a detection signature
 

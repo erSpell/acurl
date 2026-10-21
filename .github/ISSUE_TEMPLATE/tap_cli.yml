@@ -1,0 +1,39 @@
+name: acurl tap CLI support
+description: Request support for an AI CLI in acurl tap, or report one that is not captured
+labels: ["area: tap"]
+body:
+  - type: input
+    id: cli
+    attributes:
+      label: CLI and version
+      placeholder: codex 0.80.0
+    validations:
+      required: true
+  - type: input
+    id: variable
+    attributes:
+      label: Base URL variable
+      description: The environment variable the CLI reads its provider endpoint from, if you know it
+      placeholder: OPENAI_BASE_URL
+  - type: input
+    id: docs
+    attributes:
+      label: Documentation
+      description: Link to where the CLI documents that variable
+  - type: dropdown
+    id: login
+    attributes:
+      label: Login mode
+      options:
+        - API key
+        - Account login (OAuth)
+        - Enterprise / cloud provider
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: What acurl tap shows
+      description: Output of `acurl tap` while you used the CLI. Check that no keys or private prompts are left before posting.
+      render: shell

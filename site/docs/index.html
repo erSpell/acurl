@@ -87,6 +87,7 @@
   <a href="#signing">Web Bot Auth signing</a>
   <a href="#mcp">AI assistants (MCP)</a>
   <a href="#serve">Web UI and API</a>
+  <a href="#tap">Watching AI CLI traffic</a>
   <a href="#config">Configuration</a>
   <a href="#library">Go library</a>
   <h4>Command reference</h4>
@@ -97,6 +98,7 @@
   <a href="#acurl-report"><code>report</code></a>
   <a href="#acurl-serve"><code>serve</code></a>
   <a href="#acurl-mcp"><code>mcp</code></a>
+  <a href="#acurl-tap"><code>tap</code></a>
   <a href="#acurl-profiles-list"><code>profiles list</code></a>
   <a href="#acurl-profiles-show"><code>profiles show</code></a>
   <a href="#acurl-keygen"><code>keygen</code></a>
@@ -317,6 +319,31 @@ curl -s -X POST localhost:8080/api/check -d '{"url":"shop.example","categories":
   <tr><td><code>GET /api/profiles</code></td><td>Profile catalog</td></tr>
   <tr><td><code>POST /api/report?format=</code></td><td>Render a JSON report as html, markdown, csv, sarif or junit</td></tr>
 </table>
+
+<h2 id="tap">Watching AI CLI traffic</h2>
+<p><code>acurl tap</code> shows what Claude Code, Codex, Gemini CLI or Grok sends to its model provider and what comes back, one line per exchange, like tcpdump. Run it in one terminal and keep using the CLI in another:</p>
+<pre><code># terminal 1
+acurl tap
+
+# terminal 2
+eval "$(acurl tap env)"      # once, or in ~/.zshrc / ~/.bashrc
+claude</code></pre>
+<pre><code>21:21:49 #1 anthropic HEAD /api/hello 200 565ms 0B &gt; 0B
+21:21:50 #2 anthropic POST /v1/messages?beta=true claude-opus-5-5 200 1.639s 70.0KB &gt; 1.5KB stream</code></pre>
+<p>Each CLI is pointed at a local proxy through the base URL variable it already supports, so no CA certificate is installed. The wrappers from <code>acurl tap env</code> (bash, zsh, fish, PowerShell) only use the proxy while it is running. The first <code>acurl tap</code> starts the proxy in the background; quitting the viewer leaves it running, so a tapped CLI keeps working.</p>
+<table class="stack">
+  <tr><th>CLI</th><th>Variables</th><th>Notes</th></tr>
+  <tr><td><code>claude</code></td><td><code>ANTHROPIC_BASE_URL</code></td><td>API key and claude.ai login</td></tr>
+  <tr><td><code>codex</code></td><td><code>OPENAI_BASE_URL</code></td><td>API key login only; ChatGPT login bypasses the base URL</td></tr>
+  <tr><td><code>gemini</code></td><td><code>GOOGLE_GEMINI_BASE_URL</code>, <code>CODE_ASSIST_ENDPOINT</code></td><td>Gemini API key and Google login; not Vertex AI</td></tr>
+  <tr><td><code>grok</code></td><td><code>GROK_CLI_CHAT_PROXY_BASE_URL</code></td><td>Grok Build CLI with grok.com login</td></tr>
+</table>
+<pre><code>acurl tap --bodies              # request and response bodies under each line
+acurl tap -w session.jsonl      # every exchange as a JSON line
+acurl tap --redact "Acme Corp"  # remove extra strings
+acurl tap status                # is the proxy running
+acurl tap stop                  # stop it (quit tapped CLIs first)</code></pre>
+<p>API keys, tokens, cookies and <code>key=</code> parameters are replaced with <code>[redacted]</code>, and each removal is recorded. Prompts and model output are not redacted, so treat session files like shell history. The proxy only listens on loopback and refuses browser requests. Streams pass through as they arrive; WebSockets pass through with only the handshake recorded. See the <a href="https://github.com/tragent-io/acurl/blob/main/docs/tap.md">full guide</a>.</p>
 
 <h2 id="config">Configuration</h2>
 <p><code>acurl init</code> writes a commented <code>.acurl.yaml</code>. Any flag can be set by its long name. Precedence: flags, then <code>ACURL_*</code> environment variables, then the config file.</p>
@@ -710,6 +737,110 @@ calls and requires JSON bodies, which stops DNS rebinding and CSRF.</p>
     </tbody></table></div>
   <p class="label">Examples</p><pre class="example"><code>  acurl serve
   acurl serve --addr 0.0.0.0:8080 --render</code></pre>
+</section>
+<section class="cmd" id="acurl-tap">
+  <h3><a href="#acurl-tap">acurl tap</a></h3>
+  <p class="lead">Watch the API requests AI coding CLIs make, like tcpdump</p>
+  <pre class="usage"><code>acurl tap [flags]</code></pre>
+  <p>tap prints every request that Claude Code, Codex, Gemini CLI or Grok sends to
+its model provider, with the response it got back.
+
+Run it in one terminal, and run the CLI in another after loading the wrappers
+from `acurl tap env`. The wrappers point each CLI at a local proxy through its
+base URL variable while the proxy is running, and leave it alone when it is
+not. Traffic is plain HTTP on loopback and HTTPS to the provider, so no CA
+certificate is needed.
+
+The first `acurl tap` starts the proxy in the background and keeps it running
+after you quit, so CLIs started through it keep working. Stop it with
+`acurl tap stop`.
+
+API keys, tokens and cookies are replaced with [redacted] in everything tap
+prints or writes. Add other strings to remove with --redact.</p>
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--bodies</code></td><td></td><td>print request and response bodies under each line</td></tr>
+      <tr><td><code>--keep-credentials</code></td><td></td><td>do not redact API keys, tokens and cookies</td></tr>
+      <tr><td><code>--listen <i>string</i></code></td><td><code>127.0.0.1:8899</code></td><td>loopback address the proxy listens on</td></tr>
+      <tr><td><code>--max-body <i>int</i></code></td><td><code>1048576</code></td><td>bytes of each body to keep; the rest is counted, not stored</td></tr>
+      <tr><td><code>--redact <i>string, repeatable</i></code></td><td></td><td>extra string to replace with [redacted] (repeatable)</td></tr>
+      <tr><td><code>-w, --write <i>string</i></code></td><td></td><td>append every exchange as JSON lines to this file (- for stdout)</td></tr>
+    </tbody></table></div>
+  <p class="label">Examples</p><pre class="example"><code>  # terminal 1
+  acurl tap
+
+  # terminal 2
+  eval &#34;$(acurl tap env)&#34;
+  claude
+
+  acurl tap --bodies
+  acurl tap -w session.jsonl
+  acurl tap stop</code></pre>
+</section>
+<section class="cmd" id="acurl-tap-env">
+  <h3><a href="#acurl-tap-env">acurl tap env</a></h3>
+  <p class="lead">Print shell functions that route AI CLIs through acurl tap</p>
+  <pre class="usage"><code>acurl tap env [cli...] [flags]</code></pre>
+  <p>env prints shell functions named after each CLI (claude, codex, gemini, grok).
+Each one checks whether the acurl tap proxy is running. If it is, it runs the
+CLI with its base URL variable pointing at the proxy; if not, it runs the CLI
+unchanged.
+
+Load them in the current shell with eval, or add that line to your shell&#39;s rc
+file. The shell is taken from $SHELL unless --shell is set.</p>
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--list</code></td><td></td><td>list the supported CLIs and the variables they use</td></tr>
+      <tr><td><code>--listen <i>string</i></code></td><td><code>127.0.0.1:8899</code></td><td>address the proxy listens on</td></tr>
+      <tr><td><code>--shell <i>string</i></code></td><td></td><td>shell to write for: bash, zsh, fish, powershell (default from $SHELL)</td></tr>
+    </tbody></table></div>
+  <p class="label">Examples</p><pre class="example"><code>  eval &#34;$(acurl tap env)&#34;
+  eval &#34;$(acurl tap env claude)&#34;
+  acurl tap env --shell fish | source
+  acurl tap env --shell powershell | Out-String | Invoke-Expression
+  acurl tap env --list</code></pre>
+</section>
+<section class="cmd" id="acurl-tap-serve">
+  <h3><a href="#acurl-tap-serve">acurl tap serve</a></h3>
+  <p class="lead">Run the acurl tap proxy in the foreground</p>
+  <pre class="usage"><code>acurl tap serve [flags]</code></pre>
+  <p>serve runs the proxy that `acurl tap` normally starts in the background. Use it
+to run the proxy under a service manager, or to watch its log.</p>
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--keep-credentials</code></td><td></td><td>do not redact API keys, tokens and cookies</td></tr>
+      <tr><td><code>--listen <i>string</i></code></td><td><code>127.0.0.1:8899</code></td><td>loopback address the proxy listens on</td></tr>
+      <tr><td><code>--max-body <i>int</i></code></td><td><code>1048576</code></td><td>bytes of each body to keep; the rest is counted, not stored</td></tr>
+    </tbody></table></div>
+  
+</section>
+<section class="cmd" id="acurl-tap-status">
+  <h3><a href="#acurl-tap-status">acurl tap status</a></h3>
+  <p class="lead">Show whether the acurl tap proxy is running</p>
+  <pre class="usage"><code>acurl tap status [flags]</code></pre>
+  
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--listen <i>string</i></code></td><td><code>127.0.0.1:8899</code></td><td>address the proxy listens on</td></tr>
+    </tbody></table></div>
+  
+</section>
+<section class="cmd" id="acurl-tap-stop">
+  <h3><a href="#acurl-tap-stop">acurl tap stop</a></h3>
+  <p class="lead">Stop the acurl tap proxy</p>
+  <pre class="usage"><code>acurl tap stop [flags]</code></pre>
+  <p>stop shuts the background proxy down. CLIs started through it lose their
+connection to the provider, so quit them first.</p>
+  <div class="table-wrap"><table class="flags">
+    <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>--listen <i>string</i></code></td><td><code>127.0.0.1:8899</code></td><td>address the proxy listens on</td></tr>
+    </tbody></table></div>
+  
 </section>
 <section class="cmd" id="acurl-watch">
   <h3><a href="#acurl-watch">acurl watch</a></h3>
